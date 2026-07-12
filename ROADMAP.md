@@ -19,7 +19,7 @@
 - [x] Test fixtures for each profile, including deliberately incomplete variants
 - [x] Minimal working custom-element registration + smallest complete vertical slice
 
-## Phase 2 — Card layout (homeowner + detailed) — in progress (`feature/phase-2-card-layout`)
+## Phase 2 — Card layout (homeowner + detailed) ✅ complete (on `main`)
 
 - [x] Header: card name, manufacturer/model, operating mode, overall availability indicator
 - [x] Temperature section as a responsive grid (outdoor/supply/extract/exhaust), each with icon + label + value + unit
@@ -31,14 +31,36 @@
 - [x] HA native theming via CSS custom properties only, no hardcoded palette
 - [x] Responsive down to narrow mobile widths, no fixed height
 - [x] Accessibility: heading hierarchy, `role="status"` on the availability chip, tone always paired with text/icon, aria-labeled sections
-- [ ] Awaiting review before merge to `main`
+- [x] Reviewed and merged to `main` (PR #1)
 
 ## Phase 3 — Interactive controls
 
-Phase 2 covers display only (homeowner + detailed layouts, both read-only). What's left before the card can act on the system, not just show it:
+Phase 2 covers display only (homeowner + detailed layouts, both read-only). What's left before the card can act on the system, not just show it. Split into three sub-phases rather than one large change, since the three controls named below are not equal in complexity or in how confirmed their manufacturer support is — see `docs/architecture.md` §8 step 6 for the general mechanism (optimistic UI + reconciliation on the next `hass` update) and `SPECIFICATION.md` §7 for the accessibility requirement (keyboard-operable, labeled controls).
 
-- Manual entity actions: mode change, bypass override, filter reset — with optimistic UI + reconciliation on the next `hass` update
-- Keyboard-operable, labeled controls (`SPECIFICATION.md` §7)
+### Phase 3A — Control framework + filter reset ✅ complete (on `feature/phase-3`)
+
+The simplest control: a fire-and-forget action with no state to reconcile (pressing a HA `button`/`input_button` entity has no target value to wait for).
+
+- [x] `filter_reset_control` entity role (`src/types/entity-roles.ts`)
+- [x] `src/data/control-dispatcher.ts` — generic action dispatch (idle/pending/error state, timeout guard), reusable by Phase 3B/3C rather than rebuilt
+- [x] Rendered as a native, labeled, keyboard-operable `<button>` in the system status section; degrades through the same five states as every other role
+- [x] `hass.callService` stays optional — the card no-ops safely if it's unavailable (dev preview, tests), rather than requiring it
+- [x] Enabled only for the `generic` profile (feature-flaggable) — Altair/Zehnder/Aerofresh do NOT declare it supported by default: filter resettability is still TBD for all three (`docs/manufacturers/*.md`, `SPECIFICATION.md` §3)
+- [x] Tests written before implementation: dispatch/service-call correctness, pending state, error state, timeout, double-dispatch guard, all five rendering states, Altair-no-bypass regression unaffected
+
+### Phase 3B — Mode selector
+
+More involved: options, current mode, a service call, and — unlike filter reset — a real optimistic UI with rollback/reconciliation against the next resolved snapshot value.
+
+- `mode_control` entity role
+- Extend `control-dispatcher.ts` with a value-reconciliation mode (target value set optimistically, cleared once the snapshot reflects it or a timeout reverts it) rather than a second, parallel mechanism
+
+### Phase 3C — Bypass override
+
+Left until last: manual bypass override is unconfirmed for Zehnder ComfoAir Q and Aerofresh, and explicitly unsupported for Altair (hard-locked, `unsupportedRoles`). Enable per-manufacturer only once each profile's manual-override support is verified against real documentation (`CLAUDE.md`'s "don't guess" rule) — do not enable it broadly just because the mechanism exists.
+
+- `bypass_control` entity role
+- Manufacturer-specific enablement once verified, never assumed
 
 ## Phase 4 — Commissioning view
 

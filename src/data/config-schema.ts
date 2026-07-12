@@ -79,7 +79,15 @@ export function parseConfig(input: unknown): HiperMvhrCardConfig {
       console.warn(`hiper-mvhr-card: ignoring unknown feature flag role "${role}" in config`);
       continue;
     }
-    featureFlags[role] = Boolean(enabled);
+    // Strict boolean check, not `Boolean(enabled)`: that coercion would make
+    // the truthy *string* "false" enable the flag — a silent, dangerous
+    // footgun for exactly the kind of typo a YAML config invites.
+    if (typeof enabled !== 'boolean') {
+      throw new ConfigValidationError(
+        `hiper-mvhr-card: feature flag "${role}" must be true or false, got ${JSON.stringify(enabled)}`,
+      );
+    }
+    featureFlags[role] = enabled;
   }
 
   return {

@@ -86,6 +86,65 @@ describe('resolveSnapshot', () => {
     expect(snapshot.supply_air_temp?.status).toBe('entity_missing');
   });
 
+  it('treats a button entity in state "unknown" as ok, not unavailable — that is its normal never-pressed idle state', () => {
+    const genericProfile = resolveCapabilities('generic', { filter_reset_control: true });
+    const hass: HomeAssistant = {
+      states: {
+        'button.mvhr_filter_reset': {
+          entity_id: 'button.mvhr_filter_reset',
+          state: 'unknown',
+          attributes: {},
+        },
+      },
+    };
+    const snapshot = resolveSnapshot(hass, genericProfile, {
+      filter_reset_control: 'button.mvhr_filter_reset',
+    });
+    expect(snapshot.filter_reset_control?.status).toBe('ok');
+  });
+
+  it('still treats an input_button entity in state "unknown" as ok, the same as button', () => {
+    const genericProfile = resolveCapabilities('generic', { filter_reset_control: true });
+    const hass: HomeAssistant = {
+      states: {
+        'input_button.mvhr_filter_reset': {
+          entity_id: 'input_button.mvhr_filter_reset',
+          state: 'unknown',
+          attributes: {},
+        },
+      },
+    };
+    const snapshot = resolveSnapshot(hass, genericProfile, {
+      filter_reset_control: 'input_button.mvhr_filter_reset',
+    });
+    expect(snapshot.filter_reset_control?.status).toBe('ok');
+  });
+
+  it('still treats a button entity in state "unavailable" as unavailable — the exemption is only for "unknown"', () => {
+    const genericProfile = resolveCapabilities('generic', { filter_reset_control: true });
+    const hass: HomeAssistant = {
+      states: {
+        'button.mvhr_filter_reset': {
+          entity_id: 'button.mvhr_filter_reset',
+          state: 'unavailable',
+          attributes: {},
+        },
+      },
+    };
+    const snapshot = resolveSnapshot(hass, genericProfile, {
+      filter_reset_control: 'button.mvhr_filter_reset',
+    });
+    expect(snapshot.filter_reset_control?.status).toBe('unavailable');
+  });
+
+  it('does not extend the "unknown" exemption to ordinary sensor/select domains', () => {
+    const hass: HomeAssistant = {
+      states: { 'select.altair_mode': { entity_id: 'select.altair_mode', state: 'unknown', attributes: {} } },
+    };
+    const snapshot = resolveSnapshot(hass, altairProfile, { mode: 'select.altair_mode' });
+    expect(snapshot.mode?.status).toBe('unavailable');
+  });
+
   it('resolves the new Phase 2 status roles (filter, fault, frost protection) when configured', () => {
     const zehnderProfile = resolveCapabilities('zehnder-comfoair-q');
     const snapshot = resolveSnapshot(zehnderHass, zehnderProfile, {
