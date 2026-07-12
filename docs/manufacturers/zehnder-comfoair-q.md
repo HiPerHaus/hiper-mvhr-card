@@ -6,7 +6,11 @@ Capability profile ID: `zehnder-comfoair-q`
 
 Q350, Q450, and Q600 are treated as one capability profile because they're assumed to share the same control platform and differ mainly in airflow capacity. This is **not yet confirmed** — see `docs/architecture.md` §13. If any model in this family supports a role the others don't (e.g. a sensor only available on Q600), split it into its own profile or add a per-model override to `RoleSupport` before implementation, and update `SPECIFICATION.md` §3 accordingly.
 
-## TBD (needs verification before implementation)
+## Implemented (Phase 2)
+
+`bypass_state`, `filter_remaining`, `fault_active`, and `frost_protection_active` are declared supported and render in the system status section when configured. As with Altair, this means the role exists in the card, not that the TBD facts below are confirmed.
+
+## TBD (needs verification)
 
 - Summer bypass: assumed supported across all three models — confirm and note whether it's automatic-only or has a manual override
 - Frost protection method

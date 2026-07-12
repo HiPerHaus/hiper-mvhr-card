@@ -15,7 +15,13 @@
         --primary-text-color: #1c1c1c;
         --secondary-text-color: #6f6f6f;
         --divider-color: rgba(0, 0, 0, 0.12);
+        --primary-color: #03a9f4;
         --error-color: #b00020;
+        --warning-color: #ff9800;
+        --success-color: #43a047;
+        --ha-card-background: #fff;
+        --ha-card-border-radius: 12px;
+        --ha-card-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
       }
       body {
         font-family: 'Segoe UI', sans-serif;
@@ -35,17 +41,14 @@
         font-size: 0.9em;
         color: #444;
       }
+      /* To check the narrow-mobile layout, shrink this window or a
+         scenario's width below ~360px — the card's own CSS (not this
+         harness) handles the responsive reflow via a media query. */
       ha-card {
         display: block;
-        background: white;
-        border-radius: 12px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
-        padding-top: 12px;
-      }
-      ha-card [slot='header'],
-      ha-card .card-header {
-        font-weight: 600;
-        padding: 0 16px 8px;
+        background: var(--ha-card-background);
+        border-radius: var(--ha-card-border-radius);
+        box-shadow: var(--ha-card-box-shadow);
       }
     </style>
   </head>

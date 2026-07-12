@@ -5,7 +5,10 @@ import type { CapabilityProfile } from '../types/capability';
 // docs/architecture.md §13 for the assumption this rests on.
 export const zehnderComfoAirQProfile: CapabilityProfile = {
   id: 'zehnder-comfoair-q',
-  name: 'ComfoAir Q',
+  // Self-contained display name (shown alone in the card header, Phase 2) —
+  // includes the brand so it reads correctly without needing `vendor`
+  // concatenated alongside it.
+  name: 'Zehnder ComfoAir Q',
   vendor: 'Zehnder',
   models: ['Q350', 'Q450', 'Q600'],
   supportedRoles: {
@@ -17,5 +20,8 @@ export const zehnderComfoAirQProfile: CapabilityProfile = {
     supply_airflow: {},
     extract_airflow: {},
     bypass_state: {},
+    filter_remaining: {},
+    fault_active: {},
+    frost_protection_active: {},
   },
 };

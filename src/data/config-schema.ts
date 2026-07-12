@@ -1,6 +1,6 @@
 import { MANUFACTURER_IDS, type ManufacturerId } from '../types/manufacturer';
 import { ENTITY_ROLES, type EntityRoleId } from '../types/entity-roles';
-import type { HiperMvhrCardConfig, ViewMode } from '../types/config';
+import type { HiperMvhrCardConfig, DisplayMode } from '../types/config';
 
 export class ConfigValidationError extends Error {
   constructor(message: string) {
@@ -9,8 +9,8 @@ export class ConfigValidationError extends Error {
   }
 }
 
-const DEFAULT_VIEW: ViewMode = 'homeowner';
-const VIEW_MODES: ViewMode[] = ['homeowner', 'installer', 'commissioning'];
+const DEFAULT_DISPLAY_MODE: DisplayMode = 'homeowner';
+const DISPLAY_MODES: DisplayMode[] = ['homeowner', 'detailed'];
 
 function isEntityRole(value: string): value is EntityRoleId {
   return (ENTITY_ROLES as readonly string[]).includes(value);
@@ -40,10 +40,10 @@ export function parseConfig(input: unknown): HiperMvhrCardConfig {
   }
   const manufacturer = config.manufacturer as ManufacturerId;
 
-  const view = (config.view ?? DEFAULT_VIEW) as ViewMode;
-  if (!VIEW_MODES.includes(view)) {
+  const displayMode = (config.display_mode ?? DEFAULT_DISPLAY_MODE) as DisplayMode;
+  if (!DISPLAY_MODES.includes(displayMode)) {
     throw new ConfigValidationError(
-      `hiper-mvhr-card: invalid "view" value "${String(config.view)}". Expected one of: ${VIEW_MODES.join(', ')}`,
+      `hiper-mvhr-card: invalid "display_mode" value "${String(config.display_mode)}". Expected one of: ${DISPLAY_MODES.join(', ')}`,
     );
   }
 
@@ -86,7 +86,7 @@ export function parseConfig(input: unknown): HiperMvhrCardConfig {
     type: 'custom:hiper-mvhr-card',
     name: config.name as string | undefined,
     manufacturer,
-    view,
+    display_mode: displayMode,
     entities,
     feature_flags: featureFlags,
   };

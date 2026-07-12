@@ -24,7 +24,7 @@ docs/
 examples/
   altair-160/             example Lovelace YAML + notes
   zehnder-q/              covers Q350 / Q450 / Q600 (shared control platform)
-  aerfresh/                covers 300 / 450 (shared Vent-Axia control platform)
+  aerofresh/              covers 300 / 450 (shared Vent-Axia control platform)
   generic/                 NEW — DIY / ESPHome / template-sensor example
 src/
   types/                  CapabilityProfile, EntityRole, MvhrSnapshot, CardConfig
@@ -48,7 +48,7 @@ Changes from the initial scaffold, and why:
 - **`src/data/`** is new. Entity resolution and capability resolution are core domain logic — they decide what the card believes about the world. Bundling that into `src/utils/` (intended for generic, stateless helpers like `formatTemperature()`) would blur the one boundary this project most depends on: domain logic stays out of both the UI layer and the "just helpers" layer.
 - **`src/editor/`** is new. The Lovelace config editor implements a different custom-element contract (`setConfig`/`configChanged` on a `hui-*-card-editor` shape) than the display card, and is only loaded when a user is editing their dashboard. Keeping it physically separate makes it obvious it isn't part of the render-critical path and easy to code-split later if bundle size becomes a concern.
 - **`tests/fixtures/`** is new. Every manufacturer profile and every "missing sensor" scenario needs a reusable, realistic mock `hass` state object. Fixtures are the thing a new contributor copies when adding a manufacturer, so they need a first-class home rather than being inlined in test files.
-- **Manufacturer files are consolidated by control platform, not by SKU.** Zehnder Q350/Q450/Q600 and Aerofresh 300/450 are treated as one capability profile each (`zehnder-comfoair-q.ts`, `aerfresh.ts`), with the specific model handled as metadata/capacity, not a duplicated file. This is an assumption, not a confirmed fact — see §15.
+- **Manufacturer files are consolidated by control platform, not by SKU.** Zehnder Q350/Q450/Q600 and Aerofresh 300/450 are treated as one capability profile each (`zehnder-comfoair-q.ts`, `vent-axia-sentinel-econiq.ts`), with the specific model handled as metadata/capacity, not a duplicated file. This is an assumption, not a confirmed fact — see §15.
 
 ## 3. The core simplification: Home Assistant already abstracts the transport
 
@@ -76,7 +76,7 @@ A **capability profile** declares, for one manufacturer/control-platform family,
 
 ```ts
 interface CapabilityProfile {
-  id: string;                 // 'altair', 'zehnder-comfoair-q', 'aerfresh', 'generic'
+  id: string;                 // 'altair', 'zehnder-comfoair-q', 'vent_axia_sentinel_econiq' (Aerofresh brand, see docs/manufacturers/aerofresh.md), 'generic'
   name: string;
   vendor: string;
   models?: string[];          // e.g. ['Q350', 'Q450', 'Q600'] — capacity metadata only
@@ -100,7 +100,7 @@ The user's Lovelace card config selects a manufacturer profile and maps roles to
 ```yaml
 type: custom:hiper-mvhr-card
 manufacturer: zehnder-comfoair-q
-view: installer
+display_mode: detailed
 entities:
   supply_air_temp: sensor.mvhr_supply_temp
   extract_air_temp: sensor.mvhr_extract_temp
@@ -127,38 +127,40 @@ Capability profiles cover the common case; real installations vary. `featureFlag
 ## 9. Component hierarchy
 
 ```
-hiper-mvhr-card                 (root custom element)
+hiper-mvhr-card                 (root custom element, src/components/hiper-mvhr-card.ts)
 ├─ config parsing/validation     (src/data/config-schema.ts)
 ├─ capability resolution         (src/data/capability-resolver.ts)
 ├─ entity resolution             (src/data/entity-resolver.ts)
-└─ view renderer                 (src/components/views/*)
-     ├─ homeowner view
-     ├─ installer view
-     └─ commissioning view
-          └─ shared atoms: status-badge, gauge, mode-selector,
-                           filter-indicator, bypass-indicator, fault-banner
-                           (src/components/atoms/*)
-hiper-mvhr-card-editor           (src/editor — separate custom element, Lovelace config UI)
+├─ availability summary          (src/data/availability-summary.ts)
+└─ presentation policy + render  (private methods on the same component)
+     ├─ header (name, manufacturer/model, mode, availability)
+     ├─ temperature grid section
+     ├─ airflow section
+     └─ system status section
+hiper-mvhr-card-editor           (src/editor — separate custom element, Lovelace config UI, not built yet)
 ```
 
-Views are kept as separate top-level components (rather than one generic role-driven table renderer) because homeowners, installers, and commissioning engineers genuinely want different *layouts*, not just different row counts — a gauge-based summary for homeowners vs. a dense diagnostic table for commissioning engineers. All three consume the same `MvhrSnapshot` + `CapabilityProfile` and the same shared atoms, so the duplication is layout only, not logic.
+**Revised in Phase 2** from the original plan below: this shipped as one component with a presentation-policy function (`_present(value, detailed)`) driven by `display_mode`, not three separate view components. Reasoning: `homeowner` and `detailed` turned out to differ only in *which* roles show and *how much detail* accompanies them (not-configured rows, missing-entity warnings) — not in fundamentally different layouts. A single component with a policy function is less code to keep in sync and the difference is easy to see in one place. This may need revisiting again once `commissioning` is designed (Phase 4) if it turns out to need a genuinely different layout rather than "more detail still" — see the open question this replaces in §13.
+
+Original Phase 0/1 plan, kept for context: separate `homeowner`/`installer`/`commissioning` view components under `src/components/views/*` sharing atoms under `src/components/atoms/*`, on the theory that each audience wants a different layout (e.g. a gauge-based summary vs. a dense diagnostic table), not just a different row count. That may still turn out to be true for commissioning specifically; it wasn't true for homeowner vs. detailed.
 
 ## 10. Graceful degradation rules
 
 For every role a view considers showing:
 
-1. Not in `supportedRoles` for the active profile → don't render it at all (not even "not configured").
-2. In `supportedRoles` but not mapped in config → render the role's "not configured" affordance (audience-appropriate: hidden card section for homeowner view, greyed row for installer/commissioning views).
-3. Mapped but the entity's state is `unavailable`/`unknown` → render "unavailable," never a stale or blank value.
-4. Mapped and available → render the value.
+1. Not in `supportedRoles` for the active profile → don't render it at all (not even "not configured"), in any display mode.
+2. In `supportedRoles` but not mapped in config → `homeowner` omits it entirely; `detailed` renders a muted "not configured" affordance.
+3. Mapped to an entity id Home Assistant has no record of (**added in Phase 2**, previously conflated with state 4) → `homeowner` shows a quiet "Unavailable"; `detailed` shows an explicit warning naming the missing entity id — a config mistake is more actionable than a runtime hiccup, so it's surfaced more prominently where the audience can act on it.
+4. Mapped to a real entity whose state is `unavailable`/`unknown` → render "Unavailable" in both modes, never a stale or blank value.
+5. Mapped and available → render the value, including a legitimate numeric zero (only the literal states `unavailable`/`unknown` count as unavailable).
 
-No component should be able to throw because a sensor is missing; this is enforced by making "missing" a snapshot status rather than `undefined`.
+No component should be able to throw because a sensor is missing or misconfigured; this is enforced by making both "missing" and "misconfigured" snapshot statuses rather than `undefined`.
 
 ## 11. Testing strategy
 
 - **Unit tests** (Vitest) for the parts with real logic and no DOM: config schema validation, capability resolution, entity resolution (especially the degradation matrix in §10), and role-registry integrity (e.g. every role referenced by a profile actually exists in the registry).
 - **Fixtures**: one realistic mock `hass` object per manufacturer plus deliberately incomplete variants (missing bypass entity, unavailable filter sensor, etc.) in `tests/fixtures/`, reused across unit and component tests so scenarios aren't redefined per test file.
-- **Component tests**: Lit component rendering against fixtures, verifying the three-state degradation behavior actually shows up in markup, not just in resolver output.
+- **Component tests**: Lit component rendering against fixtures, verifying the degradation behavior (five states as of Phase 2 — see §10) actually shows up in markup, not just in resolver output.
 - No test depends on a live Home Assistant instance.
 
 ## 12. Release strategy
@@ -175,4 +177,4 @@ These are decisions made to keep the foundation moving, not settled facts:
 - **Zehnder Q350/Q450/Q600 sharing one profile, Aerofresh 300/450 sharing one profile.** Assumed because they share a control platform per the brief. If any specific model actually exposes/lacks a capability the others don't (e.g. only Q600 has a CO₂ sensor option), that model needs to either become its own profile or the profile needs a per-model capability override — flag this the moment it's known.
 - **Bundler choice.** `package.json` (below) picks Vite for the build, since it needs the least configuration for a single-file custom-element bundle. Rollup is the more common choice in older HA custom card examples; happy to switch before any code is written if there's a preference.
 - **License.** `LICENSE` is scaffolded as MIT (typical for HACS community cards) pending confirmation.
-- **View-per-audience vs. single role-driven renderer** (§9). Three components trade some duplication for layout freedom. If a table/list-first layout turns out to be acceptable for all three audiences, this could collapse to one renderer with per-view column/section config — worth revisiting once real screens exist.
+- **View-per-audience vs. single role-driven renderer** (§9) — **resolved for homeowner/detailed in Phase 2**: one component with a presentation-policy function, not separate view components; the two modes differ in role visibility and detail level, not layout. **Still open for `commissioning`** (Phase 4): if raw entity/register inspection needs a genuinely different layout (e.g. a table rather than grid/list), it may warrant splitting out as its own component after all — decide once that phase's real screens exist, the same way this question got answered for Phase 2.

@@ -42,5 +42,20 @@ export const altairHass: HomeAssistant = {
       state: '150',
       attributes: { unit_of_measurement: 'm³/h' },
     },
+    'sensor.altair_filter_remaining': {
+      entity_id: 'sensor.altair_filter_remaining',
+      state: '65',
+      attributes: { unit_of_measurement: '%' },
+    },
+    'binary_sensor.altair_fault': {
+      entity_id: 'binary_sensor.altair_fault',
+      state: 'off',
+      attributes: {},
+    },
+    'binary_sensor.altair_frost_protection': {
+      entity_id: 'binary_sensor.altair_frost_protection',
+      state: 'off',
+      attributes: {},
+    },
   },
 };

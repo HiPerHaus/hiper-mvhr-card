@@ -2,7 +2,8 @@ import { describe, it, expect } from 'vitest';
 import { resolveSnapshot } from '../../src/data/entity-resolver';
 import { resolveCapabilities } from '../../src/data/capability-resolver';
 import { altairHass } from '../fixtures/hass-altair-160';
-import { aerfreshHass } from '../fixtures/hass-aerfresh';
+import { aerofreshHass } from '../fixtures/hass-aerofresh';
+import { zehnderHass } from '../fixtures/hass-zehnder-comfoair-q';
 import type { HomeAssistant } from '../../src/types/hass';
 
 describe('resolveSnapshot', () => {
@@ -20,22 +21,30 @@ describe('resolveSnapshot', () => {
     expect(snapshot.supply_air_temp?.status).toBe('not_configured');
   });
 
-  it('marks a mapped entity that is unavailable as unavailable, not a crash', () => {
-    const aerfreshProfile = resolveCapabilities('aerfresh');
-    const snapshot = resolveSnapshot(aerfreshHass, aerfreshProfile, {
+  it('marks a mapped entity whose state is "unavailable" as unavailable (entity exists)', () => {
+    const aerofreshProfile = resolveCapabilities('vent_axia_sentinel_econiq');
+    const snapshot = resolveSnapshot(aerofreshHass, aerofreshProfile, {
       extract_air_temp: 'sensor.aerofresh_extract_temp',
     });
-    expect(snapshot.extract_air_temp?.status).toBe('unavailable');
+    expect(snapshot.extract_air_temp).toMatchObject({ status: 'unavailable' });
+    // Distinct from entity_missing: the entity genuinely exists in hass.states.
+    expect(aerofreshHass.states['sensor.aerofresh_extract_temp']).toBeDefined();
   });
 
-  it('marks a mapped entity that does not exist at all as unavailable, not a throw', () => {
-    expect(() =>
-      resolveSnapshot(altairHass, altairProfile, { supply_air_temp: 'sensor.does_not_exist' }),
-    ).not.toThrow();
+  it('marks a mapped entity that Home Assistant has no record of as entity_missing, not unavailable', () => {
     const snapshot = resolveSnapshot(altairHass, altairProfile, {
       supply_air_temp: 'sensor.does_not_exist',
     });
-    expect(snapshot.supply_air_temp?.status).toBe('unavailable');
+    expect(snapshot.supply_air_temp).toMatchObject({
+      status: 'entity_missing',
+      entityId: 'sensor.does_not_exist',
+    });
+  });
+
+  it('never throws for a missing entity — it is a normal state, not an error', () => {
+    expect(() =>
+      resolveSnapshot(altairHass, altairProfile, { supply_air_temp: 'sensor.does_not_exist' }),
+    ).not.toThrow();
   });
 
   it('resolves a mapped, available entity to its value and unit', () => {
@@ -50,17 +59,42 @@ describe('resolveSnapshot', () => {
     });
   });
 
+  it('resolves a valid zero reading as "ok" with numericValue 0, never as unavailable', () => {
+    const zehnderProfile = resolveCapabilities('zehnder-comfoair-q');
+    const snapshot = resolveSnapshot(zehnderHass, zehnderProfile, {
+      filter_remaining: 'sensor.comfoair_filter_remaining',
+    });
+    expect(snapshot.filter_remaining).toMatchObject({
+      status: 'ok',
+      value: '0',
+      numericValue: 0,
+      unit: '%',
+    });
+  });
+
   it('leaves numericValue undefined for a non-numeric state', () => {
     const snapshot = resolveSnapshot(altairHass, altairProfile, { mode: 'select.altair_mode' });
     expect(snapshot.mode).toMatchObject({ status: 'ok', value: 'normal' });
     expect(snapshot.mode && 'numericValue' in snapshot.mode ? snapshot.mode.numericValue : undefined).toBeUndefined();
   });
 
-  it('treats an empty states object as every mapped role being unavailable', () => {
+  it('treats an empty states object as every mapped role being entity_missing', () => {
     const emptyHass: HomeAssistant = { states: {} };
     const snapshot = resolveSnapshot(emptyHass, altairProfile, {
       supply_air_temp: 'sensor.altair_supply_temp',
     });
-    expect(snapshot.supply_air_temp?.status).toBe('unavailable');
+    expect(snapshot.supply_air_temp?.status).toBe('entity_missing');
+  });
+
+  it('resolves the new Phase 2 status roles (filter, fault, frost protection) when configured', () => {
+    const zehnderProfile = resolveCapabilities('zehnder-comfoair-q');
+    const snapshot = resolveSnapshot(zehnderHass, zehnderProfile, {
+      filter_remaining: 'sensor.comfoair_filter_remaining',
+      fault_active: 'binary_sensor.comfoair_fault',
+      frost_protection_active: 'binary_sensor.comfoair_frost_protection',
+    });
+    expect(snapshot.filter_remaining?.status).toBe('ok');
+    expect(snapshot.fault_active).toMatchObject({ status: 'ok', value: 'off' });
+    expect(snapshot.frost_protection_active).toMatchObject({ status: 'ok', value: 'on' });
   });
 });

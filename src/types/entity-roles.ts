@@ -13,6 +13,12 @@ export const ENTITY_ROLES = [
   'supply_airflow',
   'extract_airflow',
   'bypass_state',
+  // Added in Phase 2 for the system status section (ROADMAP.md Phase 2) —
+  // all three already existed in the full SPECIFICATION.md §2 table, this
+  // just promotes them into the implemented subset.
+  'filter_remaining',
+  'fault_active',
+  'frost_protection_active',
 ] as const;
 
 export type EntityRoleId = (typeof ENTITY_ROLES)[number];

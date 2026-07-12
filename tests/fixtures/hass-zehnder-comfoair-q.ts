@@ -43,5 +43,22 @@ export const zehnderHass: HomeAssistant = {
       state: 'on',
       attributes: { device_class: 'opening' },
     },
+    // Deliberately "0" (not "unavailable") — the filter needs replacing
+    // right now, which is a real, valid reading, not a missing one.
+    'sensor.comfoair_filter_remaining': {
+      entity_id: 'sensor.comfoair_filter_remaining',
+      state: '0',
+      attributes: { unit_of_measurement: '%' },
+    },
+    'binary_sensor.comfoair_fault': {
+      entity_id: 'binary_sensor.comfoair_fault',
+      state: 'off',
+      attributes: {},
+    },
+    'binary_sensor.comfoair_frost_protection': {
+      entity_id: 'binary_sensor.comfoair_frost_protection',
+      state: 'on',
+      attributes: {},
+    },
   },
 };
