@@ -9,6 +9,7 @@ For MVHR systems with no dedicated profile: DIY installs, ESPHome-based monitori
 ## Behavior
 
 - No role is assumed supported; the user opts in to each role their setup actually exposes.
+- As of Phase 2, the roles that actually do something when flagged on are: `mode`, `outdoor_air_temp`, `supply_air_temp`, `extract_air_temp`, `exhaust_air_temp`, `supply_airflow`, `extract_airflow`, `bypass_state`, `filter_remaining`, `fault_active`, `frost_protection_active`. Flagging on anything else (e.g. `co2_level`) is accepted but currently a no-op until that role is implemented.
 - Because there is no fixed "this manufacturer has/doesn't have X" fact to rely on, the generic profile is also the reference implementation for how `feature_flags` override profile defaults (`docs/architecture.md` §7) — every other profile's flags follow the same mechanism, just with different starting defaults.
 - Operating modes are user-declared (no fixed enum), since a template-sensor or ESPHome setup can expose whatever mode set the installer defined.
 

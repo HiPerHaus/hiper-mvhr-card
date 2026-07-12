@@ -29,7 +29,7 @@ This file is the short, operational version of `docs/architecture.md` and `SPECI
 
 ## Every role must survive being unmapped or unavailable
 
-Any UI code touching a role must handle all three non-value states from `SPECIFICATION.md` §6 (unsupported / not configured / unavailable) — this is enforced by review, not by the type system, so check it explicitly before approving a PR that renders a new role.
+Any UI code touching a role must handle all four non-value states from `SPECIFICATION.md` §6 (unsupported / not configured / entity missing / unavailable) — this is enforced by review, not by the type system, so check it explicitly before approving a PR that renders a new role.
 
 ## Before opening a PR
 
@@ -40,4 +40,4 @@ Any UI code touching a role must handle all three non-value states from `SPECIFI
 
 ## Current phase
 
-The project is in the foundation phase (see `ROADMAP.md`, Phase 0/1) — architecture and specification exist, but no `src/` implementation has been written yet. Do not add card implementation code without checking `ROADMAP.md` first; there is a deliberate decision not to write UI code until the entity/capability model in `docs/architecture.md` has been reviewed and confirmed.
+Phase 0 (foundation) and Phase 1 (core data layer + vertical slice) are complete and on `main`. Phase 2 (this card's homeowner/detailed layout) is in progress on `feature/phase-2-card-layout` — see `ROADMAP.md`. Check `ROADMAP.md` before starting new work; it tracks what's actually done vs. planned.

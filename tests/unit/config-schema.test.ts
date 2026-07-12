@@ -5,7 +5,7 @@ describe('parseConfig', () => {
   it('parses a minimal valid config and fills in sensible defaults', () => {
     const result = parseConfig({ manufacturer: 'generic' });
     expect(result.manufacturer).toBe('generic');
-    expect(result.view).toBe('homeowner');
+    expect(result.display_mode).toBe('homeowner');
     expect(result.entities).toEqual({});
     expect(result.feature_flags).toEqual({});
     expect(result.type).toBe('custom:hiper-mvhr-card');
@@ -24,14 +24,19 @@ describe('parseConfig', () => {
     expect(() => parseConfig({ manufacturer: 'not-a-real-brand' })).toThrow(/unknown manufacturer/i);
   });
 
-  it('throws for an invalid view value', () => {
-    expect(() => parseConfig({ manufacturer: 'generic', view: 'expert' })).toThrow(ConfigValidationError);
+  it('throws for an invalid display_mode value', () => {
+    expect(() => parseConfig({ manufacturer: 'generic', display_mode: 'expert' })).toThrow(
+      ConfigValidationError,
+    );
   });
 
-  it('accepts all three documented view values', () => {
-    for (const view of ['homeowner', 'installer', 'commissioning']) {
-      expect(() => parseConfig({ manufacturer: 'generic', view })).not.toThrow();
+  it('accepts both display_mode values implemented this phase (commissioning is not one of them yet)', () => {
+    for (const display_mode of ['homeowner', 'detailed']) {
+      expect(() => parseConfig({ manufacturer: 'generic', display_mode })).not.toThrow();
     }
+    expect(() => parseConfig({ manufacturer: 'generic', display_mode: 'commissioning' })).toThrow(
+      ConfigValidationError,
+    );
   });
 
   it('keeps only known entity roles, silently ignoring unrecognised ones', () => {

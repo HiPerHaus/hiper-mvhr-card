@@ -2,7 +2,7 @@
 
 A universal [Home Assistant](https://www.home-assistant.io/) Lovelace card for Mechanical Ventilation with Heat Recovery (MVHR) systems — one dashboard, any manufacturer, any integration path.
 
-> **Status: pre-alpha.** The architecture and specification are in place; the card itself has not been built yet. See [Roadmap](ROADMAP.md).
+> **Status: pre-alpha.** Foundation and core data layer are complete. The card now renders a real homeowner/detailed layout (Phase 2, in review) — interactive controls, a visual config editor, and commissioning diagnostics are still to come. See [Roadmap](ROADMAP.md).
 
 ## Why
 
@@ -16,18 +16,30 @@ It doesn't matter whether your system exposes entities via a native Home Assista
 |---|---|---|
 | Altair | 160 | no summer bypass — not shown for this model |
 | Zehnder | ComfoAir Q350 / Q450 / Q600 | |
-| Aerofresh (Vent-Axia) | 300 / 450 | |
+| Aerofresh | 300 / 450 | |
 | Generic | any | manually configure supported features |
 
 See [`SPECIFICATION.md`](SPECIFICATION.md) for the full capability matrix, and [`docs/manufacturers/`](docs/manufacturers/) for per-manufacturer detail.
 
-## Audiences
+## Display modes
 
-The card ships three views over the same data:
+The card shows the same data two ways today, chosen with `display_mode` in your config:
 
-- **Homeowner** — simple, attractive, plain-language status.
-- **Installer** — airflow, full temperatures, balancing, bypass control, fault codes.
-- **Commissioning** — full diagnostics and raw entity inspection.
+- **Homeowner** — clean and minimal; unconfigured optional roles are omitted entirely; no raw entity IDs.
+- **Detailed** — adds "not configured" indicators and explicit warnings when a mapped entity doesn't exist in Home Assistant, so an installer can see exactly what's left to wire up.
+
+A **Commissioning** mode (raw entity/register inspection) is planned but not built yet.
+
+## What it looks like
+
+No screenshots yet — this is still pre-release and the design is actively changing. The fastest way to see it is the local preview:
+
+```bash
+npm install
+npm run dev
+```
+
+This opens `dev/preview.html`, which renders the card against several realistic mock Home Assistant states (one per supported manufacturer, plus an invalid-config example) without needing a real Home Assistant instance.
 
 ## Installation
 
@@ -38,7 +50,7 @@ Not yet published. Once released, this will be installable via [HACS](https://ha
 ```yaml
 type: custom:hiper-mvhr-card
 manufacturer: zehnder-comfoair-q
-view: installer
+display_mode: detailed
 entities:
   supply_air_temp: sensor.mvhr_supply_temp
   extract_air_temp: sensor.mvhr_extract_temp

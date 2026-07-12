@@ -13,6 +13,9 @@ export const altairProfile: CapabilityProfile = {
     exhaust_air_temp: {},
     supply_airflow: {},
     extract_airflow: {},
+    filter_remaining: {},
+    fault_active: {},
+    frost_protection_active: {},
     // bypass_state is intentionally absent — see unsupportedRoles below.
   },
   // Confirmed product fact, not a "not configured yet" default: the Altair

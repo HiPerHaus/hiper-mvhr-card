@@ -7,11 +7,16 @@ const UNAVAILABLE_STATES = new Set(['unavailable', 'unknown']);
 
 /**
  * Resolves configured entity IDs into a vendor-neutral snapshot, one entry
- * per role, in exactly one of four states (SPECIFICATION.md §6):
- *   1. unsupported    — profile doesn't declare this role
+ * per role, in exactly one of five states (SPECIFICATION.md §6):
+ *   1. unsupported     — profile doesn't declare this role
  *   2. not_configured  — profile supports it, config doesn't map an entity
- *   3. unavailable      — entity mapped, but missing or unavailable/unknown
- *   4. ok                — entity mapped and has a real value
+ *   3. entity_missing  — mapped, but Home Assistant has no such entity
+ *                        (a configuration problem — typo, renamed entity)
+ *   4. unavailable     — mapped, entity exists, but its state is
+ *                        unavailable/unknown (a runtime problem, not config)
+ *   5. ok              — entity mapped and has a real value (including a
+ *                        legitimate numeric zero — only the literal states
+ *                        "unavailable"/"unknown" count as unavailable)
  *
  * This function never throws on missing or unavailable entities — that's a
  * normal state, not an error. No manufacturer checks happen here; only
@@ -37,7 +42,11 @@ export function resolveSnapshot(
     }
 
     const entity = hass.states[entityId];
-    if (!entity || UNAVAILABLE_STATES.has(entity.state)) {
+    if (!entity) {
+      snapshot[role] = { status: 'entity_missing', entityId };
+      continue;
+    }
+    if (UNAVAILABLE_STATES.has(entity.state)) {
       snapshot[role] = { status: 'unavailable' };
       continue;
     }

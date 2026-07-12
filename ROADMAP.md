@@ -1,35 +1,44 @@
 # Roadmap
 
-## Phase 0 — Foundation (this session)
+## Phase 0 — Foundation ✅ complete (on `main`)
 
 - [x] Repository structure reviewed and finalized (`docs/architecture.md` §2)
 - [x] Architecture documented: entity role model, capability model, data flow, testing/release strategy
 - [x] Specification documented: config schema, entity role table, capability matrix, view definitions
 - [x] Contributor-facing docs: README, CONTRIBUTING, CLAUDE.md, CHANGELOG
 - [x] Tooling scaffolded: TypeScript, ESLint, Prettier, Vitest, GitHub Actions, HACS metadata
-- [ ] Open questions in `docs/architecture.md` §13 resolved (bundler choice, license, manufacturer model consolidation, license)
+- [x] Open questions in `docs/architecture.md` §13 resolved for launch: Vite as bundler, MIT license, manufacturer-family consolidation kept
 
-No card source code is written in this phase, deliberately.
+## Phase 1 — Core data layer ✅ complete (on `main`)
 
-## Phase 1 — Core data layer
+- [x] Entity role registry (`src/types/entity-roles.ts`) — Phase 1 subset
+- [x] `CapabilityProfile` / `MvhrSnapshot` / `CardConfig` types
+- [x] Config schema validation (`src/data/config-schema.ts`)
+- [x] Capability resolver + entity resolver, with full test coverage of the degradation matrix (`SPECIFICATION.md` §6)
+- [x] Manufacturer profiles: `altair`, `zehnder-comfoair-q`, `aerfresh`, `generic`
+- [x] Test fixtures for each profile, including deliberately incomplete variants
+- [x] Minimal working custom-element registration + smallest complete vertical slice
 
-- Entity role registry (`src/types/entity-roles.ts`)
-- `CapabilityProfile` / `MvhrSnapshot` / `CardConfig` types
-- Config schema validation (`src/data/config-schema.ts`)
-- Capability resolver + entity resolver, with full test coverage of the degradation matrix (`SPECIFICATION.md` §6)
-- Manufacturer profiles: `altair`, `zehnder-comfoair-q`, `aerfresh`, `generic` — capability facts confirmed against real documentation before implementation, not assumed
-- Test fixtures for each profile, including deliberately incomplete variants
+## Phase 2 — Card layout (homeowner + detailed) — in progress (`feature/phase-2-card-layout`)
 
-## Phase 2 — Homeowner view
+- [x] Header: card name, manufacturer/model, operating mode, overall availability indicator
+- [x] Temperature section as a responsive grid (outdoor/supply/extract/exhaust), each with icon + label + value + unit
+- [x] Airflow section (supply/extract), shown only when configured and supported
+- [x] System status section: summer bypass, filter, fault, frost protection — three new roles added (`filter_remaining`, `fault_active`, `frost_protection_active`)
+- [x] Five-state rendering: unsupported / not configured / entity missing / unavailable / value — `entity_missing` split out from `unavailable` this phase
+- [x] `display_mode: homeowner | detailed` (renamed from Phase 1's `view`)
+- [x] Aerofresh rebranded: profile id `vent_axia_sentinel_econiq` (was `aerfresh`), display name always "Aerofresh"
+- [x] HA native theming via CSS custom properties only, no hardcoded palette
+- [x] Responsive down to narrow mobile widths, no fixed height
+- [x] Accessibility: heading hierarchy, `role="status"` on the availability chip, tone always paired with text/icon, aria-labeled sections
+- [ ] Awaiting review before merge to `main`
 
-- Shared UI atoms (status badge, gauge, mode selector, filter indicator, bypass indicator, fault banner)
-- Homeowner view implemented against the resolvers from Phase 1
-- Manual verification against all four launch profiles, including Altair (bypass must not appear)
+## Phase 3 — Interactive controls
 
-## Phase 3 — Installer view
+Phase 2 covers display only (homeowner + detailed layouts, both read-only). What's left before the card can act on the system, not just show it:
 
-- Airflow, full temperature set, bypass control, fault codes
-- Manual entity actions (mode change, bypass override, filter reset) with optimistic UI + reconciliation
+- Manual entity actions: mode change, bypass override, filter reset — with optimistic UI + reconciliation on the next `hass` update
+- Keyboard-operable, labeled controls (`SPECIFICATION.md` §7)
 
 ## Phase 4 — Commissioning view
 
