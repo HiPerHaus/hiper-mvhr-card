@@ -13,5 +13,14 @@ export const genericHass: HomeAssistant = {
       state: '19.0',
       attributes: { unit_of_measurement: '°C' },
     },
+    // A HA `button` entity's state is a timestamp of its last press, or
+    // "unknown" if it's never been pressed — the value itself is never
+    // rendered (see hiper-mvhr-card.ts's control row), only used to
+    // determine the entity exists and is available.
+    'button.mvhr_filter_reset': {
+      entity_id: 'button.mvhr_filter_reset',
+      state: 'unknown',
+      attributes: {},
+    },
   },
 };

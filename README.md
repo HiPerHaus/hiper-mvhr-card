@@ -2,7 +2,7 @@
 
 A universal [Home Assistant](https://www.home-assistant.io/) Lovelace card for Mechanical Ventilation with Heat Recovery (MVHR) systems — one dashboard, any manufacturer, any integration path.
 
-> **Status: pre-alpha.** Foundation and core data layer are complete. The card now renders a real homeowner/detailed layout (Phase 2, in review) — interactive controls, a visual config editor, and commissioning diagnostics are still to come. See [Roadmap](ROADMAP.md).
+> **Status: pre-alpha.** Foundation, core data layer, and the homeowner/detailed layout are complete. The card can now trigger its first interactive control, a filter reset (Phase 3A) — a mode selector, bypass override, a visual config editor, and commissioning diagnostics are still to come. See [Roadmap](ROADMAP.md).
 
 ## Why
 

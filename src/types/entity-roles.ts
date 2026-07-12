@@ -19,6 +19,16 @@ export const ENTITY_ROLES = [
   'filter_remaining',
   'fault_active',
   'frost_protection_active',
+  // Added in Phase 3A (ROADMAP.md) — the first interactive/action role. A
+  // fire-and-forget "press" action with no value to read back (see
+  // src/data/control-dispatcher.ts), unlike every role above. Only the
+  // `generic` profile declares it supported today (opt-in via
+  // feature_flags): filter resettability is still TBD for Altair, Zehnder,
+  // and Aerofresh per their docs/manufacturers/*.md — see SPECIFICATION.md §3.
+  // `mode_control` and `bypass_control` are specified in SPECIFICATION.md §2
+  // but deliberately NOT added here yet — Phase 3B/3C, once mode/bypass
+  // optimistic-value reconciliation exists to support them meaningfully.
+  'filter_reset_control',
 ] as const;
 
 export type EntityRoleId = (typeof ENTITY_ROLES)[number];

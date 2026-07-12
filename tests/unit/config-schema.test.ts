@@ -68,4 +68,19 @@ describe('parseConfig', () => {
     expect(() => parseConfig({ manufacturer: 'generic', entities: [] })).toThrow(ConfigValidationError);
     expect(() => parseConfig({ manufacturer: 'generic', feature_flags: [] })).toThrow(ConfigValidationError);
   });
+
+  it('rejects a non-boolean feature flag value instead of coercing it', () => {
+    // Boolean("false") === true in JS — a naive `Boolean(enabled)` coercion
+    // would silently enable the flag on exactly the typo a YAML author is
+    // most likely to make. Must throw, not coerce.
+    expect(() =>
+      parseConfig({ manufacturer: 'generic', feature_flags: { supply_air_temp: 'false' } }),
+    ).toThrow(ConfigValidationError);
+    expect(() =>
+      parseConfig({ manufacturer: 'generic', feature_flags: { supply_air_temp: 1 } }),
+    ).toThrow(ConfigValidationError);
+    expect(() =>
+      parseConfig({ manufacturer: 'generic', feature_flags: { supply_air_temp: null } }),
+    ).toThrow(ConfigValidationError);
+  });
 });

@@ -48,7 +48,7 @@ Roles are grouped by category. `views` lists which audience views show the role 
 
 This table is the initial set, not a closed one — new roles are additive (see architecture §4) and don't require a schema version bump for `MvhrSnapshot`/`CapabilityProfile`, only a role-registry entry.
 
-**Implemented so far** (`src/types/entity-roles.ts`): `mode`, `outdoor_air_temp`, `supply_air_temp`, `extract_air_temp`, `exhaust_air_temp`, `supply_airflow`, `extract_airflow`, `bypass_state` (Phase 1), plus `filter_remaining`, `fault_active`, `frost_protection_active` (Phase 2). Everything else in the table above (`mode_control`, `heat_recovery_efficiency`, `bypass_control`, `filter_alarm`, `filter_reset_control`, `fault_code`, `fault_description`, `boost_remaining`, `indoor_humidity`, `co2_level`, `commissioning_diagnostics`) is specified but not yet implemented.
+**Implemented so far** (`src/types/entity-roles.ts`): `mode`, `outdoor_air_temp`, `supply_air_temp`, `extract_air_temp`, `exhaust_air_temp`, `supply_airflow`, `extract_airflow`, `bypass_state` (Phase 1), `filter_remaining`, `fault_active`, `frost_protection_active` (Phase 2), plus `filter_reset_control` (Phase 3A — the first interactive/action role). Everything else in the table above (`mode_control`, `heat_recovery_efficiency`, `bypass_control`, `filter_alarm`, `fault_code`, `fault_description`, `boost_remaining`, `indoor_humidity`, `co2_level`, `commissioning_diagnostics`) is specified but not yet implemented; `mode_control` and `bypass_control` are Phase 3B/3C respectively (`ROADMAP.md`).
 
 ## 3. Capability matrix (launch set)
 
@@ -58,13 +58,14 @@ This table is the initial set, not a closed one — new roles are additive (see 
 | Manual bypass override | N/A | TBD | TBD | feature-flaggable |
 | Frost protection | Role implemented, assumed supported (TBD method) | Role implemented, assumed supported (TBD method) | Role implemented, assumed supported (TBD method) | Off by default |
 | Filter monitoring | Role implemented, assumed supported, unit TBD | Role implemented, assumed supported, unit TBD | Role implemented, assumed supported, unit TBD | Off by default |
+| Filter reset (manual) | TBD (resettable?) — not declared supported | TBD (resettable?) — not declared supported | TBD (resettable?) — not declared supported | Role implemented (Phase 3A), feature-flaggable |
 | Fault indication | Role implemented, assumed supported | Role implemented, assumed supported | Role implemented, assumed supported | Off by default |
 | Boost timer | Not implemented | Not implemented | Not implemented | Not implemented |
 | Humidity sensor | Not implemented | Not implemented | Not implemented | Not implemented |
 | CO₂ sensor | Not implemented | Not implemented | Not implemented | Not implemented |
 | Commissioning diagnostics | Not implemented (ROADMAP.md Phase 4) | Not implemented | Not implemented | Not implemented |
 
-"Role implemented" means the entity role exists in `src/types/entity-roles.ts` and the profile declares it supported (Phase 2); it does not mean the real-world facts behind it (exact method, unit, register) have been verified — those are still TBD per the notes above until confirmed against real hardware documentation.
+"Role implemented" means the entity role exists in `src/types/entity-roles.ts` and the profile declares it supported (Phase 2 for read-only roles, Phase 3A onward for action roles); it does not mean the real-world facts behind it (exact method, unit, register, resettability) have been verified — those are still TBD per the notes above until confirmed against real hardware documentation.
 
 The only capability confirmed against real product knowledge at time of writing is Altair's lack of bypass. Everything else marked "assumed" should be corrected in the relevant `docs/manufacturers/*.md` file as soon as it's verified, and the capability profile updated to match — this table and the profile source file must never disagree.
 
@@ -111,11 +112,13 @@ Every role rendered is in exactly one of five states, per `docs/architecture.md`
 
 A card must never throw, log an unhandled error, or silently render nothing where state 2, 3, or 4 applies.
 
+**Action roles** (Phase 3A: `filter_reset_control`; Phase 3B/3C: `mode_control`, `bypass_control`) go through the same five states 1–4 identically — an unconfigured or missing control degrades exactly like a sensor. Only state 5 differs: instead of rendering the entity's raw value (meaningless for a `button` entity — its state is a last-pressed timestamp), the card renders an interactive control. See `docs/architecture.md` §8 step 6 and `src/data/control-dispatcher.ts`.
+
 ## 7. Non-functional requirements
 
 - **Theming**: must respect Home Assistant's light/dark theme CSS variables; no hardcoded colors outside status semantics (ok/warning/error).
 - **Responsiveness**: usable from a phone-width dashboard panel up to a desktop panel.
 - **Performance**: re-render only on changes to entities the active config actually maps; no polling.
-- **Accessibility**: sensible heading hierarchy (card title, then one heading per section); status text must never rely on color alone (an icon or word always accompanies a tone); the availability indicator uses `role="status"`; interactive controls (mode selector, bypass toggle, filter reset — none exist yet, see `ROADMAP.md` Phase 3) must be keyboard operable and labeled once added.
+- **Accessibility**: sensible heading hierarchy (card title, then one heading per section); status text must never rely on color alone (an icon or word always accompanies a tone); the availability indicator uses `role="status"`; interactive controls must be keyboard operable and labeled. `filter_reset_control` (Phase 3A) is the first: a native `<button>`, labeled via `aria-label`, natively keyboard-operable. Mode selector and bypass toggle are Phase 3B/3C, see `ROADMAP.md`.
 - **Resilience**: see §6 — degrade, never fail.
 - **No manufacturer conditionals in `src/components/**`** — enforced by code review, not tooling, for now; may become an ESLint rule later if violations recur.

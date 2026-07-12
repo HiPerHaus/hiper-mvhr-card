@@ -6,6 +6,25 @@ import type { MvhrSnapshot } from '../types/snapshot';
 const UNAVAILABLE_STATES = new Set(['unavailable', 'unknown']);
 
 /**
+ * Home Assistant's `button` and `input_button` platforms are stateless
+ * action entities: their `state` is a timestamp of the last press, or the
+ * literal string "unknown" before they've ever been pressed — "unknown" is
+ * their normal idle state, not a sign of trouble, unlike every sensor/binary
+ * domain where "unknown" means "no meaningful value right now." This is a
+ * documented fact about these two HA platforms generically (see
+ * home-assistant.io/integrations/button, /input_button), not a
+ * manufacturer-specific exception — the same domain convention
+ * src/data/control-dispatcher.ts already relies on for its `press` service
+ * call, so it's consistent to rely on it here too.
+ */
+const STATELESS_ACTION_DOMAINS = new Set(['button', 'input_button']);
+
+function domainOf(entityId: string): string {
+  const [domain] = entityId.split('.');
+  return domain ?? '';
+}
+
+/**
  * Resolves configured entity IDs into a vendor-neutral snapshot, one entry
  * per role, in exactly one of five states (SPECIFICATION.md §6):
  *   1. unsupported     — profile doesn't declare this role
@@ -14,13 +33,16 @@ const UNAVAILABLE_STATES = new Set(['unavailable', 'unknown']);
  *                        (a configuration problem — typo, renamed entity)
  *   4. unavailable     — mapped, entity exists, but its state is
  *                        unavailable/unknown (a runtime problem, not config)
+ *                        — except "unknown" on a button/input_button entity,
+ *                        which is that domain's normal never-pressed state
  *   5. ok              — entity mapped and has a real value (including a
  *                        legitimate numeric zero — only the literal states
  *                        "unavailable"/"unknown" count as unavailable)
  *
  * This function never throws on missing or unavailable entities — that's a
  * normal state, not an error. No manufacturer checks happen here; only
- * `profile.supportedRoles` is consulted.
+ * `profile.supportedRoles` and the entity id's HA-platform domain are
+ * consulted.
  */
 export function resolveSnapshot(
   hass: HomeAssistant,
@@ -46,7 +68,9 @@ export function resolveSnapshot(
       snapshot[role] = { status: 'entity_missing', entityId };
       continue;
     }
-    if (UNAVAILABLE_STATES.has(entity.state)) {
+    const isNeverPressedAction =
+      entity.state === 'unknown' && STATELESS_ACTION_DOMAINS.has(domainOf(entityId));
+    if (UNAVAILABLE_STATES.has(entity.state) && !isNeverPressedAction) {
       snapshot[role] = { status: 'unavailable' };
       continue;
     }

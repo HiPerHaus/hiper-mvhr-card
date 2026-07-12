@@ -8,6 +8,7 @@ import { parseConfig } from '../data/config-schema';
 import { resolveCapabilities } from '../data/capability-resolver';
 import { resolveSnapshot } from '../data/entity-resolver';
 import { summarizeAvailability, type AvailabilitySummary } from '../data/availability-summary';
+import { ControlDispatcher } from '../data/control-dispatcher';
 import { getProfile } from '../manufacturers';
 import { formatRoleValue, capitalize } from '../utils/format';
 import { getRoleIcon } from '../utils/icons';
@@ -33,6 +34,11 @@ const STATUS_ROLES: Array<[EntityRoleId, string]> = [
   ['frost_protection_active', 'Frost protection'],
 ];
 
+// Phase 3A: the one action role implemented so far. Kept out of
+// STATUS_ROLES/`_present` because it renders as an interactive control, not
+// read-only text, when its snapshot status is 'ok' — see `_controlRow`.
+const CONTROL_ROLES: Array<[EntityRoleId, string]> = [['filter_reset_control', 'Filter reset']];
+
 const TONE_ICONS: Record<AvailabilitySummary['tone'], string> = {
   success: 'mdi:check-circle',
   warning: 'mdi:alert',
@@ -56,6 +62,22 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
 
   @state() private _config?: HiperMvhrCardConfig;
   @state() private _configError?: string;
+
+  // One ControlDispatcher per active action role, created lazily and kept
+  // alive across renders (not a @state field — its pending/error state is
+  // read on demand in render(), and `onChange` explicitly requests an
+  // update, so Lit's own reactivity doesn't need to know about this map).
+  private readonly _dispatchers = new Map<EntityRoleId, ControlDispatcher>();
+
+  private _getDispatcher(role: EntityRoleId): ControlDispatcher {
+    let dispatcher = this._dispatchers.get(role);
+    if (!dispatcher) {
+      dispatcher = new ControlDispatcher();
+      dispatcher.onChange(() => this.requestUpdate());
+      this._dispatchers.set(role, dispatcher);
+    }
+    return dispatcher;
+  }
 
   static getStubConfig(): Partial<HiperMvhrCardConfig> {
     return {
@@ -131,7 +153,7 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
         <div class="content">
           ${this._metricSection('Temperatures', TEMPERATURE_ROLES, snapshot, detailed)}
           ${this._metricSection('Airflow', AIRFLOW_ROLES, snapshot, detailed)}
-          ${this._statusSection('System status', STATUS_ROLES, snapshot, detailed)}
+          ${this._statusSection('System status', STATUS_ROLES, snapshot, detailed, config, hass)}
         </div>
       </ha-card>
     `;
@@ -211,8 +233,10 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     roles: Array<[EntityRoleId, string]>,
     snapshot: Partial<Record<EntityRoleId, RoleValue>>,
     detailed: boolean,
+    config: HiperMvhrCardConfig,
+    hass: HomeAssistant,
   ): TemplateResult {
-    const rows = roles
+    const valueRows = roles
       .map(([role, label]) => {
         const value = snapshot[role];
         const presentation = value ? this._present(value, detailed) : null;
@@ -220,6 +244,11 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       })
       .filter((row): row is TemplateResult => row !== null);
 
+    const controlRows = CONTROL_ROLES.map(([role, label]) =>
+      this._controlRow(role, label, snapshot[role], detailed, config, hass),
+    ).filter((row): row is TemplateResult => row !== null);
+
+    const rows = [...valueRows, ...controlRows];
     if (rows.length === 0) {
       return html``;
     }
@@ -239,6 +268,62 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
         ${icon ? html`<ha-icon icon=${icon} aria-hidden="true"></ha-icon>` : ''}
         <span class="status-label">${label}</span>
         <span class="status-value">${presentation.text}</span>
+      </div>
+    `;
+  }
+
+  /**
+   * Renders one action role. The non-value states (unsupported/not
+   * configured/entity missing/unavailable) reuse `_present`/`_statusRow`
+   * verbatim, so a control degrades identically to every read-only role
+   * (SPECIFICATION.md §6) — only the 'ok' state diverges, showing an
+   * interactive button instead of formatted text, since a button entity's
+   * raw state (a last-pressed timestamp) isn't meaningful to show.
+   */
+  private _controlRow(
+    role: EntityRoleId,
+    label: string,
+    value: RoleValue | undefined,
+    detailed: boolean,
+    config: HiperMvhrCardConfig,
+    hass: HomeAssistant,
+  ): TemplateResult | null {
+    if (!value) {
+      return null;
+    }
+    if (value.status !== 'ok') {
+      const presentation = this._present(value, detailed);
+      return presentation ? this._statusRow(role, label, presentation) : null;
+    }
+
+    const entityId = config.entities[role];
+    if (!entityId) {
+      // Can't happen in practice — entity-resolver only produces 'ok' when
+      // an entity id was mapped — but keeps this method total rather than
+      // asserting non-null.
+      return null;
+    }
+
+    const dispatcher = this._getDispatcher(role);
+    const state = dispatcher.state;
+    const icon = getRoleIcon(role);
+
+    return html`
+      <div class="status-row">
+        ${icon ? html`<ha-icon icon=${icon} aria-hidden="true"></ha-icon>` : ''}
+        <span class="status-label">${label}</span>
+        ${state.status === 'error'
+          ? html`<span class="status-value tone-warning">Couldn't reset</span>`
+          : ''}
+        <button
+          type="button"
+          class="control-button"
+          aria-label=${label}
+          ?disabled=${state.status === 'pending'}
+          @click=${() => dispatcher.dispatchAction(hass, entityId)}
+        >
+          ${state.status === 'pending' ? 'Resetting…' : 'Reset'}
+        </button>
       </div>
     `;
   }
@@ -372,6 +457,34 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     }
     .status-row.tone-warning .status-value {
       color: var(--warning-color);
+    }
+    /* Used only by an action row's own error state (e.g. filter reset
+       failed) — the row itself carries no overall tone, unlike the
+       value-role rows above, so this is scoped to the value span directly. */
+    .status-value.tone-warning {
+      color: var(--warning-color);
+      font-size: 0.85em;
+    }
+
+    .control-button {
+      font: inherit;
+      font-size: 0.85em;
+      color: var(--primary-color);
+      background: none;
+      border: 1px solid var(--primary-color);
+      border-radius: 4px;
+      padding: 4px 10px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .control-button:disabled {
+      color: var(--secondary-text-color);
+      border-color: var(--divider-color);
+      cursor: default;
+    }
+    .control-button:focus-visible {
+      outline: 2px solid var(--primary-color);
+      outline-offset: 2px;
     }
 
     .error {

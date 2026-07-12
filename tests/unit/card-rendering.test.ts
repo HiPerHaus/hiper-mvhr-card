@@ -1,8 +1,10 @@
-import { describe, it, expect, afterEach } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { HiperMvhrCard } from '../../src/components/hiper-mvhr-card';
 import { altairHass } from '../fixtures/hass-altair-160';
 import { zehnderHass } from '../fixtures/hass-zehnder-comfoair-q';
 import { aerofreshHass } from '../fixtures/hass-aerofresh';
+import { genericHass } from '../fixtures/hass-generic';
+import type { HomeAssistant } from '../../src/types/hass';
 
 function mount(): HiperMvhrCard {
   const el = document.createElement('hiper-mvhr-card') as HiperMvhrCard;
@@ -304,6 +306,168 @@ describe('hiper-mvhr-card', () => {
     it('never sets a fixed height on the card host', () => {
       const cssText = HiperMvhrCard.styles.cssText;
       expect(cssText).not.toMatch(/height:\s*\d/);
+    });
+  });
+
+  /**
+   * Phase 3A: the first interactive control. filter_reset_control is a
+   * fire-and-forget action (no target value, no reconciliation — see
+   * src/data/control-dispatcher.ts) and is only enabled today via the
+   * generic profile's feature flags — Altair/Zehnder/Aerofresh don't declare
+   * it supported by default because filter resettability is still TBD for
+   * all three (docs/manufacturers/*.md). Mode selector and bypass override
+   * controls are Phase 3B/3C and not tested here because they don't exist yet.
+   */
+  describe('filter reset control (Phase 3A)', () => {
+    function hassWithCallService(impl: (...args: unknown[]) => Promise<unknown>): HomeAssistant {
+      return {
+        ...genericHass,
+        callService: impl as HomeAssistant['callService'],
+      };
+    }
+
+    it('renders a labeled, native button when supported, configured, and available', async () => {
+      const el = mount();
+      set(el, {
+        manufacturer: 'generic',
+        display_mode: 'homeowner',
+        feature_flags: { filter_reset_control: true },
+        entities: { filter_reset_control: 'button.mvhr_filter_reset' },
+      });
+      el.hass = hassWithCallService(vi.fn().mockResolvedValue(undefined));
+      await el.updateComplete;
+
+      const button = el.shadowRoot?.querySelector('button');
+      expect(button).toBeTruthy();
+      expect(button?.getAttribute('type')).toBe('button');
+      expect(button?.getAttribute('aria-label')?.toLowerCase()).toContain('filter');
+      expect(button?.disabled).toBe(false);
+    });
+
+    it('calls hass.callService with the service derived from the entity id domain on click', async () => {
+      const callService = vi.fn().mockResolvedValue(undefined);
+      const el = mount();
+      set(el, {
+        manufacturer: 'generic',
+        display_mode: 'homeowner',
+        feature_flags: { filter_reset_control: true },
+        entities: { filter_reset_control: 'button.mvhr_filter_reset' },
+      });
+      el.hass = hassWithCallService(callService);
+      await el.updateComplete;
+
+      el.shadowRoot?.querySelector('button')?.click();
+      await el.updateComplete;
+
+      expect(callService).toHaveBeenCalledWith('button', 'press', {
+        entity_id: 'button.mvhr_filter_reset',
+      });
+    });
+
+    it('disables the button and shows a pending state while the call is in flight', async () => {
+      let resolveCall!: () => void;
+      const callService = vi.fn(() => new Promise<void>((resolve) => (resolveCall = resolve)));
+      const el = mount();
+      set(el, {
+        manufacturer: 'generic',
+        display_mode: 'homeowner',
+        feature_flags: { filter_reset_control: true },
+        entities: { filter_reset_control: 'button.mvhr_filter_reset' },
+      });
+      el.hass = hassWithCallService(callService);
+      await el.updateComplete;
+
+      el.shadowRoot?.querySelector('button')?.click();
+      await el.updateComplete;
+
+      const button = el.shadowRoot?.querySelector('button');
+      expect(button?.disabled).toBe(true);
+
+      resolveCall();
+      await new Promise((r) => setTimeout(r, 0));
+      await el.updateComplete;
+
+      expect(el.shadowRoot?.querySelector('button')?.disabled).toBe(false);
+    });
+
+    it('homeowner mode omits the control entirely when not configured', async () => {
+      const el = mount();
+      set(el, {
+        manufacturer: 'generic',
+        display_mode: 'homeowner',
+        feature_flags: { filter_reset_control: true },
+        entities: {},
+      });
+      el.hass = genericHass;
+      await el.updateComplete;
+
+      expect(el.shadowRoot?.querySelector('button')).toBeNull();
+      expect(el.shadowRoot?.textContent ?? '').not.toMatch(/not configured/i);
+    });
+
+    it('detailed mode shows a muted "Not configured" row instead of a button when not configured', async () => {
+      const el = mount();
+      set(el, {
+        manufacturer: 'generic',
+        display_mode: 'detailed',
+        feature_flags: { filter_reset_control: true },
+        entities: {},
+      });
+      el.hass = genericHass;
+      await el.updateComplete;
+
+      expect(el.shadowRoot?.querySelector('button')).toBeNull();
+      expect(el.shadowRoot?.textContent ?? '').toMatch(/not configured/i);
+    });
+
+    it('homeowner mode shows a quiet "Unavailable" (no entity id, no button) for a missing entity', async () => {
+      const el = mount();
+      set(el, {
+        manufacturer: 'generic',
+        display_mode: 'homeowner',
+        feature_flags: { filter_reset_control: true },
+        entities: { filter_reset_control: 'button.does_not_exist' },
+      });
+      el.hass = genericHass;
+      await el.updateComplete;
+
+      const text = el.shadowRoot?.textContent ?? '';
+      expect(el.shadowRoot?.querySelector('button')).toBeNull();
+      expect(text).toMatch(/unavailable/i);
+      expect(text).not.toContain('button.does_not_exist');
+    });
+
+    it('detailed mode names the missing entity instead of showing a button', async () => {
+      const el = mount();
+      set(el, {
+        manufacturer: 'generic',
+        display_mode: 'detailed',
+        feature_flags: { filter_reset_control: true },
+        entities: { filter_reset_control: 'button.does_not_exist' },
+      });
+      el.hass = genericHass;
+      await el.updateComplete;
+
+      const text = el.shadowRoot?.textContent ?? '';
+      expect(el.shadowRoot?.querySelector('button')).toBeNull();
+      expect(text).toContain('button.does_not_exist');
+      expect(text.toLowerCase()).toContain('not found');
+    });
+
+    it('is never rendered for a profile that has not declared it supported, in any display mode', async () => {
+      for (const display_mode of ['homeowner', 'detailed'] as const) {
+        const el = mount();
+        set(el, {
+          manufacturer: 'altair',
+          display_mode,
+          entities: { filter_reset_control: 'button.mvhr_filter_reset' },
+        });
+        el.hass = altairHass;
+        await el.updateComplete;
+
+        expect(el.shadowRoot?.querySelector('button')).toBeNull();
+        el.remove();
+      }
     });
   });
 });

@@ -18,6 +18,7 @@ const ROLE_ICONS: Partial<Record<EntityRoleId, string>> = {
   filter_remaining: 'mdi:air-filter',
   fault_active: 'mdi:alert-circle',
   frost_protection_active: 'mdi:snowflake-alert',
+  filter_reset_control: 'mdi:restart',
 };
 
 export function getRoleIcon(role: EntityRoleId): string | undefined {
