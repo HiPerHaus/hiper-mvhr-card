@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>HiPer MVHR Card — dev preview</title>
+    <style>
+      /*
+        No real Home Assistant frontend is present here, so ha-card and the
+        --*-color CSS variables it normally relies on don't exist. This
+        stylesheet fakes just enough of both so the card is legible during
+        local development. Real theming is verified inside an actual HA
+        instance, not here.
+      */
+      :root {
+        --primary-text-color: #1c1c1c;
+        --secondary-text-color: #6f6f6f;
+        --divider-color: rgba(0, 0, 0, 0.12);
+        --error-color: #b00020;
+      }
+      body {
+        font-family: 'Segoe UI', sans-serif;
+        background: #f2f2f2;
+        margin: 0;
+        padding: 24px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 24px;
+        align-items: flex-start;
+      }
+      .scenario {
+        width: 320px;
+      }
+      .scenario h3 {
+        margin: 0 0 8px;
+        font-size: 0.9em;
+        color: #444;
+      }
+      ha-card {
+        display: block;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+        padding-top: 12px;
+      }
+      ha-card [slot='header'],
+      ha-card .card-header {
+        font-weight: 600;
+        padding: 0 16px 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="./preview.ts"></script>
+  </body>
+</html>

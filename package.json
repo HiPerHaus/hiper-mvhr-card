@@ -1,0 +1,37 @@
+{
+  "name": "hiper-mvhr-card",
+  "version": "0.0.0",
+  "description": "Universal Home Assistant Lovelace card for MVHR systems",
+  "license": "MIT",
+  "type": "module",
+  "main": "dist/hiper-mvhr-card.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "eslint \"src/**/*.ts\" \"tests/**/*.ts\" \"dev/**/*.ts\"",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "lit": "^3.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@typescript-eslint/eslint-plugin": "^8.63.0",
+    "@typescript-eslint/parser": "^8.63.0",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "happy-dom": "^20.0.0",
+    "prettier": "^3.2.0",
+    "typescript": "^5.4.0",
+    "vite": "^6.2.0",
+    "vitest": "^4.1.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
