@@ -1,6 +1,6 @@
 import { MANUFACTURER_IDS, type ManufacturerId } from '../types/manufacturer';
 import { ENTITY_ROLES, type EntityRoleId } from '../types/entity-roles';
-import type { HiperMvhrCardConfig, DisplayMode } from '../types/config';
+import type { HiperMvhrCardConfig, DisplayMode, HeatRecoveryMethod } from '../types/config';
 
 export class ConfigValidationError extends Error {
   constructor(message: string) {
@@ -11,10 +11,27 @@ export class ConfigValidationError extends Error {
 
 const DEFAULT_DISPLAY_MODE: DisplayMode = 'homeowner';
 const DISPLAY_MODES: DisplayMode[] = ['homeowner', 'detailed'];
+const HEAT_RECOVERY_METHODS: HeatRecoveryMethod[] = [
+  'automatic',
+  'supply_temperature',
+  'disabled',
+];
 
 function isEntityRole(value: string): value is EntityRoleId {
   return (ENTITY_ROLES as readonly string[]).includes(value);
 }
+
+const ENTITY_ROLE_ALIASES: Record<string, EntityRoleId> = {
+  supply_temperature: 'supply_air_temp',
+  extract_temperature: 'extract_air_temp',
+  outdoor_temperature: 'outdoor_air_temp',
+  exhaust_temperature: 'exhaust_air_temp',
+  filter_days: 'filter_remaining',
+  filter_days_remaining: 'filter_remaining',
+  supply_fan: 'supply_fan_speed',
+  extract_fan: 'extract_fan_speed',
+  last_airflow_calibration: 'last_calibration',
+};
 
 /**
  * Parses and validates a raw Lovelace card config. Throws
@@ -50,6 +67,24 @@ export function parseConfig(input: unknown): HiperMvhrCardConfig {
   if (config.name !== undefined && typeof config.name !== 'string') {
     throw new ConfigValidationError('hiper-mvhr-card: "name" must be a string if provided');
   }
+  if (config.title !== undefined && typeof config.title !== 'string') {
+    throw new ConfigValidationError('hiper-mvhr-card: "title" must be a string if provided');
+  }
+  if (config.subtitle !== undefined && typeof config.subtitle !== 'string') {
+    throw new ConfigValidationError('hiper-mvhr-card: "subtitle" must be a string if provided');
+  }
+
+  const heatRecoveryMethod = (config.heat_recovery_method ?? 'automatic') as HeatRecoveryMethod;
+  if (!HEAT_RECOVERY_METHODS.includes(heatRecoveryMethod)) {
+    throw new ConfigValidationError(
+      `hiper-mvhr-card: invalid "heat_recovery_method" value "${String(config.heat_recovery_method)}". Expected one of: ${HEAT_RECOVERY_METHODS.join(', ')}`,
+    );
+  }
+
+  const filterMaxDays = config.filter_max_days ?? 365;
+  if (typeof filterMaxDays !== 'number' || !Number.isFinite(filterMaxDays) || filterMaxDays <= 0) {
+    throw new ConfigValidationError('hiper-mvhr-card: "filter_max_days" must be a positive number');
+  }
 
   const rawEntities = config.entities ?? {};
   if (typeof rawEntities !== 'object' || Array.isArray(rawEntities) || rawEntities === null) {
@@ -57,7 +92,8 @@ export function parseConfig(input: unknown): HiperMvhrCardConfig {
   }
   const entities: Partial<Record<EntityRoleId, string>> = {};
   for (const [role, entityId] of Object.entries(rawEntities as Record<string, unknown>)) {
-    if (!isEntityRole(role)) {
+    const resolvedRole = ENTITY_ROLE_ALIASES[role] ?? role;
+    if (!isEntityRole(resolvedRole)) {
       console.warn(`hiper-mvhr-card: ignoring unknown entity role "${role}" in config`);
       continue;
     }
@@ -66,7 +102,7 @@ export function parseConfig(input: unknown): HiperMvhrCardConfig {
         `hiper-mvhr-card: entity id for role "${role}" must be a non-empty string`,
       );
     }
-    entities[role] = entityId;
+    entities[resolvedRole] = entityId;
   }
 
   const rawFlags = config.feature_flags ?? {};
@@ -93,9 +129,18 @@ export function parseConfig(input: unknown): HiperMvhrCardConfig {
   return {
     type: 'custom:hiper-mvhr-card',
     name: config.name as string | undefined,
+    title: config.title as string | undefined,
+    subtitle: config.subtitle as string | undefined,
     manufacturer,
     display_mode: displayMode,
     entities,
     feature_flags: featureFlags,
+    show_airflow_on_all_paths: config.show_airflow_on_all_paths === true,
+    show_controls: config.show_controls !== false,
+    show_fan_speeds: config.show_fan_speeds !== false,
+    show_filter: config.show_filter !== false,
+    show_calibration: config.show_calibration !== false,
+    filter_max_days: filterMaxDays,
+    heat_recovery_method: heatRecoveryMethod,
   };
 }

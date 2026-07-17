@@ -7,6 +7,136 @@ import type { HomeAssistant } from '../../src/types/hass';
  */
 export const altairHass: HomeAssistant = {
   states: {
+    'select.altair_mvhr_mode': {
+      entity_id: 'select.altair_mvhr_mode',
+      state: 'medium',
+      attributes: { options: ['away', 'low', 'medium', 'high'] },
+    },
+    'select.altair_mvhr_override_duration': {
+      entity_id: 'select.altair_mvhr_override_duration',
+      state: 'until_next_schedule_change',
+      attributes: { options: ['until_next_schedule_change', '1h', '2h', '4h'] },
+    },
+    'button.altair_mvhr_clear_override': {
+      entity_id: 'button.altair_mvhr_clear_override',
+      state: 'unknown',
+      attributes: {},
+    },
+    'number.altair_mvhr_boost_duration': {
+      entity_id: 'number.altair_mvhr_boost_duration',
+      state: '15',
+      attributes: { unit_of_measurement: 'min' },
+    },
+    'button.altair_mvhr_start_boost': {
+      entity_id: 'button.altair_mvhr_start_boost',
+      state: 'unknown',
+      attributes: {},
+    },
+    'button.altair_mvhr_cancel_boost': {
+      entity_id: 'button.altair_mvhr_cancel_boost',
+      state: 'unknown',
+      attributes: {},
+    },
+    'sensor.altair_mvhr_airflow': {
+      entity_id: 'sensor.altair_mvhr_airflow',
+      state: '95',
+      attributes: { unit_of_measurement: 'm³/h' },
+    },
+    'sensor.altair_mvhr_target_airflow': {
+      entity_id: 'sensor.altair_mvhr_target_airflow',
+      state: '95',
+      attributes: { unit_of_measurement: 'm³/h' },
+    },
+    'sensor.altair_mvhr_effective_mode': {
+      entity_id: 'sensor.altair_mvhr_effective_mode',
+      state: 'medium',
+      attributes: {},
+    },
+    'binary_sensor.altair_mvhr_boost_active': {
+      entity_id: 'binary_sensor.altair_mvhr_boost_active',
+      state: 'off',
+      attributes: {},
+    },
+    'sensor.altair_mvhr_boost_remaining': {
+      entity_id: 'sensor.altair_mvhr_boost_remaining',
+      state: '0',
+      attributes: { unit_of_measurement: 'min' },
+    },
+    'sensor.altair_mvhr_extract_air_temperature': {
+      entity_id: 'sensor.altair_mvhr_extract_air_temperature',
+      state: '21.2',
+      attributes: { unit_of_measurement: '°C' },
+    },
+    'sensor.altair_mvhr_supply_air_temperature': {
+      entity_id: 'sensor.altair_mvhr_supply_air_temperature',
+      state: '19.0',
+      attributes: { unit_of_measurement: '°C' },
+    },
+    'sensor.altair_mvhr_outdoor_air_temperature': {
+      entity_id: 'sensor.altair_mvhr_outdoor_air_temperature',
+      state: '8.1',
+      attributes: { unit_of_measurement: '°C' },
+    },
+    'sensor.altair_mvhr_exhaust_air_temperature': {
+      entity_id: 'sensor.altair_mvhr_exhaust_air_temperature',
+      state: '12.5',
+      attributes: { unit_of_measurement: '°C' },
+    },
+    'sensor.altair_mvhr_indoor_humidity': {
+      entity_id: 'sensor.altair_mvhr_indoor_humidity',
+      state: '56',
+      attributes: { unit_of_measurement: '%' },
+    },
+    'sensor.altair_mvhr_filter_days_remaining': {
+      entity_id: 'sensor.altair_mvhr_filter_days_remaining',
+      state: '353',
+      attributes: { unit_of_measurement: 'd' },
+    },
+    'sensor.altair_mvhr_supply_fan_speed': {
+      entity_id: 'sensor.altair_mvhr_supply_fan_speed',
+      state: '1476',
+      attributes: { unit_of_measurement: 'rpm' },
+    },
+    'sensor.altair_mvhr_extract_fan_speed': {
+      entity_id: 'sensor.altair_mvhr_extract_fan_speed',
+      state: '1500',
+      attributes: { unit_of_measurement: 'rpm' },
+    },
+    'sensor.altair_mvhr_airflow_calibration_result': {
+      entity_id: 'sensor.altair_mvhr_airflow_calibration_result',
+      state: 'calibrated',
+      attributes: {},
+    },
+    'sensor.altair_mvhr_airflow_calibration_status': {
+      entity_id: 'sensor.altair_mvhr_airflow_calibration_status',
+      state: 'idle',
+      attributes: {},
+    },
+    'sensor.altair_mvhr_airflow_calibration_progress': {
+      entity_id: 'sensor.altair_mvhr_airflow_calibration_progress',
+      state: '100',
+      attributes: { unit_of_measurement: '%' },
+    },
+    'sensor.altair_mvhr_last_airflow_calibration': {
+      entity_id: 'sensor.altair_mvhr_last_airflow_calibration',
+      state: '2026-07-16 08:30',
+      attributes: {},
+    },
+    'sensor.altair_mvhr_mapped_airflow_level': {
+      entity_id: 'sensor.altair_mvhr_mapped_airflow_level',
+      state: '4',
+      attributes: {},
+    },
+    'number.altair_mvhr_manual_airflow_level': {
+      entity_id: 'number.altair_mvhr_manual_airflow_level',
+      state: '4',
+      attributes: {},
+    },
+    'switch.altair_mvhr_manual_speed_control': {
+      entity_id: 'switch.altair_mvhr_manual_speed_control',
+      state: 'off',
+      attributes: {},
+    },
     'select.altair_mode': {
       entity_id: 'select.altair_mode',
       state: 'normal',

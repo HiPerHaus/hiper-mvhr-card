@@ -9,6 +9,13 @@ describe('parseConfig', () => {
     expect(result.entities).toEqual({});
     expect(result.feature_flags).toEqual({});
     expect(result.type).toBe('custom:hiper-mvhr-card');
+    expect(result.show_airflow_on_all_paths).toBe(false);
+    expect(result.show_controls).toBe(true);
+    expect(result.show_fan_speeds).toBe(true);
+    expect(result.show_filter).toBe(true);
+    expect(result.show_calibration).toBe(true);
+    expect(result.filter_max_days).toBe(365);
+    expect(result.heat_recovery_method).toBe('automatic');
   });
 
   it('rejects a non-object config', () => {
@@ -47,6 +54,29 @@ describe('parseConfig', () => {
     expect(result.entities).toEqual({ supply_air_temp: 'sensor.a' });
   });
 
+  it('accepts Altair-friendly entity aliases without breaking canonical role names', () => {
+    const result = parseConfig({
+      manufacturer: 'altair',
+      entities: {
+        supply_temperature: 'sensor.altair_mvhr_supply_air_temperature',
+        extract_temperature: 'sensor.altair_mvhr_extract_air_temperature',
+        outdoor_temperature: 'sensor.altair_mvhr_outdoor_air_temperature',
+        exhaust_temperature: 'sensor.altair_mvhr_exhaust_air_temperature',
+        filter_days: 'sensor.altair_mvhr_filter_days_remaining',
+        last_airflow_calibration: 'sensor.altair_mvhr_last_airflow_calibration',
+      },
+    });
+
+    expect(result.entities).toMatchObject({
+      supply_air_temp: 'sensor.altair_mvhr_supply_air_temperature',
+      extract_air_temp: 'sensor.altair_mvhr_extract_air_temperature',
+      outdoor_air_temp: 'sensor.altair_mvhr_outdoor_air_temperature',
+      exhaust_air_temp: 'sensor.altair_mvhr_exhaust_air_temperature',
+      filter_remaining: 'sensor.altair_mvhr_filter_days_remaining',
+      last_calibration: 'sensor.altair_mvhr_last_airflow_calibration',
+    });
+  });
+
   it('throws when an entity id is not a non-empty string', () => {
     expect(() => parseConfig({ manufacturer: 'generic', entities: { supply_air_temp: '' } })).toThrow(
       ConfigValidationError,
@@ -82,5 +112,31 @@ describe('parseConfig', () => {
     expect(() =>
       parseConfig({ manufacturer: 'generic', feature_flags: { supply_air_temp: null } }),
     ).toThrow(ConfigValidationError);
+  });
+
+  it('validates new dashboard options', () => {
+    const result = parseConfig({
+      manufacturer: 'altair',
+      show_airflow_on_all_paths: true,
+      show_controls: false,
+      show_fan_speeds: false,
+      show_filter: false,
+      show_calibration: false,
+      filter_max_days: 180,
+      heat_recovery_method: 'disabled',
+    });
+
+    expect(result.show_airflow_on_all_paths).toBe(true);
+    expect(result.show_controls).toBe(false);
+    expect(result.show_fan_speeds).toBe(false);
+    expect(result.show_filter).toBe(false);
+    expect(result.show_calibration).toBe(false);
+    expect(result.filter_max_days).toBe(180);
+    expect(result.heat_recovery_method).toBe('disabled');
+
+    expect(() => parseConfig({ manufacturer: 'altair', filter_max_days: 0 })).toThrow(ConfigValidationError);
+    expect(() => parseConfig({ manufacturer: 'altair', heat_recovery_method: 'magic' })).toThrow(
+      ConfigValidationError,
+    );
   });
 });

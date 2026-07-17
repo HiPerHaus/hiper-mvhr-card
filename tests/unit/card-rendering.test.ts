@@ -31,6 +31,7 @@ describe('hiper-mvhr-card', () => {
 
   it('registers the custom element, and the registration guard is doing real work', () => {
     expect(customElements.get('hiper-mvhr-card')).toBeDefined();
+    expect(HiperMvhrCard.getConfigElement().tagName.toLowerCase()).toBe('hiper-mvhr-card-editor');
 
     // This is what would happen on a Vite dev-server hot reload without the
     // `if (!customElements.get(...))` guard in hiper-mvhr-card.ts — the
@@ -122,6 +123,113 @@ describe('hiper-mvhr-card', () => {
         expect((el.shadowRoot?.textContent ?? '').toLowerCase()).not.toContain('bypass');
         el.remove();
       }
+    });
+  });
+
+  describe('Altair dashboard concept', () => {
+    const altairDashboardEntities = {
+      mode: 'select.altair_mvhr_mode',
+      effective_mode: 'sensor.altair_mvhr_effective_mode',
+      airflow: 'sensor.altair_mvhr_airflow',
+      target_airflow: 'sensor.altair_mvhr_target_airflow',
+      mapped_level: 'sensor.altair_mvhr_mapped_airflow_level',
+      supply_temperature: 'sensor.altair_mvhr_supply_air_temperature',
+      extract_temperature: 'sensor.altair_mvhr_extract_air_temperature',
+      outdoor_temperature: 'sensor.altair_mvhr_outdoor_air_temperature',
+      exhaust_temperature: 'sensor.altair_mvhr_exhaust_air_temperature',
+      supply_fan_speed: 'sensor.altair_mvhr_supply_fan_speed',
+      extract_fan_speed: 'sensor.altair_mvhr_extract_fan_speed',
+      indoor_humidity: 'sensor.altair_mvhr_indoor_humidity',
+      filter_days: 'sensor.altair_mvhr_filter_days_remaining',
+      boost_active: 'binary_sensor.altair_mvhr_boost_active',
+      boost_remaining: 'sensor.altair_mvhr_boost_remaining',
+      boost_duration: 'number.altair_mvhr_boost_duration',
+      start_boost: 'button.altair_mvhr_start_boost',
+      cancel_boost: 'button.altair_mvhr_cancel_boost',
+      override_duration: 'select.altair_mvhr_override_duration',
+      clear_override: 'button.altair_mvhr_clear_override',
+      calibration_result: 'sensor.altair_mvhr_airflow_calibration_result',
+      calibration_status: 'sensor.altair_mvhr_airflow_calibration_status',
+      last_calibration: 'sensor.altair_mvhr_last_airflow_calibration',
+    };
+
+    function mountAltairDashboard(callService = vi.fn().mockResolvedValue(undefined)): HiperMvhrCard {
+      const el = mount();
+      set(el, {
+        type: 'custom:hiper-mvhr-card',
+        title: 'Altair MVHR',
+        manufacturer: 'altair',
+        display_mode: 'detailed',
+        entities: altairDashboardEntities,
+      });
+      el.hass = { ...altairHass, callService };
+      return el;
+    }
+
+    it('renders four airflow paths, the real Altair values, and Home instead of medium', async () => {
+      const el = mountAltairDashboard();
+      await el.updateComplete;
+
+      const text = el.shadowRoot?.textContent ?? '';
+      expect(el.shadowRoot?.querySelectorAll('.air-path')).toHaveLength(4);
+      expect(text).toContain('Extract air');
+      expect(text).toContain('Exhaust air');
+      expect(text).toContain('Outdoor air');
+      expect(text).toContain('Supply air');
+      expect(text).toContain('95 m³/h');
+      expect(text).toContain('Mapped level');
+      expect(text).toContain('4');
+      expect(text).toContain('83%');
+      expect(text).toContain('1476 rpm');
+      expect(text).toContain('1500 rpm');
+      expect(text).toContain('56 %');
+      expect(text).toContain('353 days');
+      expect(text).toContain('Home');
+      expect(text).not.toContain('medium');
+      expect(text.toLowerCase()).not.toContain('bypass');
+    });
+
+    it('sends the internal medium option when the visible Home mode button is pressed', async () => {
+      const callService = vi.fn().mockResolvedValue(undefined);
+      const el = mountAltairDashboard(callService);
+      await el.updateComplete;
+
+      const homeButton = Array.from(el.shadowRoot?.querySelectorAll('button') ?? []).find(
+        (button) => button.textContent?.trim() === 'Home',
+      );
+      homeButton?.click();
+
+      expect(callService).toHaveBeenCalledWith('select', 'select_option', {
+        entity_id: 'select.altair_mvhr_mode',
+        option: 'medium',
+      });
+    });
+
+    it('calls the documented Home Assistant services for boost and override controls', async () => {
+      const callService = vi.fn().mockResolvedValue(undefined);
+      const el = mountAltairDashboard(callService);
+      await el.updateComplete;
+
+      (el.shadowRoot?.querySelector('input[aria-label="Boost duration"]') as HTMLInputElement).value = '30';
+      el.shadowRoot?.querySelector('input[aria-label="Boost duration"]')?.dispatchEvent(new Event('change'));
+      (el.shadowRoot?.querySelector('button[aria-label="Start Boost"]') as HTMLButtonElement).click();
+      el.shadowRoot?.querySelector('select[aria-label="Override duration"]')?.dispatchEvent(new Event('change'));
+      (el.shadowRoot?.querySelector('button[aria-label="Clear override"]') as HTMLButtonElement).click();
+
+      expect(callService).toHaveBeenCalledWith('number', 'set_value', {
+        entity_id: 'number.altair_mvhr_boost_duration',
+        value: 30,
+      });
+      expect(callService).toHaveBeenCalledWith('button', 'press', {
+        entity_id: 'button.altair_mvhr_start_boost',
+      });
+      expect(callService).toHaveBeenCalledWith('select', 'select_option', {
+        entity_id: 'select.altair_mvhr_override_duration',
+        option: 'until_next_schedule_change',
+      });
+      expect(callService).toHaveBeenCalledWith('button', 'press', {
+        entity_id: 'button.altair_mvhr_clear_override',
+      });
     });
   });
 
@@ -305,7 +413,8 @@ describe('hiper-mvhr-card', () => {
 
     it('never sets a fixed height on the card host', () => {
       const cssText = HiperMvhrCard.styles.cssText;
-      expect(cssText).not.toMatch(/height:\s*\d/);
+      const hostBlock = cssText.match(/:host\s*{[^}]*}/)?.[0] ?? '';
+      expect(hostBlock).not.toMatch(/height:\s*\d/);
     });
   });
 

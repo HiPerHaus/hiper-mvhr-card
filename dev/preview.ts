@@ -5,48 +5,121 @@ import { altairHass } from '../tests/fixtures/hass-altair-160';
 import { zehnderHass } from '../tests/fixtures/hass-zehnder-comfoair-q';
 import { aerofreshHass } from '../tests/fixtures/hass-aerofresh';
 import { genericHass } from '../tests/fixtures/hass-generic';
+import type { HomeAssistant } from '../src/types/hass';
 
 // Note: this preview has no real `<ha-icon>` element (that's supplied by
 // Home Assistant's frontend at runtime), so icons render as empty in this
 // harness — everything else (layout, tones, text) is representative.
 
+const altairEntities = {
+  mode: 'select.altair_mvhr_mode',
+  effective_mode: 'sensor.altair_mvhr_effective_mode',
+  airflow: 'sensor.altair_mvhr_airflow',
+  target_airflow: 'sensor.altair_mvhr_target_airflow',
+  mapped_level: 'sensor.altair_mvhr_mapped_airflow_level',
+  supply_temperature: 'sensor.altair_mvhr_supply_air_temperature',
+  extract_temperature: 'sensor.altair_mvhr_extract_air_temperature',
+  outdoor_temperature: 'sensor.altair_mvhr_outdoor_air_temperature',
+  exhaust_temperature: 'sensor.altair_mvhr_exhaust_air_temperature',
+  supply_fan_speed: 'sensor.altair_mvhr_supply_fan_speed',
+  extract_fan_speed: 'sensor.altair_mvhr_extract_fan_speed',
+  indoor_humidity: 'sensor.altair_mvhr_indoor_humidity',
+  filter_days: 'sensor.altair_mvhr_filter_days_remaining',
+  boost_active: 'binary_sensor.altair_mvhr_boost_active',
+  boost_remaining: 'sensor.altair_mvhr_boost_remaining',
+  boost_duration: 'number.altair_mvhr_boost_duration',
+  start_boost: 'button.altair_mvhr_start_boost',
+  cancel_boost: 'button.altair_mvhr_cancel_boost',
+  override_duration: 'select.altair_mvhr_override_duration',
+  override_remaining: 'sensor.altair_mvhr_override_remaining',
+  clear_override: 'button.altair_mvhr_clear_override',
+  calibration_result: 'sensor.altair_mvhr_airflow_calibration_result',
+  calibration_status: 'sensor.altair_mvhr_airflow_calibration_status',
+  calibration_progress: 'sensor.altair_mvhr_airflow_calibration_progress',
+  last_calibration: 'sensor.altair_mvhr_last_airflow_calibration',
+};
+
+const altairConfig = {
+  type: 'custom:hiper-mvhr-card',
+  title: 'Altair MVHR',
+  subtitle: 'Heat Recovery Ventilation System',
+  manufacturer: 'altair',
+  display_mode: 'detailed',
+  entities: altairEntities,
+  heat_recovery_method: 'automatic',
+};
+
+function withStates(overrides: HomeAssistant['states']): HomeAssistant {
+  return {
+    ...altairHass,
+    states: {
+      ...altairHass.states,
+      ...overrides,
+    },
+  };
+}
+
 const scenarios = [
   {
-    title: 'Altair 160 — homeowner (no bypass row should appear anywhere)',
+    title: 'Altair 160 — detailed desktop',
     hass: altairHass,
+    className: 'desktop',
+    config: altairConfig,
+  },
+  {
+    title: 'Altair 160 — homeowner mobile',
+    hass: altairHass,
+    className: 'mobile',
     config: {
-      type: 'custom:hiper-mvhr-card',
-      manufacturer: 'altair',
+      ...altairConfig,
       display_mode: 'homeowner',
-      entities: {
-        mode: 'select.altair_mode',
-        outdoor_air_temp: 'sensor.altair_outdoor_temp',
-        supply_air_temp: 'sensor.altair_supply_temp',
-        extract_air_temp: 'sensor.altair_extract_temp',
-        exhaust_air_temp: 'sensor.altair_exhaust_temp',
-        supply_airflow: 'sensor.altair_supply_flow',
-        extract_airflow: 'sensor.altair_extract_flow',
-        filter_remaining: 'sensor.altair_filter_remaining',
-      },
     },
   },
   {
-    title: 'Altair 160 — detailed (fault/frost left unmapped on purpose)',
-    hass: altairHass,
-    config: {
-      type: 'custom:hiper-mvhr-card',
-      manufacturer: 'altair',
-      display_mode: 'detailed',
-      entities: {
-        mode: 'select.altair_mode',
-        outdoor_air_temp: 'sensor.altair_outdoor_temp',
-        supply_air_temp: 'sensor.altair_supply_temp',
-        filter_remaining: 'sensor.altair_filter_remaining',
-        // fault_active / frost_protection_active deliberately unmapped —
-        // detailed mode shows "Not configured" for both; homeowner would
-        // omit them entirely.
+    title: 'Altair 160 — boost active',
+    hass: withStates({
+      'binary_sensor.altair_mvhr_boost_active': {
+        entity_id: 'binary_sensor.altair_mvhr_boost_active',
+        state: 'on',
+        attributes: {},
       },
-    },
+      'sensor.altair_mvhr_boost_remaining': {
+        entity_id: 'sensor.altair_mvhr_boost_remaining',
+        state: '12',
+        attributes: { unit_of_measurement: 'min' },
+      },
+    }),
+    className: 'desktop dark',
+    config: altairConfig,
+  },
+  {
+    title: 'Altair 160 — calibration running',
+    hass: withStates({
+      'sensor.altair_mvhr_airflow_calibration_status': {
+        entity_id: 'sensor.altair_mvhr_airflow_calibration_status',
+        state: 'sampling',
+        attributes: {},
+      },
+      'sensor.altair_mvhr_airflow_calibration_progress': {
+        entity_id: 'sensor.altair_mvhr_airflow_calibration_progress',
+        state: '42',
+        attributes: { unit_of_measurement: '%' },
+      },
+    }),
+    className: 'desktop',
+    config: altairConfig,
+  },
+  {
+    title: 'Altair 160 — unavailable supply temperature',
+    hass: withStates({
+      'sensor.altair_mvhr_supply_air_temperature': {
+        entity_id: 'sensor.altair_mvhr_supply_air_temperature',
+        state: 'unavailable',
+        attributes: { unit_of_measurement: '°C' },
+      },
+    }),
+    className: 'mobile dark',
+    config: altairConfig,
   },
   {
     title: 'Zehnder ComfoAir Q — homeowner (filter at 0%, a valid zero reading)',
@@ -123,7 +196,7 @@ if (!app) {
 
 for (const scenario of scenarios) {
   const wrapper = document.createElement('div');
-  wrapper.className = 'scenario';
+  wrapper.className = `scenario ${'className' in scenario ? scenario.className : ''}`;
 
   const heading = document.createElement('h3');
   heading.textContent = scenario.title;
