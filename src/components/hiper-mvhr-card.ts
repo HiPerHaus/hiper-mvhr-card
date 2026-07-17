@@ -1,16 +1,16 @@
-import { LitElement, html, css, type TemplateResult } from 'lit';
+import { LitElement, html, css, nothing, type TemplateResult } from 'lit';
 import { property, state } from 'lit/decorators.js';
 import type { HomeAssistant, LovelaceCard } from '../types/hass';
 import type { HiperMvhrCardConfig } from '../types/config';
 import type { RoleValue } from '../types/snapshot';
-import type { EntityRoleId } from '../types/entity-roles';
+import { ENTITY_ROLES, type EntityRoleId } from '../types/entity-roles';
 import { parseConfig } from '../data/config-schema';
 import { resolveCapabilities } from '../data/capability-resolver';
 import { resolveSnapshot } from '../data/entity-resolver';
 import { summarizeAvailability, type AvailabilitySummary } from '../data/availability-summary';
 import { ControlDispatcher } from '../data/control-dispatcher';
 import { getProfile } from '../manufacturers';
-import { formatRoleValue, capitalize } from '../utils/format';
+import { formatRoleValue, capitalize, formatTimestampMaybe } from '../utils/format';
 import { getRoleIcon } from '../utils/icons';
 import { calculateHeatRecovery, type HeatRecoveryResult } from '../utils/heat-recovery';
 
@@ -41,9 +41,9 @@ const STATUS_ROLES: Array<[EntityRoleId, string]> = [
   ['frost_protection_active', 'Frost protection'],
 ];
 
-// Phase 3A: the one action role implemented so far. Kept out of
-// STATUS_ROLES/`_present` because it renders as an interactive control, not
-// read-only text, when its snapshot status is 'ok' — see `_controlRow`.
+// The one action role implemented so far. Kept out of STATUS_ROLES/`_present`
+// because it renders as an interactive control, not read-only text, when its
+// snapshot status is 'ok' — see `_controlRow`.
 const CONTROL_ROLES: Array<[EntityRoleId, string]> = [['filter_reset_control', 'Filter reset']];
 
 const TONE_ICONS: Record<AvailabilitySummary['tone'], string> = {
@@ -52,10 +52,55 @@ const TONE_ICONS: Record<AvailabilitySummary['tone'], string> = {
   muted: 'mdi:information-outline',
 };
 
+/**
+ * Roles that are diagnostic/optional conveniences rather than the card's
+ * core "is this system actually reporting" signal — an unmapped or
+ * unavailable fault/frost sensor, boost/override control, or calibration
+ * metadata field must never turn the header's top-level availability
+ * indicator into a warning (Phase 4: "Only required entity failures should
+ * affect the top-level availability status"). `effective_mode` is excluded
+ * too — it's a secondary read-out of the same thing `mode` already reports.
+ */
+const OPTIONAL_AVAILABILITY_ROLES: EntityRoleId[] = [
+  'effective_mode',
+  'fault_active',
+  'frost_protection_active',
+  'bypass_state',
+  'boost_active',
+  'boost_remaining',
+  'boost_duration',
+  'start_boost',
+  'cancel_boost',
+  'override_duration',
+  'override_remaining',
+  'clear_override',
+  'calibration_status',
+  'calibration_progress',
+  'last_calibration',
+  'filter_reset_control',
+];
+const OPTIONAL_AVAILABILITY_ROLE_SET = new Set(OPTIONAL_AVAILABILITY_ROLES);
+
+const CALIBRATION_QUIET_STATES = new Set([
+  'calibrated',
+  'complete',
+  'completed',
+  'idle',
+  'none',
+  'unknown',
+]);
+const FAULT_ACTIVE_STATES = new Set(['on', 'true', 'problem', 'active', 'detected']);
+
 /** What one resolved role should look like once display_mode is applied. */
 interface Presentation {
   tone: 'normal' | 'muted' | 'warning';
   text: string;
+}
+
+/** One row of the bottom status strip / overall dashboard health signal. */
+interface DashboardStatus {
+  tone: AvailabilitySummary['tone'];
+  label: string;
 }
 
 /**
@@ -126,83 +171,167 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     const profile = resolveCapabilities(config.manufacturer, config.feature_flags);
     const displayProfile = getProfile(config.manufacturer);
     const snapshot = resolveSnapshot(hass, profile, config.entities);
-    const availability = summarizeAvailability(snapshot, profile);
-    // "Not configured" is the header summary's fallback for "nothing mapped
-    // yet" — configuration jargon, so homeowner mode omits the chip entirely
-    // rather than show it (same "quiet, no jargon" policy as _present()'s
-    // not_configured/entity_missing handling below). Detailed mode keeps it.
+    // Only required-entity failures move the header's top-level indicator —
+    // an unmapped/unavailable optional sensor (fault, frost, boost/override
+    // controls, calibration metadata) never does (Phase 4).
+    const availability = summarizeAvailability(snapshot, profile, {
+      ignoreRoles: OPTIONAL_AVAILABILITY_ROLES,
+    });
     const showAvailability = detailed || availability.label !== 'Not configured';
     const modePresentation = snapshot.mode ? this._present(snapshot.mode, detailed) : null;
     const title = config.title ?? config.name ?? displayProfile.name;
     const subtitle = config.subtitle ?? 'Heat Recovery Ventilation System';
     const active = availability.tone !== 'warning' && availability.label !== 'Not configured';
     const recovery = this._heatRecovery(snapshot, config.heat_recovery_method);
-    const modeLabel = this._modeLabel(modePresentation?.text ?? this._text(snapshot.effective_mode));
+    const modeLabel = this._modeLabel(
+      modePresentation?.text ?? this._text(snapshot.effective_mode),
+    );
     const unitBrand = config.title ?? displayProfile.name;
-    const showStatusStrip =
-      detailed ||
-      availability.label !== 'Not configured' ||
-      Boolean(config.show_calibration && (this._value(snapshot.calibration_result) || this._value(snapshot.last_calibration)));
 
     return html`
       <ha-card>
-        <div class="header mvhr-header">
-          <div>
-            <h2 class="title">${title}</h2>
-            <div class="subheader">
-              <span class="model">${subtitle}</span>
-              <span class="sep" aria-hidden="true">·</span>
-              <span class="mode">${modeLabel || displayProfile.name}</span>
-            </div>
-          </div>
-          ${showAvailability
-            ? html`
-                <div class="availability tone-${availability.tone}" role="status">
-                  <ha-icon icon=${TONE_ICONS[availability.tone]} aria-hidden="true"></ha-icon>
-                  <span>${availability.label}</span>
-                </div>
-              `
-            : ''}
-        </div>
-
-        <div class="content">
-          ${this._metricSection('Temperatures', TEMPERATURE_ROLES, snapshot, detailed)}
-          ${this._metricSection('Airflow', AIRFLOW_ROLES, snapshot, detailed)}
-          ${this._statusSection('System status', STATUS_ROLES, snapshot, detailed, config, hass)}
-        </div>
-
-        <div class="dashboard">
-          <section class="visual-panel" aria-label="MVHR airflow diagram">
-            ${this._systemVisual(snapshot, config, active, unitBrand)}
-          </section>
-          ${config.show_controls && this._hasControls(snapshot, config)
-            ? this._controlsPanel(snapshot, config, hass)
-            : ''}
-          <section class="tile-grid" aria-label="MVHR metrics">
-            ${this._infoTile('Mode', modeLabel || '—', 'mdi:fan-auto')}
-            ${this._infoTile('Measured airflow', this._value(snapshot.airflow) ?? this._value(snapshot.supply_airflow) ?? '—', 'mdi:weather-windy')}
-            ${this._infoTile('Target airflow', this._value(snapshot.target_airflow) ?? '—', 'mdi:target')}
-            ${this._infoTile('Mapped level', this._value(snapshot.mapped_level) ?? '—', 'mdi:tune-variant')}
-            ${this._infoTile('Heat recovery', recovery.label, 'mdi:heat-wave', recovery.status)}
-            ${config.show_fan_speeds ? this._infoTile('Fan speeds', this._pair(FAN_ROLES, snapshot), 'mdi:fan') : ''}
-            ${this._infoTile('Humidity', this._value(snapshot.indoor_humidity) ?? '—', 'mdi:water-percent')}
-            ${config.show_filter ? this._filterTile(snapshot, config) : ''}
-          </section>
-          ${showStatusStrip
-            ? html`
-                <section class="status-strip" aria-label="MVHR status">
-                  <span>${this._systemStatus(snapshot, availability)}</span>
-                  ${config.show_calibration
-                    ? html`
-                        <span>Calibration: ${this._value(snapshot.calibration_result) ?? '—'}</span>
-                        <span>Last calibration: ${this._value(snapshot.last_calibration) ?? '—'}</span>
-                      `
-                    : ''}
-                </section>
-              `
-            : ''}
-        </div>
+        ${this._header(title, subtitle, modeLabel, availability, showAvailability)}
+        ${
+          detailed
+            ? this._dashboard(snapshot, config, hass, recovery, modeLabel, unitBrand, active)
+            : this._legacyContent(snapshot, config, hass, detailed)
+        }
       </ha-card>
+    `;
+  }
+
+  /**
+   * Card header — Phase 4. Shared by both display modes: title, a status dot
+   * + the current mode read prominently next to it, and the subtitle below.
+   * The availability chip only ever reflects required-entity failures (see
+   * `OPTIONAL_AVAILABILITY_ROLES` above), never an unconfigured optional
+   * sensor like fault/frost.
+   */
+  private _header(
+    title: string,
+    subtitle: string,
+    modeLabel: string,
+    availability: AvailabilitySummary,
+    showAvailability: boolean,
+  ): TemplateResult {
+    return html`
+      <div class="header mvhr-header">
+        <div class="header-row">
+          <div class="header-title-group">
+            <h2 class="title">${title}</h2>
+            <span class="status-dot dot-${availability.tone}" aria-hidden="true"></span>
+            ${modeLabel ? html`<span class="mode-pill">${modeLabel}</span>` : ''}
+          </div>
+          ${
+            showAvailability
+              ? html`
+                  <div class="availability tone-${availability.tone}" role="status">
+                    <ha-icon icon=${TONE_ICONS[availability.tone]} aria-hidden="true"></ha-icon>
+                    <span>${availability.label}</span>
+                  </div>
+                `
+              : ''
+          }
+        </div>
+        <div class="subheader">${subtitle}</div>
+      </div>
+    `;
+  }
+
+  /**
+   * `display_mode: homeowner`'s content — unchanged since Phase 2: a
+   * compact, plain-language read-out (temperatures / airflow / system
+   * status), unconfigured optional roles omitted entirely, no raw entity
+   * IDs. `display_mode: detailed` no longer renders this at all — see
+   * `_dashboard` below, which is its full replacement (ROADMAP.md "Rebuild
+   * detailed MVHR dashboard layout").
+   */
+  private _legacyContent(
+    snapshot: Partial<Record<EntityRoleId, RoleValue>>,
+    config: HiperMvhrCardConfig,
+    hass: HomeAssistant,
+    detailed: boolean,
+  ): TemplateResult {
+    return html`
+      <div class="content">
+        ${this._metricSection('Temperatures', TEMPERATURE_ROLES, snapshot, detailed)}
+        ${this._metricSection('Airflow', AIRFLOW_ROLES, snapshot, detailed)}
+        ${this._statusSection('System status', STATUS_ROLES, snapshot, detailed, config, hass)}
+      </div>
+    `;
+  }
+
+  /**
+   * `display_mode: detailed`'s entire card body (Phase 2-3/2-17 of the
+   * dashboard rebuild) — one unified MVHR dashboard: a large airflow visual
+   * + controls side by side, metrics tiles below, a status strip at the
+   * bottom. Nothing from the legacy homeowner content (`_legacyContent`)
+   * renders alongside it.
+   */
+  private _dashboard(
+    snapshot: Partial<Record<EntityRoleId, RoleValue>>,
+    config: HiperMvhrCardConfig,
+    hass: HomeAssistant,
+    recovery: HeatRecoveryResult,
+    modeLabel: string,
+    unitBrand: string,
+    active: boolean,
+  ): TemplateResult {
+    const status = this._dashboardStatus(snapshot);
+    const hasControls = config.show_controls && this._hasControls(snapshot, config);
+    const lastCalibration =
+      snapshot.last_calibration?.status === 'ok'
+        ? formatTimestampMaybe(snapshot.last_calibration.value)
+        : null;
+
+    return html`
+      <div class="mvhr-dashboard ${hasControls ? '' : 'no-controls'}">
+        <section class="visual-panel" aria-label="MVHR airflow diagram">
+          ${this._heroVisual(snapshot, config, active, unitBrand, recovery)}
+        </section>
+        ${hasControls ? this._controlsPanel(snapshot, config, hass) : ''}
+        <section class="metrics-grid" aria-label="MVHR metrics">
+          ${this._infoTile('Mode', modeLabel || '—', 'mdi:fan-auto')}
+          ${this._infoTile(
+            'Measured airflow',
+            this._value(snapshot.airflow, true) ??
+              this._value(snapshot.supply_airflow, true) ??
+              '—',
+            'mdi:weather-windy',
+          )}
+          ${this._infoTile('Target airflow', this._value(snapshot.target_airflow, true) ?? '—', 'mdi:target')}
+          ${this._infoTile('Mapped level', this._value(snapshot.mapped_level, true) ?? '—', 'mdi:tune-variant')}
+          ${this._infoTile(
+            'Heat recovery',
+            recovery.label,
+            'mdi:heat-wave',
+            recovery.status,
+            'Apparent temperature recovery',
+          )}
+          ${
+            config.show_fan_speeds
+              ? this._infoTile('Fan speeds', this._pair(FAN_ROLES, snapshot, true), 'mdi:fan')
+              : ''
+          }
+          ${this._infoTile('Humidity', this._value(snapshot.indoor_humidity, true) ?? '—', 'mdi:water-percent')}
+          ${config.show_filter ? this._filterTile(snapshot, config) : ''}
+        </section>
+        <section class="status-strip tone-${status.tone}" aria-label="MVHR status">
+          <span class="status-chip">
+            <ha-icon icon=${TONE_ICONS[status.tone]} aria-hidden="true"></ha-icon>
+            <span>${status.label}</span>
+          </span>
+          ${
+            config.show_calibration
+              ? html`
+                  <span>Calibration: ${this._value(snapshot.calibration_result, true) ?? '—'}</span>
+                  ${lastCalibration ? html`<span>Last calibration: ${lastCalibration}</span>` : ''}
+                `
+              : ''
+          }
+        </section>
+        ${this._extraControls(snapshot, config, hass)}
+      </div>
     `;
   }
 
@@ -262,7 +391,11 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     `;
   }
 
-  private _metricCell(role: EntityRoleId, label: string, presentation: Presentation): TemplateResult {
+  private _metricCell(
+    role: EntityRoleId,
+    label: string,
+    presentation: Presentation,
+  ): TemplateResult {
     const icon = getRoleIcon(role);
     return html`
       <div class="metric tone-${presentation.tone}">
@@ -308,7 +441,40 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     `;
   }
 
-  private _statusRow(role: EntityRoleId, label: string, presentation: Presentation): TemplateResult {
+  /**
+   * The new dashboard's own home for action roles beyond the ones the
+   * dashboard already surfaces as first-class controls (mode/boost/
+   * override). Today that's just `filter_reset_control` (Phase 3A,
+   * `generic`-profile only) — every action role goes through the same five
+   * SPECIFICATION.md §6 states as a read-only role, so it degrades exactly
+   * like the legacy content's status rows did. Renders nothing for
+   * Altair/Zehnder/Aerofresh, which don't declare this role supported.
+   */
+  private _extraControls(
+    snapshot: Partial<Record<EntityRoleId, RoleValue>>,
+    config: HiperMvhrCardConfig,
+    hass: HomeAssistant,
+  ): TemplateResult {
+    const rows = CONTROL_ROLES.map(([role, label]) =>
+      this._controlRow(role, label, snapshot[role], true, config, hass),
+    ).filter((row): row is TemplateResult => row !== null);
+
+    if (rows.length === 0) {
+      return html``;
+    }
+
+    return html`
+      <section class="status-section extra-controls" aria-label="Additional controls">
+        <div class="status-list">${rows}</div>
+      </section>
+    `;
+  }
+
+  private _statusRow(
+    role: EntityRoleId,
+    label: string,
+    presentation: Presentation,
+  ): TemplateResult {
     const icon = getRoleIcon(role);
     return html`
       <div class="status-row tone-${presentation.tone}">
@@ -359,9 +525,11 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       <div class="status-row">
         ${icon ? html`<ha-icon icon=${icon} aria-hidden="true"></ha-icon>` : ''}
         <span class="status-label">${label}</span>
-        ${state.status === 'error'
-          ? html`<span class="status-value tone-warning">Couldn't reset</span>`
-          : ''}
+        ${
+          state.status === 'error'
+            ? html`<span class="status-value tone-warning">Couldn't reset</span>`
+            : ''
+        }
         <button
           type="button"
           class="control-button"
@@ -375,45 +543,77 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     `;
   }
 
-  private _systemVisual(
+  /**
+   * Phase 5-7: the dashboard's hero element — a large central MVHR unit
+   * with the four air paths around it (extract/exhaust/outdoor/supply, no
+   * bypass path — this diagram is deliberately generic across every
+   * manufacturer profile, which is exactly why Altair, which has none,
+   * never gets one) and the heat-recovery badge inside the unit itself.
+   */
+  private _heroVisual(
     snapshot: Partial<Record<EntityRoleId, RoleValue>>,
     config: HiperMvhrCardConfig,
     active: boolean,
     unitBrand: string,
+    recovery: HeatRecoveryResult,
   ): TemplateResult {
-    const sharedAirflow = this._value(snapshot.airflow);
+    // The Altair integration (and most others) reports one measured airflow
+    // value shared by the whole system, not one per duct — so by default it
+    // only appears next to the two paths a homeowner actually cares about
+    // (extract/supply); `show_airflow_on_all_paths` opts into showing it on
+    // all four, and outdoor/exhaust otherwise show temperature only (Phase 5).
+    const sharedAirflow =
+      this._value(snapshot.airflow, true) ?? this._value(snapshot.supply_airflow, true);
     const showAllAirflows = config.show_airflow_on_all_paths;
+
     const path = (
       key: string,
       label: string,
       role: EntityRoleId,
-      airflow?: string | null,
-    ) => html`
-      <div class="air-path ${key} ${active ? 'active' : ''}">
-        <span class="path-label">${label}</span>
-        <span class="path-temp">${this._value(snapshot[role]) ?? '—'}</span>
-        ${airflow ? html`<span class="path-airflow">${airflow}</span>` : ''}
-      </div>
-    `;
+      showAirflowByDefault: boolean,
+    ) => {
+      const airflow = showAllAirflows || showAirflowByDefault ? sharedAirflow : null;
+      return html`
+        <div class="air-path ${key} ${active ? 'active' : ''}">
+          <span class="path-label">${label}</span>
+          <span class="path-temp">${this._value(snapshot[role], true) ?? '—'}</span>
+          ${airflow ? html`<span class="path-airflow">${airflow}</span>` : ''}
+        </div>
+      `;
+    };
 
     return html`
       <div class="visual-wrap">
-        ${path('extract', 'Extract air', 'extract_air_temp', sharedAirflow)}
-        ${path('exhaust', 'Exhaust air', 'exhaust_air_temp', showAllAirflows ? sharedAirflow : null)}
+        ${path('extract', 'Extract air', 'extract_air_temp', true)}
+        ${path('exhaust', 'Exhaust air', 'exhaust_air_temp', false)}
         <div class="unit" aria-label="Heat recovery unit">
           <div class="brand">
             ${unitBrand}${unitBrand.toLowerCase().includes('mvhr') ? '' : html`<br /><span>MVHR</span>`}
           </div>
+          <div class="duct duct-top" aria-hidden="true"></div>
+          <div class="duct duct-bottom" aria-hidden="true"></div>
+          <div class="duct duct-left" aria-hidden="true"></div>
+          <div class="duct duct-right" aria-hidden="true"></div>
           <div class="exchanger" aria-hidden="true"></div>
           <div class="fan fan-a" aria-hidden="true">✦</div>
           <div class="fan fan-b" aria-hidden="true">✦</div>
+          <div class="recovery-badge" title="Apparent temperature recovery">
+            <span class="recovery-label">Heat Recovery</span>
+            <strong class="recovery-value">${recovery.label}</strong>
+          </div>
         </div>
-        ${path('outdoor', 'Outdoor air', 'outdoor_air_temp', showAllAirflows ? sharedAirflow : null)}
-        ${path('supply', 'Supply air', 'supply_air_temp', sharedAirflow)}
+        ${path('outdoor', 'Outdoor air', 'outdoor_air_temp', false)}
+        ${path('supply', 'Supply air', 'supply_air_temp', true)}
       </div>
     `;
   }
 
+  /**
+   * Phase 8: mode / boost / override controls, restyled as three clear
+   * groups with large touch targets. Service calls are unchanged from the
+   * pre-rebuild dashboard — only markup/CSS and the active-mode highlight
+   * are new.
+   */
   private _controlsPanel(
     snapshot: Partial<Record<EntityRoleId, RoleValue>>,
     config: HiperMvhrCardConfig,
@@ -424,31 +624,56 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     const overrideEntity = config.entities.override_duration;
     const modeOptions = this._modeOptions(snapshot.mode);
     const overrideOptions = this._selectOptions(snapshot.override_duration);
+    const currentModeRaw = this._state(snapshot.mode)?.toLowerCase();
     const boostActive = this._state(snapshot.boost_active) === 'on';
+    // Boost/override "remaining" is a nice-to-have, not a required reading —
+    // shown only when there's a genuine value, never as a prominent
+    // "Unavailable remaining"/"Not configured remaining" (Phase 8).
+    const boostRemaining =
+      snapshot.boost_remaining?.status === 'ok' ? this._value(snapshot.boost_remaining) : null;
+    const overrideRemaining =
+      snapshot.override_remaining?.status === 'ok'
+        ? this._value(snapshot.override_remaining)
+        : null;
+
     return html`
       <aside class="controls-panel" aria-label="MVHR controls">
         <div class="panel-heading">Controls</div>
-        <div class="mode-buttons">
-          ${modeOptions.map(
-            (option) => html`
-              <button
-                type="button"
-                class="chip"
-                ?disabled=${!modeEntity}
-                aria-label=${`Set mode ${this._modeLabel(option)}`}
-                @click=${() => modeEntity && this._call(hass, 'select', 'select_option', { entity_id: modeEntity, option })}
-              >
-                ${this._modeLabel(option)}
-              </button>
-            `,
-          )}
+
+        <div class="control-group">
+          <span class="control-group-label">Mode</span>
+          <div class="mode-buttons" role="group" aria-label="Operating mode">
+            ${modeOptions.map((option) => {
+              const isActive =
+                currentModeRaw !== undefined && option.toLowerCase() === currentModeRaw;
+              return html`
+                <button
+                  type="button"
+                  class="chip ${isActive ? 'active' : ''}"
+                  ?disabled=${!modeEntity}
+                  aria-pressed=${isActive}
+                  aria-label=${`Set mode ${this._modeLabel(option)}`}
+                  @click=${() =>
+                    modeEntity &&
+                    this._call(hass, 'select', 'select_option', { entity_id: modeEntity, option })}
+                >
+                  ${this._modeLabel(option)}
+                </button>
+              `;
+            })}
+          </div>
         </div>
+
         <div class="control-block">
-          <span>Boost</span>
-          <strong>${boostActive ? 'Active' : 'Ready'}</strong>
-          <small>${this._value(snapshot.boost_remaining) ?? '—'} remaining</small>
+          <div class="control-block-head">
+            <span>Boost</span>
+            <strong class="state-pill ${boostActive ? 'is-active' : ''}"
+              >${boostActive ? 'Active' : 'Ready'}</strong
+            >
+          </div>
+          ${boostRemaining ? html`<small>${boostRemaining} remaining</small>` : ''}
           <label class="field">
-            <span>Duration</span>
+            <span>Duration (minutes)</span>
             <input
               type="number"
               min="1"
@@ -459,7 +684,10 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
               @change=${(event: Event) => {
                 const value = Number((event.currentTarget as HTMLInputElement).value);
                 if (durationEntity && Number.isFinite(value)) {
-                  void this._call(hass, 'number', 'set_value', { entity_id: durationEntity, value });
+                  void this._call(hass, 'number', 'set_value', {
+                    entity_id: durationEntity,
+                    value,
+                  });
                 }
               }}
             />
@@ -467,26 +695,33 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
           <div class="button-row">
             <button
               type="button"
+              class="cta"
               aria-label="Start Boost"
               ?disabled=${boostActive || !config.entities.start_boost}
               @click=${() => this._press(hass, config.entities.start_boost)}
             >
-              Start
+              Start Boost
             </button>
             <button
               type="button"
+              class="cta ghost"
               aria-label="Cancel Boost"
               ?disabled=${!boostActive || !config.entities.cancel_boost}
               @click=${() => this._press(hass, config.entities.cancel_boost)}
             >
-              Cancel
+              Cancel Boost
             </button>
           </div>
         </div>
+
         <div class="control-block">
-          <span>Override</span>
-          <strong>${this._value(snapshot.override_duration) ?? 'Until next schedule change'}</strong>
-          <small>${this._value(snapshot.override_remaining) ?? '—'} remaining</small>
+          <div class="control-block-head">
+            <span>Override</span>
+            <strong
+              >${this._value(snapshot.override_duration) ?? 'Until next schedule change'}</strong
+            >
+          </div>
+          ${overrideRemaining ? html`<small>${overrideRemaining} remaining</small>` : ''}
           <label class="field">
             <span>Duration</span>
             <select
@@ -495,13 +730,19 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
               @change=${(event: Event) => {
                 const option = (event.currentTarget as HTMLSelectElement).value;
                 if (overrideEntity) {
-                  void this._call(hass, 'select', 'select_option', { entity_id: overrideEntity, option });
+                  void this._call(hass, 'select', 'select_option', {
+                    entity_id: overrideEntity,
+                    option,
+                  });
                 }
               }}
             >
               ${overrideOptions.map(
                 (option) => html`
-                  <option .value=${option} ?selected=${this._state(snapshot.override_duration) === option}>
+                  <option
+                    .value=${option}
+                    ?selected=${this._state(snapshot.override_duration) === option}
+                  >
                     ${this._modeLabel(option)}
                   </option>
                 `,
@@ -510,6 +751,7 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
           </label>
           <button
             type="button"
+            class="cta ghost full"
             aria-label="Clear override"
             ?disabled=${!config.entities.clear_override}
             @click=${() => this._press(hass, config.entities.clear_override)}
@@ -526,9 +768,10 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     value: string,
     icon: string,
     status: HeatRecoveryResult['status'] | 'ok' = 'ok',
+    tooltip?: string,
   ): TemplateResult {
     return html`
-      <div class="info-tile tone-${status}">
+      <div class="info-tile tone-${status}" title=${tooltip ?? nothing}>
         <ha-icon icon=${icon} aria-hidden="true"></ha-icon>
         <span>${label}</span>
         <strong>${value}</strong>
@@ -536,9 +779,13 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     `;
   }
 
-  private _filterTile(snapshot: Partial<Record<EntityRoleId, RoleValue>>, config: HiperMvhrCardConfig): TemplateResult {
+  private _filterTile(
+    snapshot: Partial<Record<EntityRoleId, RoleValue>>,
+    config: HiperMvhrCardConfig,
+  ): TemplateResult {
     const days = this._number(snapshot.filter_remaining);
-    const percent = days === undefined ? 0 : Math.max(0, Math.min(100, (days / config.filter_max_days) * 100));
+    const percent =
+      days === undefined ? 0 : Math.max(0, Math.min(100, (days / config.filter_max_days) * 100));
     const label = days === undefined ? '—' : `${Math.round(days)} days`;
     return html`
       <div class="info-tile">
@@ -565,9 +812,13 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
   private _pair(
     roles: Array<[EntityRoleId, string]>,
     snapshot: Partial<Record<EntityRoleId, RoleValue>>,
+    detailed = false,
   ): string {
     return roles
-      .map(([role, label]) => `${label.replace(' fan', '')}: ${this._value(snapshot[role]) ?? '—'}`)
+      .map(
+        ([role, label]) =>
+          `${label.replace(' fan', '')}: ${this._value(snapshot[role], detailed) ?? '—'}`,
+      )
       .join(' · ');
   }
 
@@ -630,24 +881,45 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     ].some((value) => value?.status === 'ok' && Boolean(config.entities));
   }
 
-  private _systemStatus(
-    snapshot: Partial<Record<EntityRoleId, RoleValue>>,
-    availability: AvailabilitySummary,
-  ): string {
-    const calibrationStatus = snapshot.calibration_status?.status === 'ok' ? snapshot.calibration_status.value : '';
+  /**
+   * Phase 10's bottom status strip signal. "Communication issue" takes
+   * priority over everything else: a required role that's mapped but
+   * unreachable (entity missing or unavailable) is the most actionable
+   * problem. A configured, active fault entity is next, then calibration
+   * state, falling back to "System OK". Optional roles that simply aren't
+   * configured never factor in here — same rule as the header (Phase 4/10).
+   */
+  private _dashboardStatus(snapshot: Partial<Record<EntityRoleId, RoleValue>>): DashboardStatus {
+    for (const role of ENTITY_ROLES) {
+      if (OPTIONAL_AVAILABILITY_ROLE_SET.has(role)) {
+        continue;
+      }
+      const value = snapshot[role];
+      if (value?.status === 'entity_missing' || value?.status === 'unavailable') {
+        return { tone: 'warning', label: 'Communication issue' };
+      }
+    }
+
+    const fault = snapshot.fault_active;
+    if (fault?.status === 'ok' && FAULT_ACTIVE_STATES.has(fault.value.toLowerCase())) {
+      return { tone: 'warning', label: 'Fault detected' };
+    }
+
+    const calibrationStatus =
+      snapshot.calibration_status?.status === 'ok'
+        ? snapshot.calibration_status.value.toLowerCase()
+        : '';
+    if (calibrationStatus && !CALIBRATION_QUIET_STATES.has(calibrationStatus)) {
+      return { tone: 'muted', label: 'Calibrating…' };
+    }
     if (
-      calibrationStatus &&
-      !['calibrated', 'complete', 'completed', 'idle', 'none', 'unknown'].includes(calibrationStatus)
+      snapshot.calibration_result?.status === 'ok' &&
+      snapshot.calibration_result.value === 'not_calibrated'
     ) {
-      return 'Calibration running';
+      return { tone: 'warning', label: 'Calibration required' };
     }
-    if (snapshot.calibration_result?.status === 'ok' && snapshot.calibration_result.value === 'not_calibrated') {
-      return 'Calibration required';
-    }
-    if (availability.tone === 'warning') {
-      return 'Entity unavailable';
-    }
-    return availability.label === 'Not configured' ? 'Not configured' : 'System OK';
+
+    return { tone: 'success', label: 'System OK' };
   }
 
   private _press(hass: HomeAssistant, entityId: string | undefined): void {
@@ -671,31 +943,72 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       display: block;
     }
 
+    ha-card {
+      width: 100%;
+      box-sizing: border-box;
+      overflow: hidden;
+    }
+
     .header {
       padding: 16px 16px 8px;
       display: flex;
       flex-direction: column;
       gap: 4px;
     }
+    .header-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .header-title-group {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      flex-wrap: wrap;
+      min-width: 0;
+    }
     .title {
       margin: 0;
-      font-size: 1.2em;
-      font-weight: 500;
+      font-size: 1.3em;
+      font-weight: 700;
       color: var(--primary-text-color);
+    }
+    .status-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      background: var(--secondary-text-color);
+    }
+    .status-dot.dot-success {
+      background: var(--success-color);
+    }
+    .status-dot.dot-warning {
+      background: var(--warning-color);
+    }
+    .status-dot.dot-muted {
+      background: var(--secondary-text-color);
+    }
+    .mode-pill {
+      font-size: 0.78em;
+      font-weight: 700;
+      padding: 3px 11px;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--primary-color), transparent 85%);
+      color: var(--primary-color);
+      white-space: nowrap;
     }
     .subheader {
       color: var(--secondary-text-color);
       font-size: 0.9em;
-    }
-    .sep {
-      margin: 0 4px;
     }
     .availability {
       display: flex;
       align-items: center;
       gap: 4px;
       font-size: 0.85em;
-      margin-top: 2px;
     }
     .availability ha-icon {
       --mdc-icon-size: 16px;
@@ -714,6 +1027,7 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       color: var(--secondary-text-color);
     }
 
+    /* ---- display_mode: homeowner — legacy compact content ---- */
     .content {
       padding: 0 16px 16px;
       display: flex;
@@ -721,57 +1035,104 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       gap: 16px;
     }
 
-    .dashboard {
-      padding: 0 16px 16px;
+    /* ---- display_mode: detailed — unified dashboard (Phase 2-3 rebuild) ---- */
+    .mvhr-dashboard {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 4px 16px 16px;
       display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(220px, 0.38fr);
+      grid-template-columns: minmax(0, 7fr) minmax(240px, 3fr);
+      grid-template-areas:
+        'visual controls'
+        'metrics metrics'
+        'status status'
+        'extra extra';
       gap: 16px;
+      align-items: start;
+    }
+    .mvhr-dashboard.no-controls {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas:
+        'visual'
+        'metrics'
+        'status'
+        'extra';
     }
     .visual-panel {
+      grid-area: visual;
       min-width: 0;
+      box-sizing: border-box;
       border: 1px solid var(--divider-color);
-      border-radius: 14px;
+      border-radius: 16px;
       background:
         linear-gradient(145deg, rgba(40, 90, 130, 0.14), transparent),
         var(--ha-card-background, var(--card-background-color));
-      padding: 14px;
+      padding: 18px;
     }
+    .controls-panel {
+      grid-area: controls;
+      min-width: 0;
+      box-sizing: border-box;
+      border: 1px solid var(--divider-color);
+      border-radius: 16px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      background: color-mix(
+        in srgb,
+        var(--ha-card-background, var(--card-background-color)),
+        var(--primary-color) 4%
+      );
+    }
+    .extra-controls {
+      grid-area: extra;
+    }
+
     .visual-wrap {
-      min-height: 310px;
+      min-height: 340px;
       display: grid;
-      grid-template-columns: 1fr minmax(180px, 0.85fr) 1fr;
+      grid-template-columns: minmax(190px, 1fr) minmax(260px, 340px) minmax(190px, 1fr);
       grid-template-rows: 1fr 1fr;
-      gap: 14px;
+      gap: 16px;
       align-items: center;
+      width: 100%;
+      box-sizing: border-box;
     }
     .unit {
       grid-column: 2;
       grid-row: 1 / span 2;
-      min-height: 190px;
-      border-radius: 18px;
+      width: 100%;
+      min-height: 220px;
+      border-radius: 22px;
       border: 1px solid var(--divider-color);
-      background: linear-gradient(155deg, rgba(255, 255, 255, 0.16), rgba(128, 128, 128, 0.08));
+      background: linear-gradient(155deg, rgba(255, 255, 255, 0.18), rgba(128, 128, 128, 0.08));
       display: grid;
       place-items: center;
       position: relative;
       overflow: hidden;
       color: var(--primary-text-color);
-      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+      box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+        0 8px 22px rgba(0, 0, 0, 0.1);
     }
     .brand {
       position: absolute;
       top: 16px;
       left: 18px;
-      font-weight: 700;
+      font-weight: 800;
       line-height: 1.05;
+      z-index: 2;
     }
     .brand span {
       color: var(--secondary-text-color);
-      font-size: 0.78em;
+      font-size: 0.72em;
+      font-weight: 600;
+      letter-spacing: 0.06em;
     }
     .exchanger {
-      width: 74px;
-      height: 74px;
+      width: 84px;
+      height: 84px;
       transform: rotate(45deg);
       border: 2px solid var(--primary-color);
       background:
@@ -782,24 +1143,94 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     .fan {
       position: absolute;
       color: var(--secondary-text-color);
-      font-size: 24px;
+      font-size: 26px;
+      z-index: 1;
     }
     .fan-a {
-      right: 22px;
-      top: 34px;
+      right: 26px;
+      top: 40px;
     }
     .fan-b {
-      left: 24px;
-      bottom: 34px;
+      left: 28px;
+      bottom: 40px;
+    }
+    .duct {
+      position: absolute;
+      background: color-mix(in srgb, var(--divider-color), transparent 5%);
+      z-index: 1;
+    }
+    .duct-top {
+      top: -1px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 40px;
+      height: 10px;
+      border-radius: 4px 4px 0 0;
+    }
+    .duct-bottom {
+      bottom: -1px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 40px;
+      height: 10px;
+      border-radius: 0 0 4px 4px;
+    }
+    .duct-left {
+      left: -1px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 10px;
+      height: 40px;
+      border-radius: 4px 0 0 4px;
+    }
+    .duct-right {
+      right: -1px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 10px;
+      height: 40px;
+      border-radius: 0 4px 4px 0;
+    }
+    .recovery-badge {
+      position: absolute;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      padding: 6px 16px;
+      border-radius: 10px;
+      background: color-mix(
+        in srgb,
+        var(--ha-card-background, var(--card-background-color)),
+        transparent 8%
+      );
+      border: 1px solid var(--divider-color);
+      text-align: center;
+      z-index: 2;
+      cursor: default;
+    }
+    .recovery-label {
+      font-size: 0.66em;
+      color: var(--secondary-text-color);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .recovery-value {
+      font-size: 1.35em;
+      font-weight: 800;
+      color: var(--success-color);
     }
     .air-path {
-      border-radius: 12px;
-      padding: 12px;
-      min-height: 78px;
+      border-radius: 14px;
+      padding: 14px;
+      min-height: 92px;
       display: flex;
       flex-direction: column;
       justify-content: center;
-      gap: 3px;
+      gap: 4px;
       border: 1px solid color-mix(in srgb, var(--divider-color), transparent 20%);
       position: relative;
       overflow: hidden;
@@ -808,7 +1239,11 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       content: '';
       position: absolute;
       inset: 0;
-      background: repeating-linear-gradient(90deg, transparent 0 16px, rgba(255, 255, 255, 0.18) 16px 20px);
+      background: repeating-linear-gradient(
+        90deg,
+        transparent 0 16px,
+        rgba(255, 255, 255, 0.18) 16px 20px
+      );
       opacity: 0.18;
       transform: translateX(-20px);
     }
@@ -830,29 +1265,37 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     .path-label,
     .path-airflow {
       color: var(--secondary-text-color);
-      font-size: 0.78em;
+      font-size: 0.82em;
       z-index: 1;
     }
     .path-temp {
       color: var(--primary-text-color);
-      font-size: 1.2em;
+      font-size: 1.35em;
       font-weight: 700;
       z-index: 1;
     }
-    .controls-panel {
-      border: 1px solid var(--divider-color);
-      border-radius: 14px;
-      padding: 14px;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-      background: color-mix(in srgb, var(--ha-card-background, var(--card-background-color)), var(--primary-color) 4%);
-    }
+
     .panel-heading {
       font-weight: 700;
       color: var(--primary-text-color);
     }
-    .mode-buttons,
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .control-group-label {
+      font-size: 0.76em;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--secondary-text-color);
+    }
+    .mode-buttons {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(64px, 1fr));
+      gap: 8px;
+    }
     .button-row {
       display: flex;
       flex-wrap: wrap;
@@ -861,12 +1304,36 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     .chip,
     .controls-panel button {
       font: inherit;
+      font-size: 0.92em;
       border: 1px solid var(--divider-color);
       border-radius: 999px;
       background: var(--ha-card-background, var(--card-background-color));
       color: var(--primary-text-color);
-      padding: 7px 12px;
+      padding: 10px 14px;
+      min-height: 44px;
+      box-sizing: border-box;
       cursor: pointer;
+    }
+    .chip {
+      font-weight: 700;
+      text-align: center;
+    }
+    .chip.active {
+      background: var(--primary-color);
+      color: var(--text-primary-color, #fff);
+      border-color: var(--primary-color);
+    }
+    .cta {
+      flex: 1;
+      font-weight: 700;
+      min-width: 120px;
+    }
+    .cta.ghost {
+      background: none;
+    }
+    .cta.full {
+      width: 100%;
+      flex: none;
     }
     .chip:focus-visible,
     .controls-panel button:focus-visible {
@@ -883,9 +1350,29 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       display: grid;
       gap: 6px;
       color: var(--primary-text-color);
+      padding-top: 10px;
+      border-top: 1px solid var(--divider-color);
+    }
+    .control-block-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
     }
     .control-block small {
       color: var(--secondary-text-color);
+    }
+    .state-pill {
+      font-size: 0.78em;
+      font-weight: 700;
+      padding: 2px 10px;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--divider-color), transparent 20%);
+      color: var(--secondary-text-color);
+    }
+    .state-pill.is-active {
+      background: color-mix(in srgb, var(--success-color), transparent 78%);
+      color: var(--success-color);
     }
     .field {
       display: grid;
@@ -901,9 +1388,10 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       border-radius: 8px;
       background: var(--ha-card-background, var(--card-background-color));
       color: var(--primary-text-color);
-      padding: 7px 9px;
+      padding: 10px 9px;
+      min-height: 44px;
       font: inherit;
-      font-size: 1.12em;
+      font-size: 1.05em;
     }
     .field input:focus-visible,
     .field select:focus-visible {
@@ -914,11 +1402,14 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     .field select:disabled {
       opacity: 0.6;
     }
-    .tile-grid {
-      grid-column: 1 / -1;
+
+    .metrics-grid {
+      grid-area: metrics;
       display: grid;
-      grid-template-columns: repeat(6, minmax(130px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
       gap: 12px;
+      width: 100%;
+      box-sizing: border-box;
     }
     .info-tile {
       border: 1px solid var(--divider-color);
@@ -928,6 +1419,7 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       gap: 4px;
       color: var(--primary-text-color);
       min-width: 0;
+      box-sizing: border-box;
     }
     .info-tile ha-icon {
       color: var(--primary-color);
@@ -937,7 +1429,7 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       font-size: 0.78em;
     }
     .info-tile strong {
-      font-size: 1.08em;
+      font-size: 1.1em;
       word-break: break-word;
     }
     .info-tile.tone-unavailable strong,
@@ -956,15 +1448,36 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       height: 100%;
       background: var(--success-color);
     }
+
     .status-strip {
-      grid-column: 1 / -1;
+      grid-area: status;
       border-top: 1px solid var(--divider-color);
-      padding-top: 10px;
+      padding-top: 12px;
       display: flex;
       flex-wrap: wrap;
-      gap: 10px 18px;
+      align-items: center;
+      gap: 10px 20px;
       color: var(--secondary-text-color);
-      font-size: 0.85em;
+      font-size: 0.88em;
+    }
+    .status-chip {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 700;
+      color: var(--primary-text-color);
+    }
+    .status-chip ha-icon {
+      --mdc-icon-size: 18px;
+    }
+    .status-strip.tone-success .status-chip {
+      color: var(--success-color);
+    }
+    .status-strip.tone-warning .status-chip {
+      color: var(--warning-color);
+    }
+    .status-strip.tone-muted .status-chip {
+      color: var(--secondary-text-color);
     }
 
     @keyframes flow {
@@ -1099,21 +1612,71 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       }
     }
 
-    @media (max-width: 760px) {
-      .dashboard {
-        grid-template-columns: 1fr;
+    /* Tablet (~768-1024px): visual full width, controls below, metrics in
+       a slightly denser auto-fit grid. */
+    @media (max-width: 900px) {
+      .mvhr-dashboard,
+      .mvhr-dashboard.no-controls {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-areas:
+          'visual'
+          'controls'
+          'metrics'
+          'status'
+          'extra';
       }
       .visual-wrap {
-        grid-template-columns: 1fr;
-        grid-template-rows: auto;
+        grid-template-columns: minmax(150px, 1fr) minmax(220px, 280px) minmax(150px, 1fr);
+        min-height: 300px;
       }
       .unit {
+        min-height: 200px;
+      }
+      .metrics-grid {
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      }
+    }
+
+    /* Mobile (<600px): compact 2x2 endpoint grid around the unit, controls
+       stacked, metrics locked to 2 columns — never horizontal scroll. */
+    @media (max-width: 599px) {
+      .mvhr-dashboard {
+        padding-left: 12px;
+        padding-right: 12px;
+      }
+      .visual-panel {
+        padding: 12px;
+      }
+      .visual-wrap {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-rows: auto auto auto;
+        min-height: 0;
+        gap: 10px;
+      }
+      .unit {
+        grid-column: 1 / -1;
+        grid-row: 1;
+        min-height: 150px;
+        border-radius: 18px;
+      }
+      .exchanger {
+        width: 60px;
+        height: 60px;
+      }
+      .air-path {
         grid-column: auto;
         grid-row: auto;
-        min-height: 150px;
+        min-height: 66px;
+        padding: 10px;
       }
-      .tile-grid {
+      .path-temp {
+        font-size: 1.1em;
+      }
+      .metrics-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .status-strip {
+        gap: 6px 14px;
       }
     }
   `;

@@ -4,7 +4,17 @@ All notable changes to this project are documented here. Format follows [Keep a 
 
 ## [Unreleased]
 
+### Changed
+
+- **Rebuilt the `display_mode: detailed` layout as a single unified MVHR dashboard.** Previously the legacy compact/diagnostic content (`Temperatures`/`Airflow`/`System status` sections, added in Phase 2) rendered unconditionally *above* the Phase-3 dashboard in every display mode — on a live card this looked like the old compact card with a small dashboard bolted on underneath. `display_mode: detailed` now renders the dashboard alone: a large airflow visual (four labelled air paths around a bigger MVHR unit illustration, with a heat-recovery badge inside it), a restyled controls panel (mode/boost/override, 44px+ touch targets, active-mode highlighting), a metrics tile grid, and a single status strip. `display_mode: homeowner` is unchanged — it still renders the original compact content.
+- Header (both display modes): title, a status dot, and the current mode now read together on one line, with the subtitle below (`Altair MVHR ● Home` / `Heat Recovery Ventilation System`). The header's availability indicator now only reflects required-entity failures — an unmapped or unavailable optional entity (fault, frost protection, boost/override controls, calibration metadata) no longer triggers a "1 sensor unavailable"-style warning at the top level (`src/data/availability-summary.ts` gained an `ignoreRoles` option for this).
+- Dashboard layout uses CSS grid with `fr`/`minmax()` throughout — no fixed pixel widths — at three breakpoints: desktop (~70/30 visual/controls split), tablet (≤900px, single column, metrics in a denser auto-fit grid), and mobile (≤599px, compact 2×2 air-path grid around the unit, metrics locked to 2 columns, no horizontal scroll).
+- The bottom status strip now reports one of "System OK", "Communication issue" (a required, configured entity is unavailable/missing), "Fault detected", "Calibrating…", or "Calibration required", instead of duplicating the filter/calibration text that's already shown in the metrics tiles.
+
 ### Added
+
+- `src/utils/format.ts`: `formatTimestampMaybe`, so a raw ISO-8601 timestamp (if a manufacturer's integration ever reports one) is shown locale-formatted rather than verbatim; non-ISO strings (e.g. the manufacturer-formatted timestamps already in use) pass through unchanged.
+- 14 new tests in `tests/unit/card-rendering.test.ts` covering the dashboard rebuild: legacy sections absent in detailed mode, exactly one dashboard renders, optional missing entities don't warn, required-entity unavailability produces "Communication issue", calibration/filter each render once, the metrics grid's CSS has no fixed widths, the mobile/tablet breakpoints exist, the confirmed live Altair values (84% heat recovery, Home mode, 95 m³/h, etc.), default vs. `show_airflow_on_all_paths` airflow-path behavior, and cross-manufacturer regressions for Zehnder and Aerofresh.
 
 - Project foundation: `docs/architecture.md`, `SPECIFICATION.md`, `README.md`, `ROADMAP.md`, `CONTRIBUTING.md`, `CLAUDE.md`.
 - Repository structure finalized (`docs/architecture.md` §2), including `src/data/`, `src/editor/`, `tests/fixtures/`, `docs/manufacturers/`, and `examples/generic/`.

@@ -18,16 +18,30 @@ export interface AvailabilitySummary {
  * unavailability, which takes priority over a clean "all reporting" state —
  * a typo'd entity id is more actionable than a sensor that's momentarily
  * unavailable, so it should be the more prominent signal.
+ *
+ * `options.ignoreRoles` excludes purely optional/diagnostic roles (fault,
+ * frost protection, boost/override controls, calibration metadata, etc.)
+ * from this count — the dashboard header's top-level "is this thing
+ * connected" signal should reflect required entity failures only (see
+ * SPECIFICATION.md §5/§7 and the card's Phase 4 header rules), not the
+ * absence of an optional sensor nobody configured. Defaults to no exclusions
+ * so existing callers (e.g. homeowner mode's legacy summary chip) are
+ * unaffected.
  */
 export function summarizeAvailability(
   snapshot: MvhrSnapshot,
   profile: CapabilityProfile,
+  options: { ignoreRoles?: readonly EntityRoleId[] } = {},
 ): AvailabilitySummary {
+  const ignored = new Set(options.ignoreRoles ?? []);
   let ok = 0;
   let unavailable = 0;
   let missing = 0;
 
   for (const role of Object.keys(profile.supportedRoles) as EntityRoleId[]) {
+    if (ignored.has(role)) {
+      continue;
+    }
     const value = snapshot[role];
     if (!value) {
       continue;

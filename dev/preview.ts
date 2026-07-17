@@ -49,11 +49,87 @@ const altairConfig = {
   heat_recovery_method: 'automatic',
 };
 
+// The "Current live values confirmed" set from the Altair dashboard rebuild
+// — heat recovery ≈ (17.9 - 6.5) / (20.1 - 6.5) × 100 ≈ 84%, matching
+// tests/unit/card-rendering.test.ts's "current live example values" suite.
+const liveAltairStates: HomeAssistant['states'] = {
+  'sensor.altair_mvhr_outdoor_air_temperature': {
+    entity_id: 'sensor.altair_mvhr_outdoor_air_temperature',
+    state: '6.5',
+    attributes: { unit_of_measurement: '°C' },
+  },
+  'sensor.altair_mvhr_supply_air_temperature': {
+    entity_id: 'sensor.altair_mvhr_supply_air_temperature',
+    state: '17.9',
+    attributes: { unit_of_measurement: '°C' },
+  },
+  'sensor.altair_mvhr_extract_air_temperature': {
+    entity_id: 'sensor.altair_mvhr_extract_air_temperature',
+    state: '20.1',
+    attributes: { unit_of_measurement: '°C' },
+  },
+  'sensor.altair_mvhr_exhaust_air_temperature': {
+    entity_id: 'sensor.altair_mvhr_exhaust_air_temperature',
+    state: '10.9',
+    attributes: { unit_of_measurement: '°C' },
+  },
+  'sensor.altair_mvhr_airflow': {
+    entity_id: 'sensor.altair_mvhr_airflow',
+    state: '95',
+    attributes: { unit_of_measurement: 'm³/h' },
+  },
+  'sensor.altair_mvhr_target_airflow': {
+    entity_id: 'sensor.altair_mvhr_target_airflow',
+    state: '95',
+    attributes: { unit_of_measurement: 'm³/h' },
+  },
+  'sensor.altair_mvhr_mapped_airflow_level': {
+    entity_id: 'sensor.altair_mvhr_mapped_airflow_level',
+    state: '4',
+    attributes: {},
+  },
+  'sensor.altair_mvhr_supply_fan_speed': {
+    entity_id: 'sensor.altair_mvhr_supply_fan_speed',
+    state: '1476',
+    attributes: { unit_of_measurement: 'rpm' },
+  },
+  'sensor.altair_mvhr_extract_fan_speed': {
+    entity_id: 'sensor.altair_mvhr_extract_fan_speed',
+    state: '1512',
+    attributes: { unit_of_measurement: 'rpm' },
+  },
+  'sensor.altair_mvhr_indoor_humidity': {
+    entity_id: 'sensor.altair_mvhr_indoor_humidity',
+    state: '55',
+    attributes: { unit_of_measurement: '%' },
+  },
+  'sensor.altair_mvhr_filter_days_remaining': {
+    entity_id: 'sensor.altair_mvhr_filter_days_remaining',
+    state: '353',
+    attributes: { unit_of_measurement: 'd' },
+  },
+  'select.altair_mvhr_mode': {
+    entity_id: 'select.altair_mvhr_mode',
+    state: 'medium',
+    attributes: { options: ['away', 'low', 'medium', 'high'] },
+  },
+  'sensor.altair_mvhr_airflow_calibration_result': {
+    entity_id: 'sensor.altair_mvhr_airflow_calibration_result',
+    state: 'calibrated',
+    attributes: {},
+  },
+};
+
+const liveAltairHass: HomeAssistant = {
+  ...altairHass,
+  states: { ...altairHass.states, ...liveAltairStates },
+};
+
 function withStates(overrides: HomeAssistant['states']): HomeAssistant {
   return {
-    ...altairHass,
+    ...liveAltairHass,
     states: {
-      ...altairHass.states,
+      ...liveAltairHass.states,
       ...overrides,
     },
   };
@@ -61,14 +137,32 @@ function withStates(overrides: HomeAssistant['states']): HomeAssistant {
 
 const scenarios = [
   {
-    title: 'Altair 160 — detailed desktop',
-    hass: altairHass,
+    title: 'Altair 160 — detailed desktop (dark)',
+    hass: liveAltairHass,
+    className: 'desktop dark',
+    config: altairConfig,
+  },
+  {
+    title: 'Altair 160 — detailed desktop (light)',
+    hass: liveAltairHass,
     className: 'desktop',
     config: altairConfig,
   },
   {
+    title: 'Altair 160 — detailed tablet (~760px)',
+    hass: liveAltairHass,
+    className: 'tablet',
+    config: altairConfig,
+  },
+  {
+    title: 'Altair 160 — detailed mobile (~390px)',
+    hass: liveAltairHass,
+    className: 'mobile',
+    config: altairConfig,
+  },
+  {
     title: 'Altair 160 — homeowner mobile',
-    hass: altairHass,
+    hass: liveAltairHass,
     className: 'mobile',
     config: {
       ...altairConfig,
@@ -93,6 +187,23 @@ const scenarios = [
     config: altairConfig,
   },
   {
+    title: 'Altair 160 — override active',
+    hass: withStates({
+      'select.altair_mvhr_override_duration': {
+        entity_id: 'select.altair_mvhr_override_duration',
+        state: '2h',
+        attributes: { options: ['until_next_schedule_change', '1h', '2h', '4h'] },
+      },
+      'sensor.altair_mvhr_override_remaining': {
+        entity_id: 'sensor.altair_mvhr_override_remaining',
+        state: '87',
+        attributes: { unit_of_measurement: 'min' },
+      },
+    }),
+    className: 'desktop',
+    config: altairConfig,
+  },
+  {
     title: 'Altair 160 — calibration running',
     hass: withStates({
       'sensor.altair_mvhr_airflow_calibration_status': {
@@ -110,7 +221,7 @@ const scenarios = [
     config: altairConfig,
   },
   {
-    title: 'Altair 160 — unavailable supply temperature',
+    title: 'Altair 160 — unavailable required entity (supply temperature)',
     hass: withStates({
       'sensor.altair_mvhr_supply_air_temperature': {
         entity_id: 'sensor.altair_mvhr_supply_air_temperature',

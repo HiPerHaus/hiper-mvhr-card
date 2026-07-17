@@ -153,7 +153,9 @@ describe('hiper-mvhr-card', () => {
       last_calibration: 'sensor.altair_mvhr_last_airflow_calibration',
     };
 
-    function mountAltairDashboard(callService = vi.fn().mockResolvedValue(undefined)): HiperMvhrCard {
+    function mountAltairDashboard(
+      callService = vi.fn().mockResolvedValue(undefined),
+    ): HiperMvhrCard {
       const el = mount();
       set(el, {
         type: 'custom:hiper-mvhr-card',
@@ -210,11 +212,21 @@ describe('hiper-mvhr-card', () => {
       const el = mountAltairDashboard(callService);
       await el.updateComplete;
 
-      (el.shadowRoot?.querySelector('input[aria-label="Boost duration"]') as HTMLInputElement).value = '30';
-      el.shadowRoot?.querySelector('input[aria-label="Boost duration"]')?.dispatchEvent(new Event('change'));
-      (el.shadowRoot?.querySelector('button[aria-label="Start Boost"]') as HTMLButtonElement).click();
-      el.shadowRoot?.querySelector('select[aria-label="Override duration"]')?.dispatchEvent(new Event('change'));
-      (el.shadowRoot?.querySelector('button[aria-label="Clear override"]') as HTMLButtonElement).click();
+      (
+        el.shadowRoot?.querySelector('input[aria-label="Boost duration"]') as HTMLInputElement
+      ).value = '30';
+      el.shadowRoot
+        ?.querySelector('input[aria-label="Boost duration"]')
+        ?.dispatchEvent(new Event('change'));
+      (
+        el.shadowRoot?.querySelector('button[aria-label="Start Boost"]') as HTMLButtonElement
+      ).click();
+      el.shadowRoot
+        ?.querySelector('select[aria-label="Override duration"]')
+        ?.dispatchEvent(new Event('change'));
+      (
+        el.shadowRoot?.querySelector('button[aria-label="Clear override"]') as HTMLButtonElement
+      ).click();
 
       expect(callService).toHaveBeenCalledWith('number', 'set_value', {
         entity_id: 'number.altair_mvhr_boost_duration',
@@ -577,6 +589,332 @@ describe('hiper-mvhr-card', () => {
         expect(el.shadowRoot?.querySelector('button')).toBeNull();
         el.remove();
       }
+    });
+  });
+
+  /**
+   * Rebuild of the detailed-mode dashboard (ROADMAP.md "Rebuild detailed
+   * MVHR dashboard layout"): the old compact/diagnostic content
+   * (`_legacyContent` — the Temperatures/Airflow/System status sections)
+   * used to render unconditionally above the dashboard added in Phase 3,
+   * which is exactly why the live card still looked like the old compact
+   * card with a small dashboard bolted on underneath. `display_mode:
+   * detailed` now renders `_dashboard` only; `display_mode: homeowner`
+   * keeps the legacy compact content exactly as before (see the
+   * describe blocks above, all still passing unmodified).
+   */
+  describe('detailed dashboard rebuild', () => {
+    const altairDashboardEntities = {
+      mode: 'select.altair_mvhr_mode',
+      effective_mode: 'sensor.altair_mvhr_effective_mode',
+      airflow: 'sensor.altair_mvhr_airflow',
+      target_airflow: 'sensor.altair_mvhr_target_airflow',
+      mapped_level: 'sensor.altair_mvhr_mapped_airflow_level',
+      supply_temperature: 'sensor.altair_mvhr_supply_air_temperature',
+      extract_temperature: 'sensor.altair_mvhr_extract_air_temperature',
+      outdoor_temperature: 'sensor.altair_mvhr_outdoor_air_temperature',
+      exhaust_temperature: 'sensor.altair_mvhr_exhaust_air_temperature',
+      supply_fan_speed: 'sensor.altair_mvhr_supply_fan_speed',
+      extract_fan_speed: 'sensor.altair_mvhr_extract_fan_speed',
+      indoor_humidity: 'sensor.altair_mvhr_indoor_humidity',
+      filter_days: 'sensor.altair_mvhr_filter_days_remaining',
+      boost_active: 'binary_sensor.altair_mvhr_boost_active',
+      boost_remaining: 'sensor.altair_mvhr_boost_remaining',
+      boost_duration: 'number.altair_mvhr_boost_duration',
+      start_boost: 'button.altair_mvhr_start_boost',
+      cancel_boost: 'button.altair_mvhr_cancel_boost',
+      override_duration: 'select.altair_mvhr_override_duration',
+      clear_override: 'button.altair_mvhr_clear_override',
+      calibration_result: 'sensor.altair_mvhr_airflow_calibration_result',
+      calibration_status: 'sensor.altair_mvhr_airflow_calibration_status',
+      last_calibration: 'sensor.altair_mvhr_last_airflow_calibration',
+    };
+
+    function mountAltairDashboard(hass: HomeAssistant = altairHass): HiperMvhrCard {
+      const el = mount();
+      set(el, {
+        type: 'custom:hiper-mvhr-card',
+        title: 'Altair MVHR',
+        manufacturer: 'altair',
+        display_mode: 'detailed',
+        entities: altairDashboardEntities,
+      });
+      el.hass = hass;
+      return el;
+    }
+
+    it('does not render the legacy compact sections in detailed mode', async () => {
+      const el = mountAltairDashboard();
+      await el.updateComplete;
+
+      expect(el.shadowRoot?.querySelector('.content')).toBeNull();
+      expect(el.shadowRoot?.querySelector('.metric-section')).toBeNull();
+      expect(el.shadowRoot?.querySelector('.status-section:not(.extra-controls)')).toBeNull();
+      const text = el.shadowRoot?.textContent ?? '';
+      expect(text).not.toContain('Temperatures');
+      expect(text).not.toContain('System status');
+    });
+
+    it('renders exactly one unified dashboard, starting with the header, not a second layout above it', async () => {
+      const el = mountAltairDashboard();
+      await el.updateComplete;
+
+      expect(el.shadowRoot?.querySelectorAll('.mvhr-dashboard')).toHaveLength(1);
+      expect(el.shadowRoot?.querySelector('.visual-panel')).toBeTruthy();
+      expect(el.shadowRoot?.querySelector('.metrics-grid')).toBeTruthy();
+      expect(el.shadowRoot?.querySelector('.status-strip')).toBeTruthy();
+
+      // The header is the card's first rendered child, and the dashboard
+      // immediately follows it — nothing else precedes the dashboard.
+      const card = el.shadowRoot?.querySelector('ha-card');
+      const children = Array.from(card?.children ?? []);
+      expect(children[0]?.classList.contains('mvhr-header')).toBe(true);
+      expect(children[1]?.classList.contains('mvhr-dashboard')).toBe(true);
+      expect(children).toHaveLength(2);
+    });
+
+    it('does not warn at the top level when only optional fault/frost entities are unmapped', async () => {
+      const el = mountAltairDashboard();
+      await el.updateComplete;
+
+      expect(el.shadowRoot?.querySelector('.status-dot.dot-warning')).toBeNull();
+      const text = el.shadowRoot?.textContent ?? '';
+      expect(text).not.toMatch(/configuration issue/i);
+      expect(text).not.toMatch(/sensor(s)? unavailable/i);
+    });
+
+    it('shows a "Communication issue" status when a required, configured entity is unavailable', async () => {
+      const el = mountAltairDashboard({
+        ...altairHass,
+        states: {
+          ...altairHass.states,
+          'sensor.altair_mvhr_supply_air_temperature': {
+            entity_id: 'sensor.altair_mvhr_supply_air_temperature',
+            state: 'unavailable',
+            attributes: { unit_of_measurement: '°C' },
+          },
+        },
+      });
+      await el.updateComplete;
+
+      expect(el.shadowRoot?.textContent).toMatch(/communication issue/i);
+      expect(
+        el.shadowRoot?.querySelector('.status-strip')?.classList.contains('tone-warning'),
+      ).toBe(true);
+    });
+
+    it('renders the calibration reading exactly once', async () => {
+      const el = mountAltairDashboard();
+      await el.updateComplete;
+
+      const text = el.shadowRoot?.textContent ?? '';
+      expect((text.match(/Calibration:/g) ?? []).length).toBe(1);
+    });
+
+    it('renders the filter reading exactly once', async () => {
+      const el = mountAltairDashboard();
+      await el.updateComplete;
+
+      expect(el.shadowRoot?.querySelectorAll('.bar')).toHaveLength(1);
+      expect((el.shadowRoot?.textContent?.match(/353 days/g) ?? []).length).toBe(1);
+    });
+
+    it('the metrics grid uses a flexible auto-fit layout, never a fixed pixel width', () => {
+      const cssText = HiperMvhrCard.styles.cssText;
+      const metricsGridBlock = cssText.match(/\.metrics-grid\s*{[^}]*}/)?.[0] ?? '';
+      expect(metricsGridBlock).toMatch(/grid-template-columns:\s*repeat\(auto-fit/);
+      expect(metricsGridBlock).not.toMatch(/width:\s*\d+px/);
+    });
+
+    it('has an explicit mobile breakpoint that locks the metrics grid to 2 columns', () => {
+      const cssText = HiperMvhrCard.styles.cssText;
+      expect(cssText).toMatch(/@media[^{]*max-width:\s*599px/);
+      expect(cssText).toMatch(/repeat\(2,\s*minmax\(0,\s*1fr\)\)/);
+    });
+
+    it('has a tablet breakpoint that stacks the dashboard into a single column', () => {
+      const cssText = HiperMvhrCard.styles.cssText;
+      expect(cssText).toMatch(/@media[^{]*max-width:\s*900px/);
+    });
+
+    describe('current live example values', () => {
+      const liveStates: HomeAssistant['states'] = {
+        'sensor.altair_mvhr_outdoor_air_temperature': {
+          entity_id: 'sensor.altair_mvhr_outdoor_air_temperature',
+          state: '6.5',
+          attributes: { unit_of_measurement: '°C' },
+        },
+        'sensor.altair_mvhr_supply_air_temperature': {
+          entity_id: 'sensor.altair_mvhr_supply_air_temperature',
+          state: '17.9',
+          attributes: { unit_of_measurement: '°C' },
+        },
+        'sensor.altair_mvhr_extract_air_temperature': {
+          entity_id: 'sensor.altair_mvhr_extract_air_temperature',
+          state: '20.1',
+          attributes: { unit_of_measurement: '°C' },
+        },
+        'sensor.altair_mvhr_exhaust_air_temperature': {
+          entity_id: 'sensor.altair_mvhr_exhaust_air_temperature',
+          state: '10.9',
+          attributes: { unit_of_measurement: '°C' },
+        },
+        'sensor.altair_mvhr_airflow': {
+          entity_id: 'sensor.altair_mvhr_airflow',
+          state: '95',
+          attributes: { unit_of_measurement: 'm³/h' },
+        },
+        'sensor.altair_mvhr_target_airflow': {
+          entity_id: 'sensor.altair_mvhr_target_airflow',
+          state: '95',
+          attributes: { unit_of_measurement: 'm³/h' },
+        },
+        'sensor.altair_mvhr_mapped_airflow_level': {
+          entity_id: 'sensor.altair_mvhr_mapped_airflow_level',
+          state: '4',
+          attributes: {},
+        },
+        'sensor.altair_mvhr_supply_fan_speed': {
+          entity_id: 'sensor.altair_mvhr_supply_fan_speed',
+          state: '1476',
+          attributes: { unit_of_measurement: 'rpm' },
+        },
+        'sensor.altair_mvhr_extract_fan_speed': {
+          entity_id: 'sensor.altair_mvhr_extract_fan_speed',
+          state: '1512',
+          attributes: { unit_of_measurement: 'rpm' },
+        },
+        'sensor.altair_mvhr_indoor_humidity': {
+          entity_id: 'sensor.altair_mvhr_indoor_humidity',
+          state: '55',
+          attributes: { unit_of_measurement: '%' },
+        },
+        'sensor.altair_mvhr_filter_days_remaining': {
+          entity_id: 'sensor.altair_mvhr_filter_days_remaining',
+          state: '353',
+          attributes: { unit_of_measurement: 'd' },
+        },
+        'select.altair_mvhr_mode': {
+          entity_id: 'select.altair_mvhr_mode',
+          state: 'medium',
+          attributes: { options: ['away', 'low', 'medium', 'high'] },
+        },
+        'sensor.altair_mvhr_airflow_calibration_result': {
+          entity_id: 'sensor.altair_mvhr_airflow_calibration_result',
+          state: 'calibrated',
+          attributes: {},
+        },
+      };
+
+      function mountLiveAltair(): HiperMvhrCard {
+        return mountAltairDashboard({
+          ...altairHass,
+          states: { ...altairHass.states, ...liveStates },
+        });
+      }
+
+      it('renders 84% heat recovery and Home instead of the confirmed live values\' raw "medium"', async () => {
+        const el = mountLiveAltair();
+        await el.updateComplete;
+
+        const text = el.shadowRoot?.textContent ?? '';
+        expect(text).toContain('84%');
+        expect(text).toContain('Home');
+        expect(text).not.toContain('medium');
+        expect(text).toContain('95 m³/h');
+        expect(text).toContain('1476 rpm');
+        expect(text).toContain('1512 rpm');
+        expect(text).toContain('55 %');
+        expect(text).toContain('353 days');
+      });
+
+      it('shows measured airflow on extract and supply, temperature-only on outdoor and exhaust, by default', async () => {
+        const el = mountLiveAltair();
+        await el.updateComplete;
+
+        const extract = el.shadowRoot?.querySelector('.air-path.extract');
+        const supply = el.shadowRoot?.querySelector('.air-path.supply');
+        const outdoor = el.shadowRoot?.querySelector('.air-path.outdoor');
+        const exhaust = el.shadowRoot?.querySelector('.air-path.exhaust');
+
+        expect(extract?.querySelector('.path-airflow')).toBeTruthy();
+        expect(supply?.querySelector('.path-airflow')).toBeTruthy();
+        expect(outdoor?.querySelector('.path-airflow')).toBeNull();
+        expect(exhaust?.querySelector('.path-airflow')).toBeNull();
+
+        expect(outdoor?.textContent).toContain('6.5');
+        expect(exhaust?.textContent).toContain('10.9');
+      });
+
+      it('shows measured airflow on all four paths when show_airflow_on_all_paths is set', async () => {
+        const el = mount();
+        set(el, {
+          type: 'custom:hiper-mvhr-card',
+          manufacturer: 'altair',
+          display_mode: 'detailed',
+          entities: altairDashboardEntities,
+          show_airflow_on_all_paths: true,
+        });
+        el.hass = { ...altairHass, states: { ...altairHass.states, ...liveStates } };
+        await el.updateComplete;
+
+        const outdoor = el.shadowRoot?.querySelector('.air-path.outdoor');
+        const exhaust = el.shadowRoot?.querySelector('.air-path.exhaust');
+        expect(outdoor?.querySelector('.path-airflow')).toBeTruthy();
+        expect(exhaust?.querySelector('.path-airflow')).toBeTruthy();
+      });
+    });
+
+    describe('cross-manufacturer regression', () => {
+      it('renders the unified dashboard for Zehnder without the legacy sections (bypass supported, still never shown here)', async () => {
+        const el = mount();
+        set(el, {
+          manufacturer: 'zehnder-comfoair-q',
+          display_mode: 'detailed',
+          entities: {
+            mode: 'select.comfoair_mode',
+            outdoor_air_temp: 'sensor.comfoair_outdoor_temp',
+            supply_air_temp: 'sensor.comfoair_supply_temp',
+            extract_air_temp: 'sensor.comfoair_extract_temp',
+            exhaust_air_temp: 'sensor.comfoair_exhaust_temp',
+            bypass_state: 'binary_sensor.comfoair_bypass',
+            filter_remaining: 'sensor.comfoair_filter_remaining',
+          },
+        });
+        el.hass = zehnderHass;
+        await el.updateComplete;
+
+        expect(el.shadowRoot?.querySelector('.mvhr-dashboard')).toBeTruthy();
+        expect(el.shadowRoot?.querySelector('.content')).toBeNull();
+        expect(el.shadowRoot?.textContent).toMatch(/auto|Home/i);
+      });
+
+      it('renders the unified dashboard for Aerofresh, brand name only, degrading missing/unavailable entities correctly', async () => {
+        const el = mount();
+        set(el, {
+          manufacturer: 'vent_axia_sentinel_econiq',
+          display_mode: 'detailed',
+          entities: {
+            mode: 'select.aerofresh_mode',
+            outdoor_air_temp: 'sensor.aerofresh_outdoor_temp',
+            supply_air_temp: 'sensor.aerofresh_supply_temp',
+            extract_air_temp: 'sensor.aerofresh_extract_temp',
+            exhaust_air_temp: 'sensor.aerofresh_exhaust_temp_TYPO',
+            bypass_state: 'binary_sensor.aerofresh_bypass',
+            filter_remaining: 'sensor.aerofresh_filter_remaining',
+            fault_active: 'binary_sensor.aerofresh_fault',
+          },
+        });
+        el.hass = aerofreshHass;
+        await el.updateComplete;
+
+        expect(el.shadowRoot?.querySelector('.mvhr-dashboard')).toBeTruthy();
+        expect(el.shadowRoot?.querySelector('.content')).toBeNull();
+        const text = el.shadowRoot?.textContent ?? '';
+        expect(text).toContain('Aerofresh');
+        expect(text.toLowerCase()).not.toContain('vent-axia');
+        expect(text.toLowerCase()).not.toContain('vent_axia');
+      });
     });
   });
 });
