@@ -1860,42 +1860,57 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
           >
             <defs>
               <clipPath id="system-exchanger-clip">
-                <path d="M50 34 L66 50 L50 66 L34 50 Z"></path>
+                <path d="M50 22 L78 50 L50 78 L22 50 Z"></path>
               </clipPath>
             </defs>
+            <rect class="unit-frame" x="3" y="5" width="94" height="90" rx="7"></rect>
+            <g class="duct-shells" aria-hidden="true">
+              <path d="M0 78 C20 78 30 74 43 58"></path>
+              <path d="M43 42 C30 26 20 22 0 22"></path>
+              <path d="M100 78 C80 78 70 74 57 58"></path>
+              <path d="M57 42 C70 26 80 22 100 22"></path>
+            </g>
             <path
               class="airflow-path extract-flow"
               data-flow="inward"
-              d="M0 82 C18 82 25 67 42 55"
+              d="M0 78 C20 78 30 74 43 58"
             ></path>
             <path
               class="airflow-path exhaust-flow"
               data-flow="outward"
-              d="M42 45 C25 33 18 18 0 18"
+              d="M43 42 C30 26 20 22 0 22"
             ></path>
             <path
               class="airflow-path outdoor-flow"
               data-flow="inward"
-              d="M100 82 C82 82 75 67 58 55"
+              d="M100 78 C80 78 70 74 57 58"
             ></path>
             <path
               class="airflow-path supply-flow"
               data-flow="outward"
-              d="M58 45 C75 33 82 18 100 18"
+              d="M57 42 C70 26 80 22 100 22"
             ></path>
+            <g class="port-collars" aria-hidden="true">
+              <rect x="0" y="14" width="5" height="16" rx="2"></rect>
+              <rect x="0" y="70" width="5" height="16" rx="2"></rect>
+              <rect x="95" y="14" width="5" height="16" rx="2"></rect>
+              <rect x="95" y="70" width="5" height="16" rx="2"></rect>
+            </g>
             <g class="exchanger-plate" aria-hidden="true">
-              <path class="exchanger-outline" d="M50 34 L66 50 L50 66 L34 50 Z"></path>
+              <path class="exchanger-outline" d="M50 22 L78 50 L50 78 L22 50 Z"></path>
               <g class="warm-channels" clip-path="url(#system-exchanger-clip)">
-                <path d="M32 43 L50 61"></path>
-                <path d="M35 39 L53 57"></path>
-                <path d="M39 35 L57 53"></path>
+                <path d="M18 43 L55 80"></path>
+                <path d="M22 37 L59 74"></path>
+                <path d="M27 32 L64 69"></path>
+                <path d="M32 27 L69 64"></path>
               </g>
               <g class="cool-channels" clip-path="url(#system-exchanger-clip)">
-                <path d="M50 39 L68 57"></path>
-                <path d="M47 43 L65 61"></path>
-                <path d="M43 47 L61 65"></path>
+                <path d="M45 20 L82 57"></path>
+                <path d="M41 26 L78 63"></path>
+                <path d="M36 31 L73 68"></path>
+                <path d="M31 36 L68 73"></path>
               </g>
-              <path class="passage-separator" d="M42 50 L50 42 L58 50 L50 58 Z"></path>
+              <path class="passage-separator" d="M39 50 L50 39 L61 50 L50 61 Z"></path>
             </g>
             ${['extract', 'exhaust', 'outdoor', 'supply'].map(
               (stream) =>
@@ -2942,7 +2957,7 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
         text-align: left;
       }
     }
-    @container (max-width: 420px) {
+    @container (max-width: 520px) {
       .system-visual-wrap {
         grid-template-columns: repeat(2, minmax(0, 1fr));
         grid-template-rows: auto auto auto;
@@ -3015,21 +3030,40 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
        instead of a competing side column, Overview always gets the full
        card width, so it's sized considerably larger again here. */
     .system-visual-wrap {
-      min-height: 560px;
-      grid-template-columns: minmax(180px, 1fr) minmax(320px, 480px) minmax(180px, 1fr);
+      min-height: 430px;
+      grid-template-columns: minmax(160px, 1fr) minmax(460px, 700px) minmax(160px, 1fr);
     }
     .system-visual-panel .unit {
-      min-height: 480px;
-      border-radius: 32px;
+      min-height: 360px;
+      border-radius: 26px;
     }
     .system-visual-panel .fan {
       --mdc-icon-size: 48px;
+      right: 5%;
+      left: auto;
+      z-index: 2;
+      padding: 5px;
+      border-radius: 8px;
+      color: var(--primary-text-color);
+      background: color-mix(
+        in srgb,
+        var(--ha-card-background, var(--card-background-color)),
+        transparent 8%
+      );
+      border: 1px solid var(--divider-color);
+    }
+    .system-visual-panel .fan-a {
+      top: 17%;
+    }
+    .system-visual-panel .fan-b {
+      top: auto;
+      bottom: 17%;
     }
     .airflow-schematic {
       position: absolute;
-      inset: 9% 0;
+      inset: 3% 0;
       width: 100%;
-      height: 82%;
+      height: 94%;
       overflow: visible;
       --air-outdoor: color-mix(in srgb, var(--primary-color), white 18%);
       --air-supply: color-mix(in srgb, var(--primary-color), white 42%);
@@ -3038,10 +3072,27 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     }
     .airflow-path {
       fill: none;
-      stroke-width: 4.2;
+      stroke-width: 13;
       stroke-linecap: round;
-      opacity: 0.74;
+      opacity: 0.86;
       vector-effect: non-scaling-stroke;
+    }
+    .duct-shells path {
+      fill: none;
+      stroke: color-mix(in srgb, var(--divider-color), var(--primary-text-color) 12%);
+      stroke-width: 17;
+      stroke-linecap: butt;
+      vector-effect: non-scaling-stroke;
+    }
+    .unit-frame {
+      fill: none;
+      stroke: color-mix(in srgb, var(--divider-color), var(--primary-text-color) 24%);
+      stroke-width: 1.5;
+    }
+    .port-collars rect {
+      fill: color-mix(in srgb, var(--secondary-text-color), transparent 22%);
+      stroke: var(--divider-color);
+      stroke-width: 0.8;
     }
     .extract-flow {
       stroke: var(--air-extract);
@@ -3062,12 +3113,12 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
         transparent 4%
       );
       stroke: var(--divider-color);
-      stroke-width: 1.4;
+      stroke-width: 2;
     }
     .warm-channels path,
     .cool-channels path {
       fill: none;
-      stroke-width: 2.2;
+      stroke-width: 1.5;
       stroke-linecap: round;
     }
     .warm-channels path {
@@ -3079,7 +3130,7 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     .passage-separator {
       fill: var(--ha-card-background, var(--card-background-color));
       stroke: var(--divider-color);
-      stroke-width: 1.2;
+      stroke-width: 1.6;
     }
     .airflow-particle {
       opacity: 0;
@@ -3087,19 +3138,19 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     }
     .extract-particles .airflow-particle {
       fill: var(--air-extract);
-      offset-path: path('M0 82 C18 82 25 67 42 55');
+      offset-path: path('M0 78 C20 78 30 74 43 58');
     }
     .exhaust-particles .airflow-particle {
       fill: var(--air-exhaust);
-      offset-path: path('M42 45 C25 33 18 18 0 18');
+      offset-path: path('M43 42 C30 26 20 22 0 22');
     }
     .outdoor-particles .airflow-particle {
       fill: var(--air-outdoor);
-      offset-path: path('M100 82 C82 82 75 67 58 55');
+      offset-path: path('M100 78 C80 78 70 74 57 58');
     }
     .supply-particles .airflow-particle {
       fill: var(--air-supply);
-      offset-path: path('M58 45 C75 33 82 18 100 18');
+      offset-path: path('M57 42 C70 26 80 22 100 22');
     }
     .system-visual-panel .unit.active .airflow-particle {
       animation: schematic-particle 2.4s linear infinite;
@@ -3714,7 +3765,7 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
         grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
       }
       .system-visual-wrap {
-        grid-template-columns: minmax(150px, 1fr) minmax(260px, 340px) minmax(150px, 1fr);
+        grid-template-columns: minmax(140px, 1fr) minmax(360px, 520px) minmax(140px, 1fr);
         min-height: 440px;
       }
       .system-visual-panel .unit {
@@ -3839,6 +3890,30 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       }
       .disclosure-toggle {
         width: 100%;
+      }
+    }
+
+    /* Container-query overrides must follow the desktop system-visual
+       rules above: dashboard columns can be narrow even when the browser
+       viewport is wide, so viewport media queries alone are insufficient. */
+    @container (max-width: 520px) {
+      .system-visual-wrap {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-rows: auto auto auto;
+        min-height: 0;
+        gap: 10px;
+      }
+      .system-visual-panel .unit {
+        grid-column: 1 / -1;
+        grid-row: 2;
+        min-height: 180px;
+      }
+      .system-visual-panel .air-path {
+        min-height: 66px;
+        padding: 10px;
+      }
+      .system-lower-grid {
+        grid-template-columns: minmax(0, 1fr);
       }
     }
   `;

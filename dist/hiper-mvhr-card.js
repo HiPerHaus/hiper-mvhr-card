@@ -284,7 +284,7 @@ C.elementStyles = [], C.shadowRootOptions = { mode: "open" }, C[M("elementProper
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const L = globalThis, he = (s) => s, j = L.trustedTypes, me = j ? j.createPolicy("lit-html", { createHTML: (s) => s }) : void 0, Re = "$lit$", x = `lit$${Math.random().toFixed(9).slice(2)}$`, Oe = "?" + x, We = `<${Oe}>`, S = document, P = () => S.createComment(""), N = (s) => s === null || typeof s != "object" && typeof s != "function", ae = Array.isArray, Ye = (s) => ae(s) || typeof (s == null ? void 0 : s[Symbol.iterator]) == "function", Z = `[ 	
+const L = globalThis, he = (s) => s, j = L.trustedTypes, me = j ? j.createPolicy("lit-html", { createHTML: (s) => s }) : void 0, Re = "$lit$", w = `lit$${Math.random().toFixed(9).slice(2)}$`, Oe = "?" + w, We = `<${Oe}>`, S = document, P = () => S.createComment(""), N = (s) => s === null || typeof s != "object" && typeof s != "function", ae = Array.isArray, Ye = (s) => ae(s) || typeof (s == null ? void 0 : s[Symbol.iterator]) == "function", Z = `[ 	
 \f\r]`, z = /<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g, fe = /-->/g, ge = />/g, $ = RegExp(`>|${Z}(?:([^\\s"'>=/]+)(${Z}*=${Z}*(?:[^ 	
 \f\r"'\`<>=]|("|')|))|$)`, "g"), ve = /'/g, be = /"/g, ze = /^(?:script|style|textarea|title)$/i, Ze = (s) => (e, ...t) => ({ _$litType$: s, strings: e, values: t }), c = Ze(1), R = Symbol.for("lit-noChange"), g = Symbol.for("lit-nothing"), _e = /* @__PURE__ */ new WeakMap(), k = S.createTreeWalker(S, 129);
 function Me(s, e) {
@@ -299,7 +299,7 @@ const Ge = (s, e) => {
     let u, d, p = -1, h = 0;
     for (; h < l.length && (o.lastIndex = h, d = o.exec(l), d !== null); ) h = o.lastIndex, o === z ? d[1] === "!--" ? o = fe : d[1] !== void 0 ? o = ge : d[2] !== void 0 ? (ze.test(d[2]) && (a = RegExp("</" + d[2], "g")), o = $) : d[3] !== void 0 && (o = $) : o === $ ? d[0] === ">" ? (o = a ?? z, p = -1) : d[1] === void 0 ? p = -2 : (p = o.lastIndex - d[2].length, u = d[1], o = d[3] === void 0 ? $ : d[3] === '"' ? be : ve) : o === be || o === ve ? o = $ : o === fe || o === ge ? o = z : (o = $, a = void 0);
     const m = o === $ && s[n + 1].startsWith("/>") ? " " : "";
-    i += o === z ? l + We : p >= 0 ? (r.push(u), l.slice(0, p) + Re + l.slice(p) + x + m) : l + x + (p === -2 ? n : m);
+    i += o === z ? l + We : p >= 0 ? (r.push(u), l.slice(0, p) + Re + l.slice(p) + w + m) : l + w + (p === -2 ? n : m);
   }
   return [Me(s, i + (s[t] || "<?>") + (e === 2 ? "</svg>" : e === 3 ? "</math>" : "")), r];
 };
@@ -316,11 +316,11 @@ class H {
     for (; (a = k.nextNode()) !== null && l.length < n; ) {
       if (a.nodeType === 1) {
         if (a.hasAttributes()) for (const p of a.getAttributeNames()) if (p.endsWith(Re)) {
-          const h = d[o++], m = a.getAttribute(p).split(x), v = /([.?@])?(.*)/.exec(h);
+          const h = d[o++], m = a.getAttribute(p).split(w), v = /([.?@])?(.*)/.exec(h);
           l.push({ type: 1, index: i, name: v[2], strings: m, ctor: v[1] === "." ? Qe : v[1] === "?" ? Ke : v[1] === "@" ? Je : F }), a.removeAttribute(p);
-        } else p.startsWith(x) && (l.push({ type: 6, index: i }), a.removeAttribute(p));
+        } else p.startsWith(w) && (l.push({ type: 6, index: i }), a.removeAttribute(p));
         if (ze.test(a.tagName)) {
-          const p = a.textContent.split(x), h = p.length - 1;
+          const p = a.textContent.split(w), h = p.length - 1;
           if (h > 0) {
             a.textContent = j ? j.emptyScript : "";
             for (let m = 0; m < h; m++) a.append(p[m], P()), k.nextNode(), l.push({ type: 2, index: ++i });
@@ -330,7 +330,7 @@ class H {
       } else if (a.nodeType === 8) if (a.data === Oe) l.push({ type: 2, index: i });
       else {
         let p = -1;
-        for (; (p = a.data.indexOf(x, p + 1)) !== -1; ) l.push({ type: 7, index: i }), p += x.length - 1;
+        for (; (p = a.data.indexOf(w, p + 1)) !== -1; ) l.push({ type: 7, index: i }), p += w.length - 1;
       }
       i++;
     }
@@ -701,7 +701,7 @@ var ct = Object.defineProperty, Pe = (s, e, t, r) => {
     (o = s[i]) && (a = o(e, t, a) || a);
   return a && ct(e, t, a), a;
 };
-const we = "hiper-mvhr-card-editor", se = class se extends T {
+const xe = "hiper-mvhr-card-editor", se = class se extends T {
   setConfig(e) {
     this._config = { ...e };
   }
@@ -854,7 +854,7 @@ Pe([
 Pe([
   q()
 ], U.prototype, "_config");
-customElements.get(we) || customElements.define(we, U);
+customElements.get(xe) || customElements.define(xe, U);
 const oe = [
   "mode",
   "effective_mode",
@@ -935,7 +935,7 @@ class b extends Error {
     super(e), this.name = "ConfigValidationError";
   }
 }
-const dt = "homeowner", xe = ["homeowner", "detailed", "system"], ye = ["automatic", "supply_temperature", "disabled"];
+const dt = "homeowner", we = ["homeowner", "detailed", "system"], ye = ["automatic", "supply_temperature", "disabled"];
 function $e(s) {
   return oe.includes(s);
 }
@@ -961,9 +961,9 @@ function ut(s) {
       `hiper-mvhr-card: unknown manufacturer "${e.manufacturer}". Supported: ${J.join(", ")}`
     );
   const t = e.manufacturer, r = e.display_mode ?? dt;
-  if (!xe.includes(r))
+  if (!we.includes(r))
     throw new b(
-      `hiper-mvhr-card: invalid "display_mode" value "${String(e.display_mode)}". Expected one of: ${xe.join(", ")}`
+      `hiper-mvhr-card: invalid "display_mode" value "${String(e.display_mode)}". Expected one of: ${we.join(", ")}`
     );
   if (e.name !== void 0 && typeof e.name != "string")
     throw new b('hiper-mvhr-card: "name" must be a string if provided');
@@ -1099,8 +1099,8 @@ function bt(s, e, t = {}) {
     label: i === 1 ? "1 sensor unavailable" : `${i} sensors unavailable`
   } : a > 0 ? { tone: "success", label: "All sensors reporting" } : { tone: "muted", label: "Not configured" };
 }
-const _t = 1e4, wt = "press";
-function xt(s) {
+const _t = 1e4, xt = "press";
+function wt(s) {
   const [e] = s.split(".");
   return e ?? "";
 }
@@ -1133,14 +1133,14 @@ class yt {
     if (!(e != null && e.callService) || this._state.status === "pending")
       return;
     this._setState({ status: "pending" });
-    const r = xt(t);
+    const r = wt(t);
     let a;
     const i = new Promise((o) => {
       a = setTimeout(() => o("timeout"), this._timeoutMs);
     });
     try {
       if (await Promise.race([
-        e.callService(r, wt, { entity_id: t }).then(() => "done"),
+        e.callService(r, xt, { entity_id: t }).then(() => "done"),
         i
       ]) === "timeout") {
         this._setState({ status: "error", message: "Timed out waiting for a response." });
@@ -1614,13 +1614,13 @@ const V = "hiper-mvhr-card", Rt = [
           <span class="control-group-label">Mode</span>
           <div class="mode-buttons" role="group" aria-label="Operating mode">
             ${n.map((f) => {
-      const w = u !== void 0 && f.toLowerCase() === u;
+      const x = u !== void 0 && f.toLowerCase() === u;
       return c`
                 <button
                   type="button"
-                  class="chip ${w ? "active" : ""}"
+                  class="chip ${x ? "active" : ""}"
                   ?disabled=${!a}
-                  aria-pressed=${w}
+                  aria-pressed=${x}
                   aria-label=${`Set mode ${this._modeLabel(f)}`}
                   @click=${() => a && this._call(r, "select", "select_option", { entity_id: a, option: f })}
                 >
@@ -1649,10 +1649,10 @@ const V = "hiper-mvhr-card", Rt = [
               ?disabled=${!i}
               aria-label="Boost duration"
               @change=${(f) => {
-      const w = Number(f.currentTarget.value);
-      i && Number.isFinite(w) && this._call(r, "number", "set_value", {
+      const x = Number(f.currentTarget.value);
+      i && Number.isFinite(x) && this._call(r, "number", "set_value", {
         entity_id: i,
-        value: w
+        value: x
       });
     }}
             />
@@ -1693,10 +1693,10 @@ const V = "hiper-mvhr-card", Rt = [
               ?disabled=${!o}
               aria-label="Override duration"
               @change=${(f) => {
-      const w = f.currentTarget.value;
+      const x = f.currentTarget.value;
       o && this._call(r, "select", "select_option", {
         entity_id: o,
-        option: w
+        option: x
       });
     }}
             >
@@ -1791,10 +1791,10 @@ const V = "hiper-mvhr-card", Rt = [
                     class="mode-select-pill"
                     aria-label="Operating mode"
                     @change=${(f) => {
-      const w = f.currentTarget.value;
+      const x = f.currentTarget.value;
       i && this._call(r, "select", "select_option", {
         entity_id: i,
-        option: w
+        option: x
       });
     }}
                   >
@@ -2384,7 +2384,7 @@ const V = "hiper-mvhr-card", Rt = [
   _systemHeroVisual(e, t, r, a, i, o) {
     const n = this._value(e.airflow, !0) ?? this._value(e.supply_airflow, !0), l = t.show_airflow_on_all_paths, u = i.status === "ok" && this._prevRecoveryLabel !== void 0 && this._prevRecoveryLabel !== i.label;
     this._prevRecoveryLabel = i.status === "ok" ? i.label : this._prevRecoveryLabel;
-    const d = (p, h, m, v, _, f, w) => {
+    const d = (p, h, m, v, _, f, x) => {
       const le = l || v ? n : null;
       return c`
         <div
@@ -2393,7 +2393,7 @@ const V = "hiper-mvhr-card", Rt = [
           <span class="path-label">
             <ha-icon icon=${_} aria-hidden="true"></ha-icon>
             ${h}
-            <ha-icon class="path-arrow" icon=${f} aria-label=${w}></ha-icon>
+            <ha-icon class="path-arrow" icon=${f} aria-label=${x}></ha-icon>
           </span>
           <span class="path-temp">${this._value(e[m], !0) ?? "—"}</span>
           ${le ? c`<span class="path-airflow"
@@ -2437,42 +2437,57 @@ const V = "hiper-mvhr-card", Rt = [
           >
             <defs>
               <clipPath id="system-exchanger-clip">
-                <path d="M50 34 L66 50 L50 66 L34 50 Z"></path>
+                <path d="M50 22 L78 50 L50 78 L22 50 Z"></path>
               </clipPath>
             </defs>
+            <rect class="unit-frame" x="3" y="5" width="94" height="90" rx="7"></rect>
+            <g class="duct-shells" aria-hidden="true">
+              <path d="M0 78 C20 78 30 74 43 58"></path>
+              <path d="M43 42 C30 26 20 22 0 22"></path>
+              <path d="M100 78 C80 78 70 74 57 58"></path>
+              <path d="M57 42 C70 26 80 22 100 22"></path>
+            </g>
             <path
               class="airflow-path extract-flow"
               data-flow="inward"
-              d="M0 82 C18 82 25 67 42 55"
+              d="M0 78 C20 78 30 74 43 58"
             ></path>
             <path
               class="airflow-path exhaust-flow"
               data-flow="outward"
-              d="M42 45 C25 33 18 18 0 18"
+              d="M43 42 C30 26 20 22 0 22"
             ></path>
             <path
               class="airflow-path outdoor-flow"
               data-flow="inward"
-              d="M100 82 C82 82 75 67 58 55"
+              d="M100 78 C80 78 70 74 57 58"
             ></path>
             <path
               class="airflow-path supply-flow"
               data-flow="outward"
-              d="M58 45 C75 33 82 18 100 18"
+              d="M57 42 C70 26 80 22 100 22"
             ></path>
+            <g class="port-collars" aria-hidden="true">
+              <rect x="0" y="14" width="5" height="16" rx="2"></rect>
+              <rect x="0" y="70" width="5" height="16" rx="2"></rect>
+              <rect x="95" y="14" width="5" height="16" rx="2"></rect>
+              <rect x="95" y="70" width="5" height="16" rx="2"></rect>
+            </g>
             <g class="exchanger-plate" aria-hidden="true">
-              <path class="exchanger-outline" d="M50 34 L66 50 L50 66 L34 50 Z"></path>
+              <path class="exchanger-outline" d="M50 22 L78 50 L50 78 L22 50 Z"></path>
               <g class="warm-channels" clip-path="url(#system-exchanger-clip)">
-                <path d="M32 43 L50 61"></path>
-                <path d="M35 39 L53 57"></path>
-                <path d="M39 35 L57 53"></path>
+                <path d="M18 43 L55 80"></path>
+                <path d="M22 37 L59 74"></path>
+                <path d="M27 32 L64 69"></path>
+                <path d="M32 27 L69 64"></path>
               </g>
               <g class="cool-channels" clip-path="url(#system-exchanger-clip)">
-                <path d="M50 39 L68 57"></path>
-                <path d="M47 43 L65 61"></path>
-                <path d="M43 47 L61 65"></path>
+                <path d="M45 20 L82 57"></path>
+                <path d="M41 26 L78 63"></path>
+                <path d="M36 31 L73 68"></path>
+                <path d="M31 36 L68 73"></path>
               </g>
-              <path class="passage-separator" d="M42 50 L50 42 L58 50 L50 58 Z"></path>
+              <path class="passage-separator" d="M39 50 L50 39 L61 50 L50 61 Z"></path>
             </g>
             ${["extract", "exhaust", "outdoor", "supply"].map(
       (p) => c`<g class="airflow-particles ${p}-particles" aria-hidden="true">
@@ -3437,7 +3452,7 @@ ne.styles = Te`
         text-align: left;
       }
     }
-    @container (max-width: 420px) {
+    @container (max-width: 520px) {
       .system-visual-wrap {
         grid-template-columns: repeat(2, minmax(0, 1fr));
         grid-template-rows: auto auto auto;
@@ -3510,21 +3525,40 @@ ne.styles = Te`
        instead of a competing side column, Overview always gets the full
        card width, so it's sized considerably larger again here. */
     .system-visual-wrap {
-      min-height: 560px;
-      grid-template-columns: minmax(180px, 1fr) minmax(320px, 480px) minmax(180px, 1fr);
+      min-height: 430px;
+      grid-template-columns: minmax(160px, 1fr) minmax(460px, 700px) minmax(160px, 1fr);
     }
     .system-visual-panel .unit {
-      min-height: 480px;
-      border-radius: 32px;
+      min-height: 360px;
+      border-radius: 26px;
     }
     .system-visual-panel .fan {
       --mdc-icon-size: 48px;
+      right: 5%;
+      left: auto;
+      z-index: 2;
+      padding: 5px;
+      border-radius: 8px;
+      color: var(--primary-text-color);
+      background: color-mix(
+        in srgb,
+        var(--ha-card-background, var(--card-background-color)),
+        transparent 8%
+      );
+      border: 1px solid var(--divider-color);
+    }
+    .system-visual-panel .fan-a {
+      top: 17%;
+    }
+    .system-visual-panel .fan-b {
+      top: auto;
+      bottom: 17%;
     }
     .airflow-schematic {
       position: absolute;
-      inset: 9% 0;
+      inset: 3% 0;
       width: 100%;
-      height: 82%;
+      height: 94%;
       overflow: visible;
       --air-outdoor: color-mix(in srgb, var(--primary-color), white 18%);
       --air-supply: color-mix(in srgb, var(--primary-color), white 42%);
@@ -3533,10 +3567,27 @@ ne.styles = Te`
     }
     .airflow-path {
       fill: none;
-      stroke-width: 4.2;
+      stroke-width: 13;
       stroke-linecap: round;
-      opacity: 0.74;
+      opacity: 0.86;
       vector-effect: non-scaling-stroke;
+    }
+    .duct-shells path {
+      fill: none;
+      stroke: color-mix(in srgb, var(--divider-color), var(--primary-text-color) 12%);
+      stroke-width: 17;
+      stroke-linecap: butt;
+      vector-effect: non-scaling-stroke;
+    }
+    .unit-frame {
+      fill: none;
+      stroke: color-mix(in srgb, var(--divider-color), var(--primary-text-color) 24%);
+      stroke-width: 1.5;
+    }
+    .port-collars rect {
+      fill: color-mix(in srgb, var(--secondary-text-color), transparent 22%);
+      stroke: var(--divider-color);
+      stroke-width: 0.8;
     }
     .extract-flow {
       stroke: var(--air-extract);
@@ -3557,12 +3608,12 @@ ne.styles = Te`
         transparent 4%
       );
       stroke: var(--divider-color);
-      stroke-width: 1.4;
+      stroke-width: 2;
     }
     .warm-channels path,
     .cool-channels path {
       fill: none;
-      stroke-width: 2.2;
+      stroke-width: 1.5;
       stroke-linecap: round;
     }
     .warm-channels path {
@@ -3574,7 +3625,7 @@ ne.styles = Te`
     .passage-separator {
       fill: var(--ha-card-background, var(--card-background-color));
       stroke: var(--divider-color);
-      stroke-width: 1.2;
+      stroke-width: 1.6;
     }
     .airflow-particle {
       opacity: 0;
@@ -3582,19 +3633,19 @@ ne.styles = Te`
     }
     .extract-particles .airflow-particle {
       fill: var(--air-extract);
-      offset-path: path('M0 82 C18 82 25 67 42 55');
+      offset-path: path('M0 78 C20 78 30 74 43 58');
     }
     .exhaust-particles .airflow-particle {
       fill: var(--air-exhaust);
-      offset-path: path('M42 45 C25 33 18 18 0 18');
+      offset-path: path('M43 42 C30 26 20 22 0 22');
     }
     .outdoor-particles .airflow-particle {
       fill: var(--air-outdoor);
-      offset-path: path('M100 82 C82 82 75 67 58 55');
+      offset-path: path('M100 78 C80 78 70 74 57 58');
     }
     .supply-particles .airflow-particle {
       fill: var(--air-supply);
-      offset-path: path('M58 45 C75 33 82 18 100 18');
+      offset-path: path('M57 42 C70 26 80 22 100 22');
     }
     .system-visual-panel .unit.active .airflow-particle {
       animation: schematic-particle 2.4s linear infinite;
@@ -4209,7 +4260,7 @@ ne.styles = Te`
         grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
       }
       .system-visual-wrap {
-        grid-template-columns: minmax(150px, 1fr) minmax(260px, 340px) minmax(150px, 1fr);
+        grid-template-columns: minmax(140px, 1fr) minmax(360px, 520px) minmax(140px, 1fr);
         min-height: 440px;
       }
       .system-visual-panel .unit {
@@ -4334,6 +4385,30 @@ ne.styles = Te`
       }
       .disclosure-toggle {
         width: 100%;
+      }
+    }
+
+    /* Container-query overrides must follow the desktop system-visual
+       rules above: dashboard columns can be narrow even when the browser
+       viewport is wide, so viewport media queries alone are insufficient. */
+    @container (max-width: 520px) {
+      .system-visual-wrap {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-rows: auto auto auto;
+        min-height: 0;
+        gap: 10px;
+      }
+      .system-visual-panel .unit {
+        grid-column: 1 / -1;
+        grid-row: 2;
+        min-height: 180px;
+      }
+      .system-visual-panel .air-path {
+        min-height: 66px;
+        padding: 10px;
+      }
+      .system-lower-grid {
+        grid-template-columns: minmax(0, 1fr);
       }
     }
   `;

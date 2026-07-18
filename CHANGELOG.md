@@ -40,6 +40,7 @@ All notable changes to this project are documented here. Format follows [Keep a 
   - 6 new tests in `tests/unit/card-rendering.test.ts` covering the arc fraction at `mapped_level` 0/4/6/10, confirming current/target airflow no longer influence the fraction, the `selected_speed` fallback when `mapped_level` is unavailable, and an empty arc when neither is available.
 - **The system-mode MVHR unit now contains a functional four-path SVG airflow schematic.** Extract and outdoor air curve inward through separate warm/cool exchanger passages; exhaust and supply curve outward without the streams visually merging. Theme-derived colours, direction-correct particles, boost speed-up, reduced-motion handling, centred recovery badge, and card-width container-query reflow are retained across desktop and mobile layouts.
   - Added rendering tests for the four independent paths and their directions, separated exchanger channels, particle structure, boost timing, centred badge, reduced-motion coverage, and responsive markup/CSS.
+  - Follow-up visual refinement makes the unit wider and more appliance-like, with thick duct bands, an internal casing frame, four port collars, right-side fan housings, a larger plate exchanger, and an explicit two-row compact-card layout matching the desktop composition.
 
 ### Changed
 

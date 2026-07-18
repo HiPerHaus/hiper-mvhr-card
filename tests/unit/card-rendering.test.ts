@@ -1197,6 +1197,9 @@ describe('hiper-mvhr-card', () => {
         );
         expect(schematic?.querySelector('.supply-flow')?.getAttribute('data-flow')).toBe('outward');
         expect(schematic?.querySelectorAll('.airflow-particle')).toHaveLength(12);
+        expect(schematic?.querySelector('.unit-frame')).toBeTruthy();
+        expect(schematic?.querySelectorAll('.duct-shells path')).toHaveLength(4);
+        expect(schematic?.querySelectorAll('.port-collars rect')).toHaveLength(4);
       });
 
       it('keeps warm and cool exchanger channels visually separate beneath the centred badge', async () => {
