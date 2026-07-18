@@ -1727,6 +1727,119 @@ describe('hiper-mvhr-card', () => {
 
         expect(el.shadowRoot?.querySelector('button[aria-label="Run calibration"]')).toBeNull();
       });
+
+      it('speeds up the duct-particle and fan animations while boost is active', () => {
+        const cssText = HiperMvhrCard.styles.cssText;
+        expect(cssText).toMatch(/\.unit\.active\.boost-active \.fan\s*{[^}]*animation-duration:\s*3\.5s/);
+        expect(cssText).toMatch(
+          /\.unit\.active\.boost-active \.duct-top::after,[\s\S]*?animation-duration:\s*0\.6s/,
+        );
+      });
+
+      describe('micro-animations: one-shot change detection', () => {
+        it('does not pulse the recovery badge on the very first render', async () => {
+          const el = mountSystem();
+          await el.updateComplete;
+
+          expect(el.shadowRoot?.querySelector('.recovery-badge-circular.recovery-pulse')).toBeNull();
+        });
+
+        it('pulses the recovery badge only on the render where the figure actually changes', async () => {
+          const el = mountSystem();
+          await el.updateComplete;
+          expect(el.shadowRoot?.querySelector('.recovery-badge-circular')?.textContent).toContain('74%');
+
+          // Same instance, a later hass update with a genuinely different
+          // supply temperature -> a different recovery percentage.
+          el.hass = {
+            ...altairHass,
+            states: {
+              ...altairHass.states,
+              ...systemStates,
+              'sensor.altair_mvhr_supply_air_temperature': {
+                entity_id: 'sensor.altair_mvhr_supply_air_temperature',
+                state: '12.5',
+                attributes: { unit_of_measurement: '°C' },
+              },
+            },
+          };
+          await el.updateComplete;
+          const badge = el.shadowRoot?.querySelector('.recovery-badge-circular');
+          expect(badge?.textContent).not.toContain('74%');
+          expect(badge?.classList.contains('recovery-pulse')).toBe(true);
+
+          // A further render with the same (now unchanged) figure shouldn't
+          // pulse again.
+          el.hass = {
+            ...altairHass,
+            states: {
+              ...altairHass.states,
+              ...systemStates,
+              'sensor.altair_mvhr_supply_air_temperature': {
+                entity_id: 'sensor.altair_mvhr_supply_air_temperature',
+                state: '12.5',
+                attributes: { unit_of_measurement: '°C' },
+              },
+              // Force a re-render via an unrelated state change.
+              'sensor.altair_mvhr_indoor_humidity': {
+                entity_id: 'sensor.altair_mvhr_indoor_humidity',
+                state: '62',
+                attributes: { unit_of_measurement: '%' },
+              },
+            },
+          };
+          await el.updateComplete;
+          expect(
+            el.shadowRoot?.querySelector('.recovery-badge-circular')?.classList.contains('recovery-pulse'),
+          ).toBe(false);
+        });
+
+        it('does not brighten the Airflow card on the very first render', async () => {
+          const el = mountSystem();
+          await el.updateComplete;
+
+          expect(el.shadowRoot?.querySelector('.airflow-card.airflow-brighten')).toBeNull();
+        });
+
+        it('brightens the Airflow card only when the reading increases, not when it decreases', async () => {
+          const el = mountSystem();
+          await el.updateComplete;
+
+          el.hass = {
+            ...altairHass,
+            states: {
+              ...altairHass.states,
+              ...systemStates,
+              'sensor.altair_mvhr_airflow': {
+                entity_id: 'sensor.altair_mvhr_airflow',
+                state: '90',
+                attributes: { unit_of_measurement: 'm³/h' },
+              },
+            },
+          };
+          await el.updateComplete;
+          expect(el.shadowRoot?.querySelector('.airflow-card')?.classList.contains('airflow-brighten')).toBe(
+            true,
+          );
+
+          el.hass = {
+            ...altairHass,
+            states: {
+              ...altairHass.states,
+              ...systemStates,
+              'sensor.altair_mvhr_airflow': {
+                entity_id: 'sensor.altair_mvhr_airflow',
+                state: '80',
+                attributes: { unit_of_measurement: 'm³/h' },
+              },
+            },
+          };
+          await el.updateComplete;
+          expect(el.shadowRoot?.querySelector('.airflow-card')?.classList.contains('airflow-brighten')).toBe(
+            false,
+          );
+        });
+      });
     });
 
     /**

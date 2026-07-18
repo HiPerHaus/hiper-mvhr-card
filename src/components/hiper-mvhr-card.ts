@@ -152,6 +152,16 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
   // update, so Lit's own reactivity doesn't need to know about this map).
   private readonly _dispatchers = new Map<EntityRoleId, ControlDispatcher>();
 
+  // Micro-animation change-tracking (visual-polish follow-up, round 3):
+  // plain instance fields, not @state — recording "what did this value used
+  // to be" is a side effect of rendering, not something that should itself
+  // trigger a re-render. Read at the start of the relevant render method
+  // (to decide whether to play a one-shot "just changed" animation this
+  // pass) and written at the end of that same method, so the comparison is
+  // always against the previous hass update, never against itself.
+  private _prevRecoveryLabel?: string;
+  private _prevAirflowNumber?: number;
+
   private _getDispatcher(role: EntityRoleId): ControlDispatcher {
     let dispatcher = this._dispatchers.get(role);
     if (!dispatcher) {
@@ -1008,6 +1018,11 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     const airflowNumber = this._number(snapshot.airflow) ?? this._number(snapshot.supply_airflow);
     const animated = config.show_airflow_animation && active && (airflowNumber ?? 0) > 0;
     const shower = this._shower(snapshot);
+    // A real boost mode raises fan speed noticeably — the fans/particles
+    // speeding up visually during boost reinforces that instead of
+    // adding new elements to the exchanger graphic itself ("particles
+    // accelerate slightly during Boost", visual-polish follow-up round 3).
+    const boostActive = this._state(snapshot.boost_active) === 'on';
 
     return html`
       <div class="mvhr-system">
@@ -1017,7 +1032,7 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
             <div class="panel-heading-row">
               <h3>System Overview</h3>
             </div>
-            ${this._systemHeroVisual(snapshot, config, animated, unitBrand, recovery)}
+            ${this._systemHeroVisual(snapshot, config, animated, unitBrand, recovery, boostActive)}
           </section>
         </section>
 
@@ -1269,6 +1284,15 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       airflowNumber !== undefined && targetNumber
         ? Math.max(0, Math.min(1, airflowNumber / targetNumber))
         : 0;
+    // "Airflow cards brighten when airflow increases" — a one-shot
+    // brightening, only when the reading genuinely went up from the
+    // previous render (never on first load, and never on a decrease —
+    // visual-polish follow-up, round 3).
+    const airflowIncreased =
+      airflowNumber !== undefined &&
+      this._prevAirflowNumber !== undefined &&
+      airflowNumber > this._prevAirflowNumber;
+    this._prevAirflowNumber = airflowNumber ?? this._prevAirflowNumber;
 
     const rows: TemplateResult[] = [];
     if (config.show_fan_speeds && snapshot.supply_fan_speed && snapshot.extract_fan_speed) {
@@ -1291,7 +1315,7 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     }
 
     return html`
-      <section class="lower-card airflow-card" aria-label="Airflow">
+      <section class="lower-card airflow-card ${airflowIncreased ? 'airflow-brighten' : ''}" aria-label="Airflow">
         <h3>Airflow</h3>
         <div class="airflow-card-body">
           ${
@@ -1690,7 +1714,13 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
    * `.recovery-badge-circular`) rather than as a small pill in the panel
    * heading — "make the heat exchanger the hero" / "move the heat recovery
    * number into the centre of the HRV" — so this method takes a `recovery`
-   * argument again.
+   * argument again. Per the round-3 micro-animation follow-up ("I wouldn't
+   * make the exchanger itself any more complicated — instead spend time on
+   * micro-animations"), `boostActive` doesn't add any new visual element:
+   * it just shortens the existing particle/fan animation durations via a
+   * `.boost-active` class, and the recovery badge plays a one-shot pulse
+   * (`_recoveryPulseClass`) when the figure actually changes, tracked via
+   * `_prevRecoveryLabel`.
    */
   private _systemHeroVisual(
     snapshot: Partial<Record<EntityRoleId, RoleValue>>,
@@ -1698,10 +1728,22 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     animated: boolean,
     unitBrand: string,
     recovery: HeatRecoveryResult,
+    boostActive: boolean,
   ): TemplateResult {
     const sharedAirflow =
       this._value(snapshot.airflow, true) ?? this._value(snapshot.supply_airflow, true);
     const showAllAirflows = config.show_airflow_on_all_paths;
+    // "Heat recovery badge gently pulses when efficiency changes" — a
+    // one-shot animation, not a permanently-looping one, so it only plays
+    // when this render's figure actually differs from the previous one.
+    // Comparing against `undefined` on the very first render would count
+    // as "changed" and pulse immediately on load, which isn't a real
+    // change — guarded against explicitly.
+    const recoveryPulse =
+      recovery.status === 'ok' &&
+      this._prevRecoveryLabel !== undefined &&
+      this._prevRecoveryLabel !== recovery.label;
+    this._prevRecoveryLabel = recovery.status === 'ok' ? recovery.label : this._prevRecoveryLabel;
 
     const path = (
       key: string,
@@ -1714,7 +1756,7 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     ) => {
       const airflow = showAllAirflows || showAirflowByDefault ? sharedAirflow : null;
       return html`
-        <div class="air-path ${key} ${animated ? 'active' : ''}">
+        <div class="air-path ${key} ${animated ? 'active' : ''} ${animated && boostActive ? 'boost-active' : ''}">
           <span class="path-label">
             <ha-icon icon=${endpointIcon} aria-hidden="true"></ha-icon>
             ${label}
@@ -1752,7 +1794,10 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
           'mdi:arrow-top-right-thin',
           'Flowing into the home',
         )}
-        <div class="unit ${animated ? 'active' : ''}" aria-label="Heat recovery unit">
+        <div
+          class="unit ${animated ? 'active' : ''} ${animated && boostActive ? 'boost-active' : ''}"
+          aria-label="Heat recovery unit"
+        >
           <div class="brand">
             ${unitBrand}${unitBrand.toLowerCase().includes('mvhr') ? '' : html`<br /><span>MVHR</span>`}
           </div>
@@ -1766,7 +1811,10 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
           ${
             recovery.status === 'ok'
               ? html`
-                  <div class="recovery-badge-circular" title="Apparent temperature recovery" role="img"
+                  <div
+                    class="recovery-badge-circular ${recoveryPulse ? 'recovery-pulse' : ''}"
+                    title="Apparent temperature recovery"
+                    role="img"
                     aria-label=${`Heat recovery ${recovery.label}`}
                   >
                     <strong>${recovery.label}</strong>
@@ -2535,6 +2583,8 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       .system-visual-panel .unit.active .duct-right::after,
       .system-visual-panel .unit.active .duct-bottom::after,
       .system-visual-panel .unit.active .duct-left::after,
+      .recovery-badge-circular.recovery-pulse,
+      .airflow-card.airflow-brighten,
       .droplet {
         animation: none;
       }
@@ -2923,6 +2973,26 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       text-transform: uppercase;
       letter-spacing: 0.04em;
     }
+    /* "Heat recovery badge gently pulses when efficiency changes" — a
+       single, subtle scale pulse, not a loop (visual-polish follow-up,
+       round 3). Only ever applied for one render, the instant the figure
+       actually changes (see _systemHeroVisual's recoveryPulse), so it
+       naturally plays once and stops rather than needing to be removed. */
+    .recovery-badge-circular.recovery-pulse {
+      animation: recovery-pulse 0.7s ease-out;
+    }
+    @keyframes recovery-pulse {
+      0% {
+        transform: translate(-50%, -50%) scale(1);
+      }
+      35% {
+        transform: translate(-50%, -50%) scale(1.08);
+        box-shadow: 0 0 0 10px color-mix(in srgb, var(--success-color), transparent 82%);
+      }
+      100% {
+        transform: translate(-50%, -50%) scale(1);
+      }
+    }
     .system-visual-panel .path-label {
       display: flex;
       align-items: center;
@@ -3027,6 +3097,31 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       to {
         background-position: -18px 0;
       }
+    }
+    /* "Particles accelerate slightly during Boost" and the fans spin a
+       little faster with them — a real boost mode raises fan speed
+       noticeably, so this reinforces that state through the animations
+       that already exist rather than adding anything new to the exchanger
+       graphic (visual-polish follow-up, round 3). Same elements, same
+       keyframes, just a shorter duration — .boost-active is only ever
+       applied alongside .active, so this never overrides a stopped
+       animation into a running one. */
+    .system-visual-panel .exhaust.active.boost-active::after,
+    .system-visual-panel .outdoor.active.boost-active::after {
+      animation-duration: 1s;
+    }
+    .system-visual-panel .supply.active.boost-active::after,
+    .system-visual-panel .extract.active.boost-active::after {
+      animation-duration: 1s;
+    }
+    .system-visual-panel .unit.active.boost-active .fan {
+      animation-duration: 3.5s;
+    }
+    .system-visual-panel .unit.active.boost-active .duct-top::after,
+    .system-visual-panel .unit.active.boost-active .duct-right::after,
+    .system-visual-panel .unit.active.boost-active .duct-bottom::after,
+    .system-visual-panel .unit.active.boost-active .duct-left::after {
+      animation-duration: 0.6s;
     }
 
     /* ---- shower-detection banner (full-width, active only — the idle
@@ -3163,6 +3258,29 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       box-sizing: border-box;
       min-width: 0;
       background: var(--ha-card-background, var(--card-background-color));
+      transition: border-color 0.3s ease;
+    }
+    /* "Airflow cards brighten when airflow increases" — a brief border/glow
+       flash, not a permanent state change (visual-polish follow-up, round
+       3); only ever applied for the one render where the reading just went
+       up (see _systemAirflowCard's airflowIncreased), so like the
+       recovery pulse it plays once and stops on its own. */
+    .airflow-card.airflow-brighten {
+      animation: airflow-brighten 0.9s ease-out;
+    }
+    @keyframes airflow-brighten {
+      0% {
+        border-color: var(--divider-color);
+        box-shadow: none;
+      }
+      30% {
+        border-color: color-mix(in srgb, #3b82f6, transparent 30%);
+        box-shadow: 0 0 0 4px color-mix(in srgb, #3b82f6, transparent 85%);
+      }
+      100% {
+        border-color: var(--divider-color);
+        box-shadow: none;
+      }
     }
     .airflow-card-body {
       display: flex;
