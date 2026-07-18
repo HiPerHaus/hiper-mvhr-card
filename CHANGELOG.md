@@ -42,6 +42,7 @@ All notable changes to this project are documented here. Format follows [Keep a 
   - Added rendering tests for the four independent paths and their directions, separated exchanger channels, particle structure, boost timing, centred badge, reduced-motion coverage, and responsive markup/CSS.
   - Follow-up visual refinement makes the unit wider and more appliance-like, with thick duct bands, an internal casing frame, four port collars, right-side fan housings, a larger plate exchanger, and an explicit two-row compact-card layout matching the desktop composition.
   - Air stream colours now interpolate continuously from each live endpoint temperature (0°C deep blue through 35°C red). SVG gradients show extract cooling toward exhaust and outdoor air warming or cooling toward supply; endpoint cards, particles, exchanger channels, and port collars share the same reactive colours, with a theme-neutral fallback for unavailable readings.
+  - The overview now follows a real cutaway layout: indoor extract enters at upper left and supply leaves at lower left; outdoor air enters at upper right and exhaust leaves at lower right. Incoming filters and two prominent internal blower assemblies sit in their physical compartments, with the fan rotors retaining live spinning, boost-speed, and reduced-motion behaviour.
 
 ### Changed
 

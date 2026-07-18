@@ -1197,9 +1197,32 @@ describe('hiper-mvhr-card', () => {
         );
         expect(schematic?.querySelector('.supply-flow')?.getAttribute('data-flow')).toBe('outward');
         expect(schematic?.querySelectorAll('.airflow-particle')).toHaveLength(12);
-        expect(schematic?.querySelector('.unit-frame')).toBeTruthy();
+        expect(schematic?.querySelector('.cutaway-shell')).toBeTruthy();
         expect(schematic?.querySelectorAll('.duct-shells path')).toHaveLength(4);
         expect(schematic?.querySelectorAll('.port-collars rect')).toHaveLength(4);
+      });
+
+      it('groups indoor and outdoor ports on their physical sides and keeps both fans inside the casing', async () => {
+        const el = mountSystem();
+        await el.updateComplete;
+
+        expect(el.shadowRoot?.querySelector('.air-path.extract')?.getAttribute('data-side')).toBe(
+          'indoor',
+        );
+        expect(el.shadowRoot?.querySelector('.air-path.supply')?.getAttribute('data-side')).toBe(
+          'indoor',
+        );
+        expect(el.shadowRoot?.querySelector('.air-path.outdoor')?.getAttribute('data-side')).toBe(
+          'outdoor',
+        );
+        expect(el.shadowRoot?.querySelector('.air-path.exhaust')?.getAttribute('data-side')).toBe(
+          'outdoor',
+        );
+        const schematic = el.shadowRoot?.querySelector('.airflow-schematic');
+        expect(schematic?.querySelector('.cutaway-shell')).toBeTruthy();
+        expect(schematic?.querySelectorAll('.fan-assembly')).toHaveLength(2);
+        expect(schematic?.querySelectorAll('.fan-rotor')).toHaveLength(2);
+        expect(schematic?.querySelectorAll('.filters rect')).toHaveLength(2);
       });
 
       it('keeps warm and cool exchanger channels visually separate beneath the centred badge', async () => {
@@ -1991,7 +2014,7 @@ describe('hiper-mvhr-card', () => {
       it('speeds up the schematic-particle and fan animations while boost is active', () => {
         const cssText = HiperMvhrCard.styles.cssText;
         expect(cssText).toMatch(
-          /\.unit\.active\.boost-active \.fan\s*{[^}]*animation-duration:\s*3\.5s/,
+          /\.unit\.active\.boost-active \.fan-rotor\s*{[^}]*animation-duration:\s*1\.6s/,
         );
         expect(cssText).toMatch(
           /\.unit\.active\.boost-active \.airflow-particle\s*{[^}]*animation-duration:\s*1\.35s/,
