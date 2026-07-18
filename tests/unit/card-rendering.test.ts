@@ -1223,6 +1223,13 @@ describe('hiper-mvhr-card', () => {
         expect(schematic?.querySelectorAll('.fan-assembly')).toHaveLength(2);
         expect(schematic?.querySelectorAll('.fan-rotor')).toHaveLength(2);
         expect(schematic?.querySelectorAll('.filters rect')).toHaveLength(2);
+        const paths = [...(el.shadowRoot?.querySelectorAll('.system-visual-wrap > .air-path') ?? [])];
+        expect(paths.map((node) => node.getAttribute('data-side'))).toEqual([
+          'outdoor',
+          'indoor',
+          'outdoor',
+          'indoor',
+        ]);
       });
 
       it('keeps warm and cool exchanger channels visually separate beneath the centred badge', async () => {

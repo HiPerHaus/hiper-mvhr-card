@@ -2426,22 +2426,22 @@ const F = "hiper-mvhr-card", C = [
     return d`
       <div class="visual-wrap system-visual-wrap">
         ${b(
-      "extract",
-      "Extract air",
-      "extract_air_temp",
-      !0,
-      "mdi:home",
-      "mdi:arrow-bottom-right-thin",
-      "Drawn from the home"
-    )}
-        ${b(
       "outdoor",
       "Outdoor air",
       "outdoor_air_temp",
       !1,
       "mdi:tree",
-      "mdi:arrow-bottom-left-thin",
+      "mdi:arrow-bottom-right-thin",
       "Drawn from outdoors"
+    )}
+        ${b(
+      "extract",
+      "Extract air",
+      "extract_air_temp",
+      !0,
+      "mdi:home",
+      "mdi:arrow-bottom-left-thin",
+      "Drawn from the home"
     )}
         <div
           class="unit ${r ? "active" : ""} ${r && i ? "boost-active" : ""}"
@@ -2464,9 +2464,9 @@ const F = "hiper-mvhr-card", C = [
               <linearGradient
                 id="extract-gradient"
                 gradientUnits="userSpaceOnUse"
-                x1="0"
+                x1="140"
                 y1="22"
-                x2="58"
+                x2="82"
                 y2="38"
               >
                 <stop offset="0" stop-color=${c.extract}></stop>
@@ -2475,9 +2475,9 @@ const F = "hiper-mvhr-card", C = [
               <linearGradient
                 id="exhaust-gradient"
                 gradientUnits="userSpaceOnUse"
-                x1="82"
+                x1="58"
                 y1="42"
-                x2="140"
+                x2="0"
                 y2="58"
               >
                 <stop offset="0" stop-color=${p}></stop>
@@ -2486,9 +2486,9 @@ const F = "hiper-mvhr-card", C = [
               <linearGradient
                 id="outdoor-gradient"
                 gradientUnits="userSpaceOnUse"
-                x1="140"
+                x1="0"
                 y1="22"
-                x2="82"
+                x2="58"
                 y2="38"
               >
                 <stop offset="0" stop-color=${c.outdoor}></stop>
@@ -2497,9 +2497,9 @@ const F = "hiper-mvhr-card", C = [
               <linearGradient
                 id="supply-gradient"
                 gradientUnits="userSpaceOnUse"
-                x1="58"
+                x1="82"
                 y1="42"
-                x2="0"
+                x2="140"
                 y2="58"
               >
                 <stop offset="0" stop-color=${h}></stop>
@@ -2508,9 +2508,9 @@ const F = "hiper-mvhr-card", C = [
               <linearGradient
                 id="warm-exchanger-gradient"
                 gradientUnits="userSpaceOnUse"
-                x1="50"
+                x1="90"
                 y1="25"
-                x2="90"
+                x2="50"
                 y2="55"
               >
                 <stop offset="0" stop-color=${c.extract}></stop>
@@ -2519,9 +2519,9 @@ const F = "hiper-mvhr-card", C = [
               <linearGradient
                 id="cool-exchanger-gradient"
                 gradientUnits="userSpaceOnUse"
-                x1="90"
+                x1="50"
                 y1="25"
-                x2="50"
+                x2="90"
                 y2="55"
               >
                 <stop offset="0" stop-color=${c.outdoor}></stop>
@@ -2545,57 +2545,39 @@ const F = "hiper-mvhr-card", C = [
     ].map(([g, f]) => d`<circle cx=${g} cy=${f} r="0.8"></circle>`)}
             </g>
             <g class="duct-shells" aria-hidden="true">
-              <path d="M0 22 C30 22 43 24 58 38"></path>
-              <path d="M82 42 C97 56 110 58 140 58"></path>
               <path d="M140 22 C110 22 97 24 82 38"></path>
               <path d="M58 42 C43 56 30 58 0 58"></path>
+              <path d="M0 22 C30 22 43 24 58 38"></path>
+              <path d="M82 42 C97 56 110 58 140 58"></path>
             </g>
             <path
               class="airflow-path extract-flow"
               data-flow="inward"
-              d="M0 22 C30 22 43 24 58 38"
+              d="M140 22 C110 22 97 24 82 38"
             ></path>
             <path
               class="airflow-path exhaust-flow"
               data-flow="outward"
-              d="M82 42 C97 56 110 58 140 58"
+              d="M58 42 C43 56 30 58 0 58"
             ></path>
             <path
               class="airflow-path outdoor-flow"
               data-flow="inward"
-              d="M140 22 C110 22 97 24 82 38"
+              d="M0 22 C30 22 43 24 58 38"
             ></path>
             <path
               class="airflow-path supply-flow"
               data-flow="outward"
-              d="M58 42 C43 56 30 58 0 58"
+              d="M82 42 C97 56 110 58 140 58"
             ></path>
             <g class="filters" aria-hidden="true">
-              <rect class="extract-filter" x="17" y="12" width="4" height="20" rx="1"></rect>
-              <rect class="outdoor-filter" x="119" y="12" width="4" height="20" rx="1"></rect>
+              <rect class="outdoor-filter" x="17" y="12" width="4" height="20" rx="1"></rect>
+              <rect class="extract-filter" x="119" y="12" width="4" height="20" rx="1"></rect>
             </g>
             <g class="port-collars" aria-hidden="true">
               <rect
-                class="extract-collar"
-                x="0"
-                y="14"
-                width="5"
-                height="16"
-                rx="2"
-                style=${`--collar-color:${c.extract}`}
-              ></rect>
-              <rect
-                class="supply-collar"
-                x="0"
-                y="50"
-                width="5"
-                height="16"
-                rx="2"
-                style=${`--collar-color:${c.supply}`}
-              ></rect>
-              <rect
                 class="outdoor-collar"
-                x="135"
+                x="0"
                 y="14"
                 width="5"
                 height="16"
@@ -2604,18 +2586,36 @@ const F = "hiper-mvhr-card", C = [
               ></rect>
               <rect
                 class="exhaust-collar"
-                x="135"
+                x="0"
                 y="50"
                 width="5"
                 height="16"
                 rx="2"
                 style=${`--collar-color:${c.exhaust}`}
               ></rect>
+              <rect
+                class="extract-collar"
+                x="135"
+                y="14"
+                width="5"
+                height="16"
+                rx="2"
+                style=${`--collar-color:${c.extract}`}
+              ></rect>
+              <rect
+                class="supply-collar"
+                x="135"
+                y="50"
+                width="5"
+                height="16"
+                rx="2"
+                style=${`--collar-color:${c.supply}`}
+              ></rect>
             </g>
             <g class="fan-assemblies" aria-hidden="true">
               ${[
-      ["supply-fan", 27, 58],
-      ["exhaust-fan", 113, 58]
+      ["exhaust-fan", 27, 58],
+      ["supply-fan", 113, 58]
     ].map(
       ([g, f, _]) => d`
                   <g class="fan-assembly ${g}" transform=${`translate(${f} ${_})`}>
@@ -2682,22 +2682,22 @@ const F = "hiper-mvhr-card", C = [
                 ` : ""}
         </div>
         ${b(
-      "supply",
-      "Supply air",
-      "supply_air_temp",
-      !0,
-      "mdi:home",
-      "mdi:arrow-bottom-left-thin",
-      "Flowing into the home"
-    )}
-        ${b(
       "exhaust",
       "Exhaust air",
       "exhaust_air_temp",
       !1,
       "mdi:tree",
-      "mdi:arrow-bottom-right-thin",
+      "mdi:arrow-bottom-left-thin",
       "Flowing outdoors"
+    )}
+        ${b(
+      "supply",
+      "Supply air",
+      "supply_air_temp",
+      !0,
+      "mdi:home",
+      "mdi:arrow-bottom-right-thin",
+      "Flowing into the home"
     )}
       </div>
     `;
@@ -3837,19 +3837,19 @@ ce.styles = Oe`
     }
     .extract-particles .airflow-particle {
       fill: var(--air-extract);
-      offset-path: path('M0 22 C30 22 43 24 58 38');
+      offset-path: path('M140 22 C110 22 97 24 82 38');
     }
     .exhaust-particles .airflow-particle {
       fill: var(--air-exhaust);
-      offset-path: path('M82 42 C97 56 110 58 140 58');
+      offset-path: path('M58 42 C43 56 30 58 0 58');
     }
     .outdoor-particles .airflow-particle {
       fill: var(--air-outdoor);
-      offset-path: path('M140 22 C110 22 97 24 82 38');
+      offset-path: path('M0 22 C30 22 43 24 58 38');
     }
     .supply-particles .airflow-particle {
       fill: var(--air-supply);
-      offset-path: path('M58 42 C43 56 30 58 0 58');
+      offset-path: path('M82 42 C97 56 110 58 140 58');
     }
     .system-visual-panel .unit.active .airflow-particle {
       animation: schematic-particle 2.4s linear infinite;
