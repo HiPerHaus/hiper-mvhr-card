@@ -41,6 +41,7 @@ All notable changes to this project are documented here. Format follows [Keep a 
 - **The system-mode MVHR unit now contains a functional four-path SVG airflow schematic.** Extract and outdoor air curve inward through separate warm/cool exchanger passages; exhaust and supply curve outward without the streams visually merging. Theme-derived colours, direction-correct particles, boost speed-up, reduced-motion handling, centred recovery badge, and card-width container-query reflow are retained across desktop and mobile layouts.
   - Added rendering tests for the four independent paths and their directions, separated exchanger channels, particle structure, boost timing, centred badge, reduced-motion coverage, and responsive markup/CSS.
   - Follow-up visual refinement makes the unit wider and more appliance-like, with thick duct bands, an internal casing frame, four port collars, right-side fan housings, a larger plate exchanger, and an explicit two-row compact-card layout matching the desktop composition.
+  - Air stream colours now interpolate continuously from each live endpoint temperature (0°C deep blue through 35°C red). SVG gradients show extract cooling toward exhaust and outdoor air warming or cooling toward supply; endpoint cards, particles, exchanger channels, and port collars share the same reactive colours, with a theme-neutral fallback for unavailable readings.
 
 ### Changed
 

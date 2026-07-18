@@ -16,6 +16,15 @@ import { calculateHeatRecovery, type HeatRecoveryResult } from '../utils/heat-re
 
 const CARD_TAG = 'hiper-mvhr-card';
 
+const TEMPERATURE_COLOUR_STOPS: ReadonlyArray<readonly [number, number, number, number]> = [
+  [0, 30, 90, 210],
+  [10, 55, 145, 230],
+  [16, 165, 205, 235],
+  [20, 238, 190, 105],
+  [25, 235, 120, 45],
+  [35, 205, 45, 45],
+];
+
 const TEMPERATURE_ROLES: Array<[EntityRoleId, string]> = [
   ['outdoor_air_temp', 'Outdoor air'],
   ['supply_air_temp', 'Supply air'],
@@ -644,7 +653,6 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     const sharedAirflow =
       this._value(snapshot.airflow, true) ?? this._value(snapshot.supply_airflow, true);
     const showAllAirflows = config.show_airflow_on_all_paths;
-
     const path = (
       key: string,
       label: string,
@@ -1782,6 +1790,26 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     const sharedAirflow =
       this._value(snapshot.airflow, true) ?? this._value(snapshot.supply_airflow, true);
     const showAllAirflows = config.show_airflow_on_all_paths;
+    const temperatures = {
+      extract: this._number(snapshot.extract_air_temp) ?? null,
+      exhaust: this._number(snapshot.exhaust_air_temp) ?? null,
+      outdoor: this._number(snapshot.outdoor_air_temp) ?? null,
+      supply: this._number(snapshot.supply_air_temp) ?? null,
+    };
+    const colours = {
+      extract: this._temperatureColour(temperatures.extract),
+      exhaust: this._temperatureColour(temperatures.exhaust),
+      outdoor: this._temperatureColour(temperatures.outdoor),
+      supply: this._temperatureColour(temperatures.supply),
+    };
+    const warmMidpoint =
+      temperatures.extract !== null && temperatures.exhaust !== null
+        ? this._temperatureColour((temperatures.extract + temperatures.exhaust) / 2)
+        : this._temperatureColour(null);
+    const coolMidpoint =
+      temperatures.outdoor !== null && temperatures.supply !== null
+        ? this._temperatureColour((temperatures.outdoor + temperatures.supply) / 2)
+        : this._temperatureColour(null);
     // "Heat recovery badge gently pulses when efficiency changes" — a
     // one-shot animation, not a permanently-looping one, so it only plays
     // when this render's figure actually differs from the previous one.
@@ -1804,9 +1832,14 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       arrowLabel: string,
     ) => {
       const airflow = showAllAirflows || showAirflowByDefault ? sharedAirflow : null;
+      const temperature = this._number(snapshot[role]) ?? null;
+      const streamColour = this._temperatureColour(temperature);
+      const streamSoft = this._temperatureColour(temperature, 0.13);
       return html`
         <div
           class="air-path ${key} ${animated ? 'active' : ''} ${animated && boostActive ? 'boost-active' : ''}"
+          data-temperature=${temperature ?? 'unavailable'}
+          style=${`--stream-color:${streamColour};--stream-soft:${streamSoft}`}
         >
           <span class="path-label">
             <ha-icon icon=${endpointIcon} aria-hidden="true"></ha-icon>
@@ -1857,11 +1890,78 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
             viewBox="0 0 100 100"
             role="img"
             aria-label="Two separate air streams cross through the heat exchanger"
+            style=${`--air-extract:${colours.extract};--air-exhaust:${colours.exhaust};--air-outdoor:${colours.outdoor};--air-supply:${colours.supply}`}
           >
             <defs>
               <clipPath id="system-exchanger-clip">
                 <path d="M50 22 L78 50 L50 78 L22 50 Z"></path>
               </clipPath>
+              <linearGradient
+                id="extract-gradient"
+                gradientUnits="userSpaceOnUse"
+                x1="0"
+                y1="78"
+                x2="43"
+                y2="58"
+              >
+                <stop offset="0" stop-color=${colours.extract}></stop>
+                <stop offset="1" stop-color=${warmMidpoint}></stop>
+              </linearGradient>
+              <linearGradient
+                id="exhaust-gradient"
+                gradientUnits="userSpaceOnUse"
+                x1="43"
+                y1="42"
+                x2="0"
+                y2="22"
+              >
+                <stop offset="0" stop-color=${warmMidpoint}></stop>
+                <stop offset="1" stop-color=${colours.exhaust}></stop>
+              </linearGradient>
+              <linearGradient
+                id="outdoor-gradient"
+                gradientUnits="userSpaceOnUse"
+                x1="100"
+                y1="78"
+                x2="57"
+                y2="58"
+              >
+                <stop offset="0" stop-color=${colours.outdoor}></stop>
+                <stop offset="1" stop-color=${coolMidpoint}></stop>
+              </linearGradient>
+              <linearGradient
+                id="supply-gradient"
+                gradientUnits="userSpaceOnUse"
+                x1="57"
+                y1="42"
+                x2="100"
+                y2="22"
+              >
+                <stop offset="0" stop-color=${coolMidpoint}></stop>
+                <stop offset="1" stop-color=${colours.supply}></stop>
+              </linearGradient>
+              <linearGradient
+                id="warm-exchanger-gradient"
+                gradientUnits="userSpaceOnUse"
+                x1="35"
+                y1="65"
+                x2="65"
+                y2="35"
+              >
+                <stop offset="0" stop-color=${colours.extract}></stop>
+                <stop offset="1" stop-color=${colours.exhaust}></stop>
+              </linearGradient>
+              <linearGradient
+                id="cool-exchanger-gradient"
+                gradientUnits="userSpaceOnUse"
+                x1="65"
+                y1="65"
+                x2="35"
+                y2="35"
+              >
+                <stop offset="0" stop-color=${colours.outdoor}></stop>
+                <stop offset="1" stop-color=${colours.supply}></stop>
+              </linearGradient>
             </defs>
             <rect class="unit-frame" x="3" y="5" width="94" height="90" rx="7"></rect>
             <g class="duct-shells" aria-hidden="true">
@@ -1891,10 +1991,42 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
               d="M57 42 C70 26 80 22 100 22"
             ></path>
             <g class="port-collars" aria-hidden="true">
-              <rect x="0" y="14" width="5" height="16" rx="2"></rect>
-              <rect x="0" y="70" width="5" height="16" rx="2"></rect>
-              <rect x="95" y="14" width="5" height="16" rx="2"></rect>
-              <rect x="95" y="70" width="5" height="16" rx="2"></rect>
+              <rect
+                class="exhaust-collar"
+                x="0"
+                y="14"
+                width="5"
+                height="16"
+                rx="2"
+                style=${`--collar-color:${colours.exhaust}`}
+              ></rect>
+              <rect
+                class="extract-collar"
+                x="0"
+                y="70"
+                width="5"
+                height="16"
+                rx="2"
+                style=${`--collar-color:${colours.extract}`}
+              ></rect>
+              <rect
+                class="supply-collar"
+                x="95"
+                y="14"
+                width="5"
+                height="16"
+                rx="2"
+                style=${`--collar-color:${colours.supply}`}
+              ></rect>
+              <rect
+                class="outdoor-collar"
+                x="95"
+                y="70"
+                width="5"
+                height="16"
+                rx="2"
+                style=${`--collar-color:${colours.outdoor}`}
+              ></rect>
             </g>
             <g class="exchanger-plate" aria-hidden="true">
               <path class="exchanger-outline" d="M50 22 L78 50 L50 78 L22 50 Z"></path>
@@ -2038,6 +2170,30 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
 
   private _number(value: RoleValue | undefined): number | undefined {
     return value?.status === 'ok' ? value.numericValue : undefined;
+  }
+
+  private _temperatureColour(temperature: number | null, alpha = 1): string {
+    const opacity = Math.max(0, Math.min(1, alpha));
+    if (temperature === null || !Number.isFinite(temperature)) {
+      return `color-mix(in srgb, var(--secondary-text-color), transparent ${Math.round((1 - opacity) * 100)}%)`;
+    }
+
+    const firstStop = TEMPERATURE_COLOUR_STOPS[0]!;
+    const lastStop = TEMPERATURE_COLOUR_STOPS[TEMPERATURE_COLOUR_STOPS.length - 1]!;
+    const clamped = Math.max(firstStop[0], Math.min(lastStop[0], temperature));
+    let lower = firstStop;
+    let upper = lastStop;
+    for (let index = 1; index < TEMPERATURE_COLOUR_STOPS.length; index += 1) {
+      const candidate = TEMPERATURE_COLOUR_STOPS[index]!;
+      if (clamped <= candidate[0]) {
+        lower = TEMPERATURE_COLOUR_STOPS[index - 1]!;
+        upper = candidate;
+        break;
+      }
+    }
+    const fraction = upper[0] === lower[0] ? 0 : (clamped - lower[0]) / (upper[0] - lower[0]);
+    const channel = (from: number, to: number) => Math.round(from + (to - from) * fraction);
+    return `rgba(${channel(lower[1], upper[1])}, ${channel(lower[2], upper[2])}, ${channel(lower[3], upper[3])}, ${opacity})`;
   }
 
   private _modeLabel(value: string): string {
@@ -3065,10 +3221,6 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       width: 100%;
       height: 94%;
       overflow: visible;
-      --air-outdoor: color-mix(in srgb, var(--primary-color), white 18%);
-      --air-supply: color-mix(in srgb, var(--primary-color), white 42%);
-      --air-extract: color-mix(in srgb, var(--warning-color), var(--primary-text-color) 14%);
-      --air-exhaust: color-mix(in srgb, var(--secondary-text-color), var(--warning-color) 22%);
     }
     .airflow-path {
       fill: none;
@@ -3090,21 +3242,21 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       stroke-width: 1.5;
     }
     .port-collars rect {
-      fill: color-mix(in srgb, var(--secondary-text-color), transparent 22%);
+      fill: var(--collar-color);
       stroke: var(--divider-color);
       stroke-width: 0.8;
     }
     .extract-flow {
-      stroke: var(--air-extract);
+      stroke: url(#extract-gradient);
     }
     .exhaust-flow {
-      stroke: var(--air-exhaust);
+      stroke: url(#exhaust-gradient);
     }
     .outdoor-flow {
-      stroke: var(--air-outdoor);
+      stroke: url(#outdoor-gradient);
     }
     .supply-flow {
-      stroke: var(--air-supply);
+      stroke: url(#supply-gradient);
     }
     .exchanger-outline {
       fill: color-mix(
@@ -3122,10 +3274,10 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       stroke-linecap: round;
     }
     .warm-channels path {
-      stroke: var(--air-extract);
+      stroke: url(#warm-exchanger-gradient);
     }
     .cool-channels path {
-      stroke: var(--air-outdoor);
+      stroke: url(#cool-exchanger-gradient);
     }
     .passage-separator {
       fill: var(--ha-card-background, var(--card-background-color));
@@ -3255,24 +3407,11 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       margin-left: auto;
       opacity: 0.8;
     }
-    /* Redesign colour families, scoped to .system-visual-panel only so
-       _heroVisual's own .supply/.extract/.outdoor/.exhaust colours
-       (detailed mode) are completely untouched: supply/outdoor read as a
-       cool blue family, extract as a warm orange family, exhaust as a
-       neutral grey family. Labels/icons still carry the meaning too, never
-       colour alone. */
-    .system-visual-panel .air-path.supply,
-    .system-visual-panel .air-path.outdoor {
-      background: color-mix(in srgb, #3b82f6, transparent 84%);
-      border-color: color-mix(in srgb, #3b82f6, transparent 55%);
-    }
-    .system-visual-panel .air-path.extract {
-      background: color-mix(in srgb, #f59e0b, transparent 84%);
-      border-color: color-mix(in srgb, #f59e0b, transparent 55%);
-    }
-    .system-visual-panel .air-path.exhaust {
-      background: color-mix(in srgb, var(--secondary-text-color), transparent 84%);
-      border-color: color-mix(in srgb, var(--secondary-text-color), transparent 55%);
+    /* Each endpoint is tinted from its own live temperature. The inline
+       custom properties are recalculated on every Home Assistant update. */
+    .system-visual-panel .air-path {
+      background: var(--stream-soft);
+      border-color: color-mix(in srgb, var(--stream-color), transparent 45%);
     }
     /* Direction-aware duct animation for system mode's top/bottom
        arrangement (Phase 6/7): Exhaust (top-left) and Supply (top-right)
@@ -3303,7 +3442,7 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
        scoped to .system-visual-panel so display_mode: detailed's own
        striped .air-path::after is untouched. */
     .system-visual-panel .air-path::after {
-      background: radial-gradient(circle, rgba(255, 255, 255, 0.85) 1.6px, transparent 1.8px);
+      background: radial-gradient(circle, var(--stream-color) 1.6px, transparent 1.8px);
       background-size: 20px 20px;
       background-repeat: repeat;
       opacity: 0.4;

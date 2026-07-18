@@ -137,32 +137,28 @@ function withStates(overrides: HomeAssistant['states']): HomeAssistant {
 
 // `display_mode: system`'s own realistic value set (ROADMAP.md "Add visual
 // MVHR system display mode"). Note: the brief's supply temperature
-// ("approximately 15.7–16.0 °C") sits above its extract temperature
-// (13.0 °C), which the existing, unmodified apparent-recovery formula
-// correctly treats as physically implausible ("Not applicable"). 12.0 °C
-// keeps the same outdoor/extract pair internally consistent with that
-// formula, producing a genuine ~74% instead of forcing numbers through a
-// calculation that would (correctly) reject them — see
-// tests/unit/card-rendering.test.ts's "system mode" suite for the same call.
+// Winter example chosen to make the temperature-driven gradients obvious:
+// outdoor 6°C warms to 17.4°C supply, while 19.6°C extract cools to 9.8°C
+// exhaust. The apparent-recovery calculation remains physically valid.
 const systemStates: HomeAssistant['states'] = {
   'sensor.altair_mvhr_outdoor_air_temperature': {
     entity_id: 'sensor.altair_mvhr_outdoor_air_temperature',
-    state: '9.2',
+    state: '6.0',
     attributes: { unit_of_measurement: '°C' },
   },
   'sensor.altair_mvhr_supply_air_temperature': {
     entity_id: 'sensor.altair_mvhr_supply_air_temperature',
-    state: '12.0',
+    state: '17.4',
     attributes: { unit_of_measurement: '°C' },
   },
   'sensor.altair_mvhr_extract_air_temperature': {
     entity_id: 'sensor.altair_mvhr_extract_air_temperature',
-    state: '13.0',
+    state: '19.6',
     attributes: { unit_of_measurement: '°C' },
   },
   'sensor.altair_mvhr_exhaust_air_temperature': {
     entity_id: 'sensor.altair_mvhr_exhaust_air_temperature',
-    state: '10.5',
+    state: '9.8',
     attributes: { unit_of_measurement: '°C' },
   },
   'sensor.altair_mvhr_airflow': {
@@ -446,7 +442,8 @@ const scenarios = [
     config: systemShowerConfig,
   },
   {
-    title: 'System mode — shower entities configured but no shower right now (compact inactive card)',
+    title:
+      'System mode — shower entities configured but no shower right now (compact inactive card)',
     hass: {
       ...systemAltairHass,
       states: {

@@ -1247,6 +1247,109 @@ describe('hiper-mvhr-card', () => {
       });
     });
 
+    describe('temperature-driven airflow colours', () => {
+      function mountTemperatures(values: {
+        extract: string;
+        supply: string;
+        outdoor: string;
+        exhaust: string;
+      }): HiperMvhrCard {
+        return mountSystem({
+          ...altairHass,
+          states: {
+            ...altairHass.states,
+            ...systemStates,
+            'sensor.altair_mvhr_extract_air_temperature': {
+              entity_id: 'sensor.altair_mvhr_extract_air_temperature',
+              state: values.extract,
+              attributes: { unit_of_measurement: '°C' },
+            },
+            'sensor.altair_mvhr_supply_air_temperature': {
+              entity_id: 'sensor.altair_mvhr_supply_air_temperature',
+              state: values.supply,
+              attributes: { unit_of_measurement: '°C' },
+            },
+            'sensor.altair_mvhr_outdoor_air_temperature': {
+              entity_id: 'sensor.altair_mvhr_outdoor_air_temperature',
+              state: values.outdoor,
+              attributes: { unit_of_measurement: '°C' },
+            },
+            'sensor.altair_mvhr_exhaust_air_temperature': {
+              entity_id: 'sensor.altair_mvhr_exhaust_air_temperature',
+              state: values.exhaust,
+              attributes: { unit_of_measurement: '°C' },
+            },
+          },
+        });
+      }
+
+      it('maps winter endpoint temperatures independently and gradients toward their paired outlet', async () => {
+        const el = mountTemperatures({
+          extract: '19.6',
+          supply: '17.4',
+          outdoor: '6',
+          exhaust: '9.8',
+        });
+        await el.updateComplete;
+
+        expect(el.shadowRoot?.querySelector('.air-path.extract')?.getAttribute('style')).toContain(
+          '--stream-color:rgba(231, 192, 118, 1)',
+        );
+        expect(el.shadowRoot?.querySelector('.air-path.supply')?.getAttribute('style')).toContain(
+          '--stream-color:rgba(191, 200, 190, 1)',
+        );
+        expect(el.shadowRoot?.querySelector('.air-path.outdoor')?.getAttribute('style')).toContain(
+          '--stream-color:rgba(45, 123, 222, 1)',
+        );
+        expect(el.shadowRoot?.querySelector('.air-path.exhaust')?.getAttribute('style')).toContain(
+          '--stream-color:rgba(55, 144, 230, 1)',
+        );
+        expect(
+          el.shadowRoot
+            ?.querySelector('#supply-gradient stop:last-child')
+            ?.getAttribute('stop-color'),
+        ).toBe('rgba(191, 200, 190, 1)');
+      });
+
+      it('automatically makes hot summer outdoor air warmer than cooled supply air', async () => {
+        const el = mountTemperatures({ extract: '21', supply: '22', outdoor: '32', exhaust: '29' });
+        await el.updateComplete;
+
+        const outdoor = el.shadowRoot?.querySelector('.air-path.outdoor')?.getAttribute('style');
+        const supply = el.shadowRoot?.querySelector('.air-path.supply')?.getAttribute('style');
+        expect(outdoor).toContain('--stream-color:rgba(214, 68, 45, 1)');
+        expect(supply).toContain('--stream-color:rgba(237, 162, 81, 1)');
+        expect(outdoor).not.toBe(supply);
+      });
+
+      it('uses the same interpolated colour when all four temperatures are equal', async () => {
+        const el = mountTemperatures({ extract: '18', supply: '18', outdoor: '18', exhaust: '18' });
+        await el.updateComplete;
+
+        const styles = ['extract', 'supply', 'outdoor', 'exhaust'].map((key) =>
+          el.shadowRoot?.querySelector(`.air-path.${key}`)?.getAttribute('style'),
+        );
+        expect(new Set(styles).size).toBe(1);
+      });
+
+      it('uses a neutral theme colour for an unavailable endpoint', async () => {
+        const el = mountTemperatures({
+          extract: '19.6',
+          supply: '17.4',
+          outdoor: 'unavailable',
+          exhaust: '9.8',
+        });
+        await el.updateComplete;
+
+        const outdoor = el.shadowRoot?.querySelector('.air-path.outdoor');
+        expect(outdoor?.getAttribute('data-temperature')).toBe('unavailable');
+        expect(outdoor?.getAttribute('style')).toContain('var(--secondary-text-color)');
+        expect(el.shadowRoot?.querySelector('.outdoor-collar')?.getAttribute('style')).toContain(
+          'var(--secondary-text-color)',
+        );
+      });
+    });
+
     describe('metrics', () => {
       it('the Airflow lower card shows current airflow, target airflow, fan speed, and current profile', async () => {
         const el = mountSystem();
