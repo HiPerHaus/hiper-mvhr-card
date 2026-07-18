@@ -1461,7 +1461,11 @@ describe('hiper-mvhr-card', () => {
         const cssText = HiperMvhrCard.styles.cssText;
         const mobileBlock = cssText.match(/@media \(max-width: 599px\)\s*{[\s\S]*?\n {4}}/)?.[0] ?? '';
         expect(mobileBlock).toMatch(/\.system-lower-grid\s*{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)/);
-        expect(mobileBlock).toMatch(/\.system-main[^{]*{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)/);
+        // .system-main is always full width now (System Overview is the
+        // sole hero, no side-by-side shower column to collapse — see the
+        // "shower detection panel" tests below) — the mobile-specific rule
+        // to check for instead is the shower banner stacking to a column.
+        expect(mobileBlock).toMatch(/\.shower-active\s*{[^}]*flex-direction:\s*column/);
       });
 
       it('the airflow gauge becomes fluid-width (not a fixed px width) on mobile', () => {
@@ -1614,6 +1618,115 @@ describe('hiper-mvhr-card', () => {
         ) as HTMLButtonElement;
         expect(boostButton?.textContent).toContain('18');
       });
+
+      it('does not show a "0 min" boost-remaining countdown when boost is not active', async () => {
+        const el = mountSystem({
+          ...altairHass,
+          states: {
+            ...altairHass.states,
+            ...systemStates,
+            'binary_sensor.altair_mvhr_boost_active': {
+              entity_id: 'binary_sensor.altair_mvhr_boost_active',
+              state: 'off',
+              attributes: {},
+            },
+            'sensor.altair_mvhr_boost_remaining': {
+              entity_id: 'sensor.altair_mvhr_boost_remaining',
+              state: '0',
+              attributes: { unit_of_measurement: 'min' },
+            },
+          },
+        });
+        await el.updateComplete;
+
+        expect(el.shadowRoot?.querySelector('.boost-remaining-highlight')).toBeNull();
+        const boostButton = el.shadowRoot?.querySelector(
+          'button[aria-label="Start Boost"]',
+        ) as HTMLButtonElement;
+        expect(boostButton?.textContent).not.toContain('0 min');
+      });
+
+      it('stacks the gauge value and its unit on separate lines instead of one run-on string', async () => {
+        const el = mountSystem();
+        await el.updateComplete;
+
+        const gaugeValue = el.shadowRoot?.querySelector('.gauge .gauge-value');
+        const strong = gaugeValue?.querySelector('strong');
+        const unit = gaugeValue?.querySelector('.gauge-unit');
+        expect(strong?.textContent?.trim()).toBe('70');
+        expect(unit?.textContent?.trim()).toBe('m³/h');
+      });
+
+      it('gives System Overview the full card width (no competing side column)', () => {
+        const cssText = HiperMvhrCard.styles.cssText;
+        const systemMainBlock = cssText.match(/\.system-main\s*{[^}]*}/)?.[0] ?? '';
+        expect(systemMainBlock).toMatch(/display:\s*block/);
+      });
+
+      it('adds a moving-particle animation to the duct stubs on the unit, gated on activity and reduced-motion', () => {
+        const cssText = HiperMvhrCard.styles.cssText;
+        expect(cssText).toMatch(/@keyframes duct-particles-out/);
+        expect(cssText).toMatch(/@keyframes duct-particles-in/);
+        const reducedMotionBlock =
+          cssText.match(/@media \(prefers-reduced-motion: reduce\)\s*{[\s\S]*?\n {4}}/)?.[0] ?? '';
+        expect(reducedMotionBlock).toMatch(/duct-top::after/);
+      });
+
+      it('gives the header controls a bordered control-panel appearance instead of floating pills', () => {
+        const cssText = HiperMvhrCard.styles.cssText;
+        const headerControlsBlock =
+          cssText.match(/\.system-controls\.header-controls\s*{[^}]*}/)?.[0] ?? '';
+        expect(headerControlsBlock).toMatch(/border:\s*1px solid/);
+        expect(headerControlsBlock).toMatch(/border-radius/);
+      });
+
+      it('shows a "Run calibration" button in the advanced drawer when calibration_start_control is enabled', async () => {
+        const callService = vi.fn().mockResolvedValue(undefined);
+        const el = mount();
+        set(el, {
+          type: 'custom:hiper-mvhr-card',
+          manufacturer: 'generic',
+          display_mode: 'system',
+          entities: { ...systemEntities, calibration_start_control: 'button.mvhr_run_calibration' },
+          feature_flags: { calibration_start_control: true },
+        });
+        el.hass = {
+          ...altairHass,
+          states: {
+            ...altairHass.states,
+            ...systemStates,
+            'button.mvhr_run_calibration': {
+              entity_id: 'button.mvhr_run_calibration',
+              state: 'unknown',
+              attributes: {},
+            },
+          },
+          callService,
+        };
+        await el.updateComplete;
+        (el.shadowRoot?.querySelector('.disclosure-toggle') as HTMLButtonElement)?.click();
+        await el.updateComplete;
+
+        const button = el.shadowRoot?.querySelector(
+          'button[aria-label="Run calibration"]',
+        ) as HTMLButtonElement;
+        expect(button).toBeTruthy();
+        expect(button.textContent).toContain('Run');
+        button.click();
+
+        expect(callService).toHaveBeenCalledWith('button', 'press', {
+          entity_id: 'button.mvhr_run_calibration',
+        });
+      });
+
+      it('does not show a calibration button for a profile that has not declared it supported', async () => {
+        const el = mountSystem();
+        await el.updateComplete;
+        (el.shadowRoot?.querySelector('.disclosure-toggle') as HTMLButtonElement)?.click();
+        await el.updateComplete;
+
+        expect(el.shadowRoot?.querySelector('button[aria-label="Run calibration"]')).toBeNull();
+      });
     });
 
     /**
@@ -1647,15 +1760,15 @@ describe('hiper-mvhr-card', () => {
         return el;
       }
 
-      it('no shower entities configured: no shower panel at all, overview expands full width', async () => {
+      it('no shower entities configured: no shower panel and no header pill at all', async () => {
         const el = mountSystem();
         await el.updateComplete;
 
         expect(el.shadowRoot?.querySelector('.shower-panel')).toBeNull();
-        expect(el.shadowRoot?.querySelector('.system-main.no-shower')).toBeTruthy();
+        expect(el.shadowRoot?.querySelector('.shower-pill')).toBeNull();
       });
 
-      it('shower entities configured but off: a compact inactive card, not the large illustration', async () => {
+      it('shower entities configured but off: a quiet header pill, not the large illustration or a main-content card', async () => {
         const el = mountShower({
           'binary_sensor.altair_shower_detected': {
             entity_id: 'binary_sensor.altair_shower_detected',
@@ -1665,9 +1778,14 @@ describe('hiper-mvhr-card', () => {
         });
         await el.updateComplete;
 
-        expect(el.shadowRoot?.querySelector('.shower-inactive')).toBeTruthy();
+        const pill = el.shadowRoot?.querySelector('.shower-pill');
+        expect(pill).toBeTruthy();
+        expect(pill?.classList.contains('is-active')).toBe(false);
+        expect(pill?.textContent).toContain('No shower detected');
+        // Idle state renders no main-content card at all — visual-polish
+        // follow-up, round 2: "creates a lot of empty whitespace."
+        expect(el.shadowRoot?.querySelector('.shower-panel')).toBeNull();
         expect(el.shadowRoot?.querySelector('.shower-active')).toBeNull();
-        expect(el.shadowRoot?.querySelector('.system-main.no-shower')).toBeNull();
       });
 
       it('an unavailable shower_detected entity is treated as inactive, not as an active shower', async () => {
@@ -1680,7 +1798,9 @@ describe('hiper-mvhr-card', () => {
         });
         await el.updateComplete;
 
-        expect(el.shadowRoot?.querySelector('.shower-inactive')).toBeTruthy();
+        const pill = el.shadowRoot?.querySelector('.shower-pill');
+        expect(pill).toBeTruthy();
+        expect(pill?.classList.contains('is-active')).toBe(false);
         expect(el.shadowRoot?.querySelector('.shower-active')).toBeNull();
       });
 

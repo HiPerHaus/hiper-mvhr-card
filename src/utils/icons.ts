@@ -19,6 +19,7 @@ const ROLE_ICONS: Partial<Record<EntityRoleId, string>> = {
   fault_active: 'mdi:alert-circle',
   frost_protection_active: 'mdi:snowflake-alert',
   filter_reset_control: 'mdi:restart',
+  calibration_start_control: 'mdi:progress-wrench',
   shower_detected: 'mdi:shower-head',
   shower_trigger_temperature: 'mdi:thermometer-water',
   shower_pipe_temperature: 'mdi:thermometer-water',

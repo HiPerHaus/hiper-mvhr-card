@@ -37,6 +37,7 @@ Roles are grouped by category. `views` lists which audience views show the role 
 | `filter_remaining` | core | numeric | H, I | unit defined per profile (days / % / hours) |
 | `filter_alarm` | core | binary | H, I | |
 | `filter_reset_control` | core | action | I | |
+| `calibration_start_control` | core | action | I | manual airflow-calibration trigger |
 | `frost_protection_active` | diagnostic | binary | I | |
 | `fault_active` | core | binary | H, I | |
 | `fault_code` | diagnostic | text | I, C | |
@@ -48,7 +49,7 @@ Roles are grouped by category. `views` lists which audience views show the role 
 
 This table is the initial set, not a closed one — new roles are additive (see architecture §4) and don't require a schema version bump for `MvhrSnapshot`/`CapabilityProfile`, only a role-registry entry.
 
-**Implemented so far** (`src/types/entity-roles.ts`): `mode`, `outdoor_air_temp`, `supply_air_temp`, `extract_air_temp`, `exhaust_air_temp`, `supply_airflow`, `extract_airflow`, `bypass_state` (Phase 1), `filter_remaining`, `fault_active`, `frost_protection_active` (Phase 2), plus `filter_reset_control` (Phase 3A — the first interactive/action role). Everything else in the table above (`mode_control`, `heat_recovery_efficiency`, `bypass_control`, `filter_alarm`, `fault_code`, `fault_description`, `boost_remaining`, `indoor_humidity`, `co2_level`, `commissioning_diagnostics`) is specified but not yet implemented; `mode_control` and `bypass_control` are Phase 3B/3C respectively (`ROADMAP.md`).
+**Implemented so far** (`src/types/entity-roles.ts`): `mode`, `outdoor_air_temp`, `supply_air_temp`, `extract_air_temp`, `exhaust_air_temp`, `supply_airflow`, `extract_airflow`, `bypass_state` (Phase 1), `filter_remaining`, `fault_active`, `frost_protection_active` (Phase 2), `filter_reset_control` (Phase 3A — the first interactive/action role), plus `calibration_start_control` (system-mode visual-polish follow-up — a second action role, same generic/feature-flaggable pattern as filter reset). Everything else in the table above (`mode_control`, `heat_recovery_efficiency`, `bypass_control`, `filter_alarm`, `fault_code`, `fault_description`, `boost_remaining`, `indoor_humidity`, `co2_level`, `commissioning_diagnostics`) is specified but not yet implemented; `mode_control` and `bypass_control` are Phase 3B/3C respectively (`ROADMAP.md`).
 
 ## 3. Capability matrix (launch set)
 
@@ -59,6 +60,7 @@ This table is the initial set, not a closed one — new roles are additive (see 
 | Frost protection | Role implemented, assumed supported (TBD method) | Role implemented, assumed supported (TBD method) | Role implemented, assumed supported (TBD method) | Off by default |
 | Filter monitoring | Role implemented, assumed supported, unit TBD | Role implemented, assumed supported, unit TBD | Role implemented, assumed supported, unit TBD | Off by default |
 | Filter reset (manual) | TBD (resettable?) — not declared supported | TBD (resettable?) — not declared supported | TBD (resettable?) — not declared supported | Role implemented (Phase 3A), feature-flaggable |
+| Manual calibration trigger | TBD (does the integration expose a start-calibration service/button?) — not declared supported | TBD — not declared supported | TBD — not declared supported | Role implemented, feature-flaggable |
 | Fault indication | Role implemented, assumed supported | Role implemented, assumed supported | Role implemented, assumed supported | Off by default |
 | Boost timer | Not implemented | Not implemented | Not implemented | Not implemented |
 | Humidity sensor | Not implemented | Not implemented | Not implemented | Not implemented |
