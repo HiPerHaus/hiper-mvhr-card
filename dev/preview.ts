@@ -232,6 +232,51 @@ const systemAltairConfig = {
   display_mode: 'system',
 };
 
+// Visual-redesign shower-detection panel scenarios. `shower_pipe_temperature`
+// is deliberately a foreign-looking entity id (no `altair_mvhr_` prefix) —
+// it's the ESPHome sensor on the physical pipe, not part of the Altair
+// integration itself, same as it's documented in ha-altair-mvhr.
+const systemShowerConfig = {
+  ...systemAltairConfig,
+  entities: {
+    ...systemAltairConfig.entities,
+    shower_detected: 'binary_sensor.altair_shower_detected',
+    shower_trigger_temperature: 'sensor.altair_shower_trigger_temperature',
+    shower_pipe_temperature: 'sensor.shower_pipe_temperature',
+  },
+};
+
+// Trigger 43.6°C, rearm at 33.6°C (trigger - 10°C, computed by the card —
+// see the "shower detection panel" describe block in
+// tests/unit/card-rendering.test.ts for the same worked example).
+const showerActiveStates: HomeAssistant['states'] = {
+  'binary_sensor.altair_shower_detected': {
+    entity_id: 'binary_sensor.altair_shower_detected',
+    state: 'on',
+    attributes: {},
+  },
+  'sensor.altair_shower_trigger_temperature': {
+    entity_id: 'sensor.altair_shower_trigger_temperature',
+    state: '43.6',
+    attributes: { unit_of_measurement: '°C' },
+  },
+  'sensor.shower_pipe_temperature': {
+    entity_id: 'sensor.shower_pipe_temperature',
+    state: '43.6',
+    attributes: { unit_of_measurement: '°C' },
+  },
+  'binary_sensor.altair_mvhr_boost_active': {
+    entity_id: 'binary_sensor.altair_mvhr_boost_active',
+    state: 'on',
+    attributes: {},
+  },
+  'sensor.altair_mvhr_boost_remaining': {
+    entity_id: 'sensor.altair_mvhr_boost_remaining',
+    state: '25',
+    attributes: { unit_of_measurement: 'min' },
+  },
+};
+
 const scenarios = [
   {
     title: 'Altair 160 — detailed desktop (dark)',
@@ -360,7 +405,13 @@ const scenarios = [
     config: systemAltairConfig,
   },
   {
-    title: 'System mode — boost active',
+    title: 'System mode — normal Home mode (no shower entities configured)',
+    hass: systemAltairHass,
+    className: 'desktop',
+    config: systemAltairConfig,
+  },
+  {
+    title: 'System mode — boost active (no shower)',
     hass: withSystemStates({
       'binary_sensor.altair_mvhr_boost_active': {
         entity_id: 'binary_sensor.altair_mvhr_boost_active',
@@ -375,6 +426,57 @@ const scenarios = [
     }),
     className: 'desktop dark',
     config: systemAltairConfig,
+  },
+  {
+    title: 'System mode — shower detected (pipe 43.6°C, rearm 33.6°C, boost active)',
+    hass: {
+      ...systemAltairHass,
+      states: { ...systemAltairHass.states, ...showerActiveStates },
+    },
+    className: 'desktop dark',
+    config: systemShowerConfig,
+  },
+  {
+    title: 'System mode — shower detected, mobile width',
+    hass: {
+      ...systemAltairHass,
+      states: { ...systemAltairHass.states, ...showerActiveStates },
+    },
+    className: 'mobile dark',
+    config: systemShowerConfig,
+  },
+  {
+    title: 'System mode — shower entities configured but no shower right now (compact inactive card)',
+    hass: {
+      ...systemAltairHass,
+      states: {
+        ...systemAltairHass.states,
+        'binary_sensor.altair_shower_detected': {
+          entity_id: 'binary_sensor.altair_shower_detected',
+          state: 'off',
+          attributes: {},
+        },
+      },
+    },
+    className: 'desktop',
+    config: systemShowerConfig,
+  },
+  {
+    title: 'System mode — shower detected but pipe sensor unavailable (no fake reading shown)',
+    hass: {
+      ...systemAltairHass,
+      states: {
+        ...systemAltairHass.states,
+        ...showerActiveStates,
+        'sensor.shower_pipe_temperature': {
+          entity_id: 'sensor.shower_pipe_temperature',
+          state: 'unavailable',
+          attributes: { unit_of_measurement: '°C' },
+        },
+      },
+    },
+    className: 'desktop',
+    config: systemShowerConfig,
   },
   {
     title: 'System mode — calibration required',

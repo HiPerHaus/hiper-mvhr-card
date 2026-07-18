@@ -1122,7 +1122,7 @@ describe('hiper-mvhr-card', () => {
         expect(toggle?.getAttribute('aria-expanded')).toBe('false');
       });
 
-      it('opens the advanced drawer when the disclosure is clicked, revealing mapped level and override', async () => {
+      it('opens the advanced drawer when the disclosure is clicked, revealing override and boost duration', async () => {
         const el = mountSystem();
         await el.updateComplete;
 
@@ -1131,8 +1131,8 @@ describe('hiper-mvhr-card', () => {
 
         const drawer = el.shadowRoot?.querySelector('.advanced-drawer');
         expect(drawer).toBeTruthy();
-        expect(drawer?.textContent).toContain('Mapped level');
         expect(drawer?.textContent).toContain('Override');
+        expect(drawer?.querySelector('input[aria-label="Boost duration"]')).toBeTruthy();
       });
 
       it('Altair never gets a bypass row, even in the advanced drawer', async () => {
@@ -1218,25 +1218,28 @@ describe('hiper-mvhr-card', () => {
     });
 
     describe('metrics', () => {
-      it('the primary metrics row omits mapped level', async () => {
+      it('the Airflow lower card shows current airflow, target airflow, fan speed, and mapped level', async () => {
         const el = mountSystem();
         await el.updateComplete;
 
-        const primaryRow = el.shadowRoot?.querySelector('.system-metrics-row');
-        expect(primaryRow?.textContent).not.toContain('Mapped level');
+        const airflowCard = el.shadowRoot?.querySelector('.airflow-card');
+        expect(airflowCard).toBeTruthy();
+        expect(airflowCard?.textContent).toContain('Mapped level');
+        expect(airflowCard?.textContent).toContain('Target airflow');
+        expect(airflowCard?.textContent).toContain('Fan speed');
+        expect(airflowCard?.querySelector('.gauge')).toBeTruthy();
       });
 
-      it('mapped level appears only in the advanced diagnostics drawer', async () => {
+      it('the Temperatures lower card shows all four temperatures and heat recovery', async () => {
         const el = mountSystem();
         await el.updateComplete;
 
-        expect(el.shadowRoot?.textContent).not.toContain('Mapped level');
-        (el.shadowRoot?.querySelector('.disclosure-toggle') as HTMLButtonElement)?.click();
-        await el.updateComplete;
-
-        expect(el.shadowRoot?.querySelector('.advanced-drawer')?.textContent).toContain(
-          'Mapped level',
-        );
+        const card = el.shadowRoot?.querySelector('.temperatures-card');
+        expect(card?.textContent).toContain('Supply air');
+        expect(card?.textContent).toContain('Extract air');
+        expect(card?.textContent).toContain('Outdoor air');
+        expect(card?.textContent).toContain('Exhaust air');
+        expect(card?.textContent).toContain('Heat recovery');
       });
 
       it('renders the apparent heat-recovery calculation correctly (~74% for these values), not a hard-coded figure', async () => {
@@ -1274,16 +1277,18 @@ describe('hiper-mvhr-card', () => {
     });
 
     describe('controls', () => {
-      it('sends the internal medium option when the visible Home mode button is pressed', async () => {
+      it('sends the internal medium option when Home is chosen from the compact header mode select', async () => {
         const callService = vi.fn().mockResolvedValue(undefined);
         const el = mountSystem();
         el.hass = { ...altairHass, states: { ...altairHass.states, ...systemStates }, callService };
         await el.updateComplete;
 
-        const homeButton = Array.from(el.shadowRoot?.querySelectorAll('button') ?? []).find(
-          (button) => button.textContent?.trim() === 'Home',
-        );
-        homeButton?.click();
+        const select = el.shadowRoot?.querySelector(
+          'select[aria-label="Operating mode"]',
+        ) as HTMLSelectElement;
+        expect(select).toBeTruthy();
+        select.value = 'medium';
+        select.dispatchEvent(new Event('change'));
 
         expect(callService).toHaveBeenCalledWith('select', 'select_option', {
           entity_id: 'select.altair_mvhr_mode',
@@ -1291,10 +1296,49 @@ describe('hiper-mvhr-card', () => {
         });
       });
 
-      it('starts and cancels boost, and sets the boost duration, via the documented services', async () => {
+      it('the header boost pill starts boost when ready, and reads Active once boost is on', async () => {
         const callService = vi.fn().mockResolvedValue(undefined);
         const el = mountSystem();
         el.hass = { ...altairHass, states: { ...altairHass.states, ...systemStates }, callService };
+        await el.updateComplete;
+
+        const boostButton = el.shadowRoot?.querySelector(
+          'button[aria-label="Start Boost"]',
+        ) as HTMLButtonElement;
+        expect(boostButton).toBeTruthy();
+        expect(boostButton.textContent).toContain('Ready');
+        boostButton.click();
+
+        expect(callService).toHaveBeenCalledWith('button', 'press', {
+          entity_id: 'button.altair_mvhr_start_boost',
+        });
+
+        const activeEl = mountSystem({
+          ...altairHass,
+          states: {
+            ...altairHass.states,
+            ...systemStates,
+            'binary_sensor.altair_mvhr_boost_active': {
+              entity_id: 'binary_sensor.altair_mvhr_boost_active',
+              state: 'on',
+              attributes: {},
+            },
+          },
+        });
+        await activeEl.updateComplete;
+        const cancelButton = activeEl.shadowRoot?.querySelector(
+          'button[aria-label="Cancel Boost"]',
+        ) as HTMLButtonElement;
+        expect(cancelButton).toBeTruthy();
+        expect(cancelButton.textContent).toContain('Active');
+      });
+
+      it('boost duration, in the advanced drawer, sets the duration via the documented service', async () => {
+        const callService = vi.fn().mockResolvedValue(undefined);
+        const el = mountSystem();
+        el.hass = { ...altairHass, states: { ...altairHass.states, ...systemStates }, callService };
+        await el.updateComplete;
+        (el.shadowRoot?.querySelector('.disclosure-toggle') as HTMLButtonElement)?.click();
         await el.updateComplete;
 
         (
@@ -1303,16 +1347,10 @@ describe('hiper-mvhr-card', () => {
         el.shadowRoot
           ?.querySelector('input[aria-label="Boost duration"]')
           ?.dispatchEvent(new Event('change'));
-        (
-          el.shadowRoot?.querySelector('button[aria-label="Start Boost"]') as HTMLButtonElement
-        ).click();
 
         expect(callService).toHaveBeenCalledWith('number', 'set_value', {
           entity_id: 'number.altair_mvhr_boost_duration',
           value: 20,
-        });
-        expect(callService).toHaveBeenCalledWith('button', 'press', {
-          entity_id: 'button.altair_mvhr_start_boost',
         });
       });
 
@@ -1416,20 +1454,26 @@ describe('hiper-mvhr-card', () => {
         expect(cssText).toMatch(/repeat\(2,\s*minmax\(0,\s*1fr\)\)/);
       });
 
-      it('the system metrics row locks to 2 columns on mobile (via the shared .metrics-grid rule)', async () => {
-        const el = mountSystem();
-        await el.updateComplete;
-        expect(
-          el.shadowRoot?.querySelector('.system-metrics-row')?.classList.contains('metrics-grid'),
-        ).toBe(true);
+      it('the lower dashboard cards (Airflow/Temperatures/System Status) collapse to a single column on mobile', () => {
+        const cssText = HiperMvhrCard.styles.cssText;
+        const mobileBlock = cssText.match(/@media \(max-width: 599px\)\s*{[\s\S]*?\n {4}}/)?.[0] ?? '';
+        expect(mobileBlock).toMatch(/\.system-lower-grid\s*{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)/);
+        expect(mobileBlock).toMatch(/\.system-main[^{]*{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)/);
       });
 
-      it('respects prefers-reduced-motion for the duct and fan animations', () => {
+      it('the airflow gauge becomes fluid-width (not a fixed px width) on mobile', () => {
+        const cssText = HiperMvhrCard.styles.cssText;
+        const mobileBlock = cssText.match(/@media \(max-width: 599px\)\s*{[\s\S]*?\n {4}}/)?.[0] ?? '';
+        expect(mobileBlock).toMatch(/\.gauge\s*{[^}]*width:\s*100%/);
+      });
+
+      it('respects prefers-reduced-motion for the duct, fan, and shower-droplet animations', () => {
         const cssText = HiperMvhrCard.styles.cssText;
         const reducedMotionBlock =
           cssText.match(/@media \(prefers-reduced-motion: reduce\)\s*{[^}]*}/)?.[0] ?? '';
         expect(reducedMotionBlock).toMatch(/animation:\s*none/);
         expect(reducedMotionBlock).toMatch(/system-visual-panel/);
+        expect(reducedMotionBlock).toMatch(/\.droplet/);
       });
     });
 
@@ -1438,6 +1482,185 @@ describe('hiper-mvhr-card', () => {
         const el = mountSystem();
         await el.updateComplete;
         expect((el.shadowRoot?.textContent ?? '').toLowerCase()).not.toContain('bypass');
+      });
+    });
+
+    /**
+     * Shower-detection panel (visual redesign) — `shower_detected`,
+     * `shower_trigger_temperature`, and `shower_pipe_temperature` are
+     * optional roles; these tests deliberately mount with a separate
+     * entities object rather than adding them to `systemEntities`, so
+     * every test above (mounted without any shower entities) keeps
+     * exercising the "not configured at all" path implicitly.
+     */
+    describe('shower detection panel', () => {
+      const showerEntities = {
+        ...systemEntities,
+        shower_detected: 'binary_sensor.altair_shower_detected',
+        shower_trigger_temperature: 'sensor.altair_shower_trigger_temperature',
+        shower_pipe_temperature: 'sensor.shower_pipe_temperature',
+      };
+
+      function mountShower(showerStates: HomeAssistant['states']): HiperMvhrCard {
+        const el = mount();
+        set(el, {
+          type: 'custom:hiper-mvhr-card',
+          manufacturer: 'altair',
+          display_mode: 'system',
+          entities: showerEntities,
+        });
+        el.hass = {
+          ...altairHass,
+          states: { ...altairHass.states, ...systemStates, ...showerStates },
+        };
+        return el;
+      }
+
+      it('no shower entities configured: no shower panel at all, overview expands full width', async () => {
+        const el = mountSystem();
+        await el.updateComplete;
+
+        expect(el.shadowRoot?.querySelector('.shower-panel')).toBeNull();
+        expect(el.shadowRoot?.querySelector('.system-main.no-shower')).toBeTruthy();
+      });
+
+      it('shower entities configured but off: a compact inactive card, not the large illustration', async () => {
+        const el = mountShower({
+          'binary_sensor.altair_shower_detected': {
+            entity_id: 'binary_sensor.altair_shower_detected',
+            state: 'off',
+            attributes: {},
+          },
+        });
+        await el.updateComplete;
+
+        expect(el.shadowRoot?.querySelector('.shower-inactive')).toBeTruthy();
+        expect(el.shadowRoot?.querySelector('.shower-active')).toBeNull();
+        expect(el.shadowRoot?.querySelector('.system-main.no-shower')).toBeNull();
+      });
+
+      it('an unavailable shower_detected entity is treated as inactive, not as an active shower', async () => {
+        const el = mountShower({
+          'binary_sensor.altair_shower_detected': {
+            entity_id: 'binary_sensor.altair_shower_detected',
+            state: 'unavailable',
+            attributes: {},
+          },
+        });
+        await el.updateComplete;
+
+        expect(el.shadowRoot?.querySelector('.shower-inactive')).toBeTruthy();
+        expect(el.shadowRoot?.querySelector('.shower-active')).toBeNull();
+      });
+
+      it('shower detected: shows the full panel with pipe, trigger, and computed re-arm temperatures', async () => {
+        const el = mountShower({
+          'binary_sensor.altair_shower_detected': {
+            entity_id: 'binary_sensor.altair_shower_detected',
+            state: 'on',
+            attributes: {},
+          },
+          'sensor.altair_shower_trigger_temperature': {
+            entity_id: 'sensor.altair_shower_trigger_temperature',
+            state: '43.6',
+            attributes: { unit_of_measurement: '°C' },
+          },
+          'sensor.shower_pipe_temperature': {
+            entity_id: 'sensor.shower_pipe_temperature',
+            state: '43.6',
+            attributes: { unit_of_measurement: '°C' },
+          },
+          'binary_sensor.altair_mvhr_boost_active': {
+            entity_id: 'binary_sensor.altair_mvhr_boost_active',
+            state: 'on',
+            attributes: {},
+          },
+          'sensor.altair_mvhr_boost_remaining': {
+            entity_id: 'sensor.altair_mvhr_boost_remaining',
+            state: '25',
+            attributes: { unit_of_measurement: 'min' },
+          },
+        });
+        await el.updateComplete;
+
+        const panel = el.shadowRoot?.querySelector('.shower-active');
+        expect(panel).toBeTruthy();
+        expect(panel?.textContent).toContain('Shower detected');
+        expect(panel?.textContent).toContain('Boost active');
+        expect(panel?.textContent).toContain('43.6 °C');
+        // Re-arm = trigger - 10°C, computed by the card, not a separate entity.
+        expect(panel?.textContent).toContain('33.6');
+        expect(panel?.textContent).toContain('25 min');
+      });
+
+      it('does not display a fake pipe temperature when that sensor is unavailable', async () => {
+        const el = mountShower({
+          'binary_sensor.altair_shower_detected': {
+            entity_id: 'binary_sensor.altair_shower_detected',
+            state: 'on',
+            attributes: {},
+          },
+          'sensor.altair_shower_trigger_temperature': {
+            entity_id: 'sensor.altair_shower_trigger_temperature',
+            state: '40.0',
+            attributes: { unit_of_measurement: '°C' },
+          },
+          'sensor.shower_pipe_temperature': {
+            entity_id: 'sensor.shower_pipe_temperature',
+            state: 'unavailable',
+            attributes: { unit_of_measurement: '°C' },
+          },
+        });
+        await el.updateComplete;
+
+        const panel = el.shadowRoot?.querySelector('.shower-active');
+        expect(panel?.textContent).not.toContain('Pipe temperature');
+      });
+
+      it('boost active and boost remaining reflect the same roles used elsewhere in the card', async () => {
+        const el = mountShower({
+          'binary_sensor.altair_shower_detected': {
+            entity_id: 'binary_sensor.altair_shower_detected',
+            state: 'on',
+            attributes: {},
+          },
+          'binary_sensor.altair_mvhr_boost_active': {
+            entity_id: 'binary_sensor.altair_mvhr_boost_active',
+            state: 'off',
+            attributes: {},
+          },
+        });
+        await el.updateComplete;
+
+        expect(el.shadowRoot?.querySelector('.shower-active')?.textContent).toContain(
+          'Boost not active',
+        );
+      });
+
+      it('renders a lightweight inline SVG illustration, not an externally hosted image', async () => {
+        const el = mountShower({
+          'binary_sensor.altair_shower_detected': {
+            entity_id: 'binary_sensor.altair_shower_detected',
+            state: 'on',
+            attributes: {},
+          },
+        });
+        await el.updateComplete;
+
+        const svg = el.shadowRoot?.querySelector('.shower-active .shower-svg');
+        expect(svg).toBeTruthy();
+        expect(el.shadowRoot?.querySelector('.shower-active img')).toBeNull();
+      });
+    });
+
+    describe('mobile layout structure', () => {
+      it('the redesigned system-main and lower-grid sections exist and are styled for a single mobile column', async () => {
+        const el = mountSystem();
+        await el.updateComplete;
+
+        expect(el.shadowRoot?.querySelector('.system-main')).toBeTruthy();
+        expect(el.shadowRoot?.querySelector('.system-lower-grid')).toBeTruthy();
+        expect(el.shadowRoot?.querySelectorAll('.lower-card')).toHaveLength(3);
       });
     });
   });

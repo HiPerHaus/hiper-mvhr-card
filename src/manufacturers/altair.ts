@@ -35,6 +35,13 @@ export const altairProfile: CapabilityProfile = {
     last_calibration: {},
     fault_active: {},
     frost_protection_active: {},
+    // The Altair HA integration's shower-triggered auto-boost feature
+    // exposes these three diagnostic entities (binary_sensor.altair_shower_detected,
+    // sensor.altair_shower_trigger_temperature) plus the ESPHome pipe sensor
+    // a user wires in themselves — see ha-altair-mvhr's shower_detector.py.
+    shower_detected: {},
+    shower_trigger_temperature: {},
+    shower_pipe_temperature: {},
     // bypass_state is intentionally absent — see unsupportedRoles below.
   },
   // Confirmed product fact, not a "not configured yet" default: the Altair

@@ -48,6 +48,21 @@ export const ENTITY_ROLES = [
   // but deliberately NOT added here yet — Phase 3B/3C, once mode/bypass
   // optimistic-value reconciliation exists to support them meaningfully.
   'filter_reset_control',
+  // Added for the system-mode visual redesign's shower-detection panel: a
+  // generic "was a shower just detected, and what temperature triggered/will
+  // rearm it" concept, not an Altair-only idea — any manufacturer profile
+  // that wires up an equivalent detector can declare these supported the
+  // same way Altair does. `shower_pipe_temperature` is the raw hot-water
+  // pipe sensor feeding the detector (typically a foreign/ESPHome entity,
+  // not part of the MVHR integration itself, but still just an optional
+  // role like any other); `shower_trigger_temperature` is the stored pipe
+  // temperature at the moment a shower was detected, from which the
+  // component derives the rearm temperature (trigger - 10°C) — that
+  // subtraction is fixed, generic UI math describing what these two roles
+  // mean together, not a manufacturer conditional.
+  'shower_detected',
+  'shower_trigger_temperature',
+  'shower_pipe_temperature',
 ] as const;
 
 export type EntityRoleId = (typeof ENTITY_ROLES)[number];
