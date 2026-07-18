@@ -889,6 +889,13 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
         (value) => value?.status === 'ok',
       );
     const boostActive = this._state(snapshot.boost_active) === 'on';
+    // Surfaced next to "Active" so the countdown is visible at a glance
+    // without opening the System Status card below — "make the boost
+    // remaining time more prominent" (visual-polish follow-up).
+    const boostRemaining =
+      boostActive && snapshot.boost_remaining?.status === 'ok'
+        ? this._value(snapshot.boost_remaining)
+        : null;
 
     if (!canEditMode && !modeLabel && !hasBoost) {
       return html``;
@@ -950,6 +957,7 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
                   >
                     <ha-icon icon="mdi:rocket-launch" aria-hidden="true"></ha-icon>
                     ${boostActive ? 'Active' : 'Ready'}
+                    ${boostRemaining ? html`<small>${boostRemaining} left</small>` : ''}
                   </button>
                 </div>
               `
@@ -994,15 +1002,8 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
           <section class="visual-panel system-visual-panel system-overview" aria-label="System overview">
             <div class="panel-heading-row">
               <h3>System Overview</h3>
-              ${
-                recovery.status === 'ok'
-                  ? html`<span class="recovery-pill" title="Apparent temperature recovery"
-                      >Heat Recovery: ${recovery.label}</span
-                    >`
-                  : ''
-              }
             </div>
-            ${this._systemHeroVisual(snapshot, config, animated, unitBrand)}
+            ${this._systemHeroVisual(snapshot, config, animated, unitBrand, recovery)}
           </section>
           ${shower.render ? this._systemShowerPanel(shower) : ''}
         </section>
@@ -1232,8 +1233,13 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       rows.push(this._diagnosticRow('mdi:fan', 'Fan speed', this._pair(FAN_ROLES, snapshot, true)));
     }
     if (snapshot.mapped_level) {
+      // "Mapped level" is an implementation detail (it names the internal
+      // role that reconciles a manufacturer's raw speed value against the
+      // profile's speed options) — shown to a homeowner as "Current
+      // profile" instead, per the visual-polish follow-up. Same role, same
+      // value, just a label a homeowner would actually recognise.
       rows.push(
-        this._diagnosticRow('mdi:tune-variant', 'Mapped level', this._value(snapshot.mapped_level, true)),
+        this._diagnosticRow('mdi:tune-variant', 'Current profile', this._value(snapshot.mapped_level, true)),
       );
     }
     if (snapshot.target_airflow) {
@@ -1328,29 +1334,66 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
         : null;
     const boostRemaining =
       snapshot.boost_remaining?.status === 'ok' ? this._value(snapshot.boost_remaining) : null;
+    const filterDays = this._number(snapshot.filter_remaining);
+    const filterTone: AvailabilitySummary['tone'] =
+      filterDays === undefined
+        ? 'muted'
+        : filterDays / config.filter_max_days <= 0.15
+          ? 'warning'
+          : 'success';
 
-    const rows: TemplateResult[] = [];
+    const badges: TemplateResult[] = [];
     if (hasBoostRole) {
-      rows.push(this._diagnosticRow('mdi:rocket-launch', 'Boost', boostActive ? 'Active' : 'Ready'));
+      badges.push(this._statusBadge(boostActive ? 'Boost Active' : 'Boost Ready', boostActive ? 'success' : 'muted'));
     }
     if (overrideText) {
-      rows.push(this._diagnosticRow('mdi:calendar-clock', 'Override', overrideText));
-    }
-    if (boostRemaining) {
-      rows.push(this._diagnosticRow('mdi:timer-sand', 'Boost remaining', boostRemaining));
+      badges.push(this._statusBadge(`Override: ${overrideText}`, 'muted'));
     }
     if (config.show_filter && snapshot.filter_remaining) {
-      rows.push(
-        this._diagnosticRow('mdi:air-filter', 'Filters', this._value(snapshot.filter_remaining, true)),
+      badges.push(
+        this._statusBadge(`Filter ${this._value(snapshot.filter_remaining, true)}`, filterTone),
       );
     }
-    rows.push(this._diagnosticRow(TONE_ICONS[status.tone], 'System', status.label));
+    badges.push(this._statusBadge(status.label, status.tone));
 
     return html`
       <section class="lower-card system-status-card" aria-label="System status">
         <h3>System Status</h3>
-        <div class="status-list">${rows}</div>
+        ${
+          // "Make the boost remaining time more prominent" — a big countdown
+          // callout above the badge row, rather than one more small row
+          // buried among everything else, and only when there's an active
+          // boost with a real remaining-time reading to show.
+          boostRemaining
+            ? html`
+                <div class="boost-remaining-highlight" role="status">
+                  <ha-icon icon="mdi:timer-sand" aria-hidden="true"></ha-icon>
+                  <div>
+                    <strong>${boostRemaining}</strong>
+                    <span>Boost remaining</span>
+                  </div>
+                </div>
+              `
+            : ''
+        }
+        <div class="status-badge-row">${badges}</div>
       </section>
+    `;
+  }
+
+  /**
+   * A small coloured-dot status badge ("🟢 Boost Active", "🟡 Filter 12
+   * days") in place of a label/value row — visual-polish follow-up. The dot
+   * is decorative (`aria-hidden`) reinforcement only; the tone is never the
+   * sole indicator since the text itself always states the state in words
+   * (e.g. "Boost Active", not just a coloured dot).
+   */
+  private _statusBadge(label: string, tone: AvailabilitySummary['tone']): TemplateResult {
+    return html`
+      <span class="status-badge tone-${tone}">
+        <span class="status-badge-dot" aria-hidden="true"></span>
+        ${label}
+      </span>
     `;
   }
 
@@ -1492,64 +1535,67 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
               `
             : ''
         }
-        <div class="status-list">
-          ${
-            // Summer bypass is not part of the primary hero visual, lower
-            // cards, or compact header controls in system mode for any
-            // manufacturer (deliberately bypass-free, generically — not an
-            // Altair-specific carve-out). It only ever appears here, and
-            // only when the active profile actually declares it supported
-            // (Zehnder/Aerofresh) — Altair's profile marks it unsupported, so
-            // `_value` returns null and this omits the row entirely, exactly
-            // like every other unsupported role (SPECIFICATION.md §6), with
-            // no manufacturer conditional written here to make that happen.
-            snapshot.bypass_state && snapshot.bypass_state.status !== 'unsupported'
-              ? this._diagnosticRow(
-                  'mdi:valve',
-                  'Summer bypass',
-                  this._value(snapshot.bypass_state, true),
-                )
-              : ''
-          }
-          ${
-            config.show_calibration
-              ? this._diagnosticRow(
-                  'mdi:progress-check',
-                  'Calibration status',
-                  this._value(snapshot.calibration_status, true),
-                )
-              : ''
-          }
-          ${
-            config.show_calibration
-              ? this._diagnosticRow(
-                  'mdi:progress-clock',
-                  'Calibration progress',
-                  this._value(snapshot.calibration_progress, true),
-                )
-              : ''
-          }
-          ${
-            config.show_fan_speeds
-              ? this._diagnosticRow(
-                  'mdi:fan',
-                  'Supply fan',
-                  this._value(snapshot.supply_fan_speed, true),
-                )
-              : ''
-          }
-          ${
-            config.show_fan_speeds
-              ? this._diagnosticRow(
-                  'mdi:fan',
-                  'Extract fan',
-                  this._value(snapshot.extract_fan_speed, true),
-                )
-              : ''
-          }
-        </div>
+        ${this._advancedCompactStats(snapshot, config)}
+        ${
+          // Summer bypass is not part of the primary hero visual, lower
+          // cards, or compact header controls in system mode for any
+          // manufacturer (deliberately bypass-free, generically — not an
+          // Altair-specific carve-out). It only ever appears here, and
+          // only when the active profile actually declares it supported
+          // (Zehnder/Aerofresh) — Altair's profile marks it unsupported, so
+          // `_value` returns null and this omits the row entirely, exactly
+          // like every other unsupported role (SPECIFICATION.md §6), with
+          // no manufacturer conditional written here to make that happen.
+          snapshot.bypass_state && snapshot.bypass_state.status !== 'unsupported'
+            ? html`
+                <div class="status-list">
+                  ${this._diagnosticRow(
+                    'mdi:valve',
+                    'Summer bypass',
+                    this._value(snapshot.bypass_state, true),
+                  )}
+                </div>
+              `
+            : ''
+        }
         ${this._extraControls(snapshot, config, hass)}
       </section>
+    `;
+  }
+
+  /**
+   * Calibration status/progress and individual fan RPM, as a small grid of
+   * compact label/value tiles rather than a full-width row each — "I don't
+   * think these need an entire row... could all fit inside a small
+   * expandable card" (visual-polish follow-up). Still just as gated on
+   * `show_calibration`/`show_fan_speeds` and role availability as before;
+   * only the presentation changed.
+   */
+  private _advancedCompactStats(
+    snapshot: Partial<Record<EntityRoleId, RoleValue>>,
+    config: HiperMvhrCardConfig,
+  ): TemplateResult {
+    const stats: TemplateResult[] = [];
+    if (config.show_calibration) {
+      stats.push(this._compactStat('Calibration', this._value(snapshot.calibration_status, true)));
+      stats.push(this._compactStat('Progress', this._value(snapshot.calibration_progress, true)));
+    }
+    if (config.show_fan_speeds) {
+      stats.push(this._compactStat('Supply fan', this._value(snapshot.supply_fan_speed, true)));
+      stats.push(this._compactStat('Extract fan', this._value(snapshot.extract_fan_speed, true)));
+    }
+    if (stats.length === 0) {
+      return html``;
+    }
+    return html`<div class="compact-stats-card">${stats}</div>`;
+  }
+
+  private _compactStat(label: string, value: string | null): TemplateResult {
+    return html`
+      <div class="compact-stat">
+        <span>${label}</span>
+        <strong>${value ?? '—'}</strong>
+      </div>
     `;
   }
 
@@ -1576,16 +1622,20 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
    * "directional arrows", without relying on colour alone) and a colour
    * family scoped to `.system-visual-panel` only — supply/outdoor cool
    * blue, extract warm orange, exhaust neutral grey — that never touches
-   * `_heroVisual`'s own `.supply`/`.extract`/etc. base colours. The heat
-   * recovery badge now lives in the panel heading (`_systemDashboard`)
-   * rather than inside the unit, so this method no longer takes a
-   * `recovery` argument.
+   * `_heroVisual`'s own `.supply`/`.extract`/etc. base colours. Per the
+   * visual-polish follow-up, the heat-recovery figure now lives inside the
+   * unit itself (a large circular badge centred over the exchanger graphic,
+   * `.recovery-badge-circular`) rather than as a small pill in the panel
+   * heading — "make the heat exchanger the hero" / "move the heat recovery
+   * number into the centre of the HRV" — so this method takes a `recovery`
+   * argument again.
    */
   private _systemHeroVisual(
     snapshot: Partial<Record<EntityRoleId, RoleValue>>,
     config: HiperMvhrCardConfig,
     animated: boolean,
     unitBrand: string,
+    recovery: HeatRecoveryResult,
   ): TemplateResult {
     const sharedAirflow =
       this._value(snapshot.airflow, true) ?? this._value(snapshot.supply_airflow, true);
@@ -1651,6 +1701,18 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
           <div class="exchanger" aria-hidden="true"></div>
           <ha-icon class="fan fan-a" icon="mdi:fan" aria-hidden="true"></ha-icon>
           <ha-icon class="fan fan-b" icon="mdi:fan" aria-hidden="true"></ha-icon>
+          ${
+            recovery.status === 'ok'
+              ? html`
+                  <div class="recovery-badge-circular" title="Apparent temperature recovery" role="img"
+                    aria-label=${`Heat recovery ${recovery.label}`}
+                  >
+                    <strong>${recovery.label}</strong>
+                    <span>Heat Recovery</span>
+                  </div>
+                `
+              : ''
+          }
         </div>
         ${path(
           'extract',
@@ -2502,6 +2564,83 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       font-size: 0.85em;
     }
 
+    /* System Status card badges (visual-polish follow-up): "🟢 Boost
+       Active / 🟢 System OK / 🟡 Filter 352 days" instead of label/value
+       rows. Colour is always paired with the state spelled out in words, so
+       the dot is decorative reinforcement, never the only signal. */
+    .status-badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.85em;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--divider-color);
+      color: var(--primary-text-color);
+      background: var(--ha-card-background, var(--card-background-color));
+    }
+    .status-badge-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--secondary-text-color);
+      flex-shrink: 0;
+    }
+    .status-badge.tone-success {
+      border-color: color-mix(in srgb, var(--success-color), transparent 55%);
+      background: color-mix(in srgb, var(--success-color), transparent 88%);
+    }
+    .status-badge.tone-success .status-badge-dot {
+      background: var(--success-color);
+    }
+    .status-badge.tone-warning {
+      border-color: color-mix(in srgb, var(--warning-color), transparent 55%);
+      background: color-mix(in srgb, var(--warning-color), transparent 88%);
+    }
+    .status-badge.tone-warning .status-badge-dot {
+      background: var(--warning-color);
+    }
+    .status-badge.tone-muted .status-badge-dot {
+      background: var(--secondary-text-color);
+    }
+
+    /* The boost-remaining countdown gets its own prominent callout above
+       the badge row instead of being one more small line — "make the boost
+       remaining time more prominent" — since it's a live, time-sensitive
+       value someone glancing at the card is likely looking for. */
+    .boost-remaining-highlight {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      margin-bottom: 12px;
+      border-radius: 12px;
+      border: 1px solid color-mix(in srgb, var(--success-color), transparent 55%);
+      background: color-mix(in srgb, var(--success-color), transparent 90%);
+    }
+    .boost-remaining-highlight ha-icon {
+      --mdc-icon-size: 26px;
+      color: var(--success-color);
+      flex-shrink: 0;
+    }
+    .boost-remaining-highlight strong {
+      display: block;
+      font-size: 1.5em;
+      font-weight: 800;
+      color: var(--success-color);
+      line-height: 1.1;
+    }
+    .boost-remaining-highlight span {
+      font-size: 0.78em;
+      color: var(--secondary-text-color);
+    }
+
     .control-button {
       font: inherit;
       font-size: 0.85em;
@@ -2546,15 +2685,68 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
          fixed brand accent, chosen so it never gets confused with the
          success/warning/primary tones the rest of the card already uses. */
       --shower-color: #a855f7;
+      /* Lets the @container rules below react to the card's own rendered
+         width instead of the browser viewport — see the comment above
+         those rules for why that distinction matters on a real Home
+         Assistant dashboard. */
+      container-type: inline-size;
     }
     .system-main {
       display: grid;
-      grid-template-columns: minmax(0, 3fr) minmax(260px, 2fr);
+      grid-template-columns: minmax(0, 3fr) minmax(220px, 2fr);
       gap: 16px;
       align-items: stretch;
     }
     .system-main.no-shower {
       grid-template-columns: minmax(0, 1fr);
+    }
+    /* A Home Assistant dashboard routinely gives a card far less width than
+       the browser viewport (masonry/sidebar columns, grid sections, etc.),
+       so a plain @media breakpoint can stay stuck on the wide desktop
+       layout — overview and shower column both hit their minmax() floors at
+       once — even though the card itself is genuinely narrow, which is what
+       "the whole dashboard is pushed to the right" turned out to be. These
+       @container rules duplicate (never replace) the equivalent @media
+       rules further down using the card's own width instead, so the layout
+       reflows correctly regardless of where Lovelace decides to place it.
+       Where a browser doesn't support container queries yet, the @media
+       rules remain as the fallback. */
+    @container (max-width: 640px) {
+      .system-main,
+      .system-main.no-shower {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      .system-lower-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+    @container (max-width: 420px) {
+      .system-lower-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      .header-controls {
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+      }
+      .header-control {
+        width: 100%;
+      }
+      .mode-select-pill,
+      .boost-pill-button {
+        width: 100%;
+        justify-content: center;
+      }
+      .airflow-card-body {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .gauge {
+        width: 100%;
+        max-width: 260px;
+        margin: 0 auto;
+      }
     }
     .panel-heading-row {
       display: flex;
@@ -2583,19 +2775,74 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       min-width: 0;
     }
     .system-visual-wrap {
-      min-height: 420px;
-      grid-template-columns: minmax(190px, 1fr) minmax(320px, 400px) minmax(190px, 1fr);
+      min-height: 460px;
+      grid-template-columns: minmax(160px, 1fr) minmax(280px, 420px) minmax(160px, 1fr);
     }
     .system-visual-panel .unit {
-      min-height: 360px;
+      min-height: 400px;
       border-radius: 28px;
     }
     .system-visual-panel .fan {
-      --mdc-icon-size: 34px;
+      --mdc-icon-size: 42px;
     }
     .system-visual-panel .exchanger {
-      width: 104px;
-      height: 104px;
+      width: 128px;
+      height: 128px;
+    }
+    /* Colour the duct stubs on the unit itself so the exchanger graphic
+       reads as "the hero" even before the surrounding air-path panels are
+       scanned — outgoing (top/right, toward supply/exhaust) picks up the
+       same cool-blue family as the supply path; incoming (bottom/left,
+       toward extract/outdoor) picks up the warm-orange extract family.
+       Never the only indicator of direction — the arrow icons and labels
+       on each .air-path already carry that meaning; this is reinforcement
+       on the unit graphic itself. */
+    .system-visual-panel .duct-top,
+    .system-visual-panel .duct-right {
+      background: color-mix(in srgb, #3b82f6, transparent 35%);
+    }
+    .system-visual-panel .duct-bottom,
+    .system-visual-panel .duct-left {
+      background: color-mix(in srgb, #f59e0b, transparent 35%);
+    }
+    /* The heat-recovery figure, centred over the exchanger graphic — "make
+       the heat exchanger the hero" / "move the heat recovery number into
+       the centre of the HRV" (visual-polish follow-up). A plain circle so
+       it reads instantly at a glance, success-toned since it only renders
+       when the calculation is actually valid (recovery.status === 'ok';
+       see _heatRecovery/calculateHeatRecovery). */
+    .recovery-badge-circular {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 3;
+      width: 108px;
+      height: 108px;
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      text-align: center;
+      background: color-mix(in srgb, var(--ha-card-background, var(--card-background-color)), transparent 4%);
+      border: 3px solid color-mix(in srgb, var(--success-color), transparent 25%);
+      box-shadow: 0 0 0 6px color-mix(in srgb, var(--success-color), transparent 90%);
+      cursor: default;
+    }
+    .recovery-badge-circular strong {
+      font-size: 1.6em;
+      font-weight: 800;
+      color: var(--success-color);
+      line-height: 1.1;
+    }
+    .recovery-badge-circular span {
+      font-size: 0.62em;
+      font-weight: 700;
+      color: var(--secondary-text-color);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
     }
     .system-visual-panel .path-label {
       display: flex;
@@ -2809,7 +3056,9 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       min-width: 0;
     }
     .gauge {
-      width: 140px;
+      /* "Airflow is probably the single most important metric" — almost
+         doubled from the original 140px per the visual-polish follow-up. */
+      width: 260px;
       flex-shrink: 0;
       display: flex;
       flex-direction: column;
@@ -2840,11 +3089,11 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       margin-top: -18px;
     }
     .gauge-value strong {
-      font-size: 1.5em;
+      font-size: 2.4em;
       color: var(--primary-text-color);
     }
     .gauge-value span {
-      font-size: 0.72em;
+      font-size: 0.8em;
       color: var(--secondary-text-color);
       text-transform: uppercase;
       letter-spacing: 0.04em;
@@ -2889,10 +3138,22 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     .boost-pill-button {
       display: flex;
       align-items: center;
-      gap: 6px;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 4px 6px;
     }
     .boost-pill-button ha-icon {
       --mdc-icon-size: 16px;
+    }
+    /* The remaining-time readout wraps onto its own line under Active/Ready
+       rather than squeezing onto the same line (visual-polish follow-up:
+       "make the boost remaining time more prominent"). */
+    .boost-pill-button small {
+      flex-basis: 100%;
+      text-align: center;
+      font-size: 0.75em;
+      font-weight: 600;
+      opacity: 0.85;
     }
     .boost-pill-button.is-active {
       background: color-mix(in srgb, var(--success-color), transparent 82%);
@@ -2937,6 +3198,32 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       display: flex;
       flex-direction: column;
       gap: 14px;
+    }
+    /* Calibration + fan-speed diagnostics as compact tiles rather than
+       full-width rows (visual-polish follow-up). */
+    .compact-stats-card {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px 20px;
+      border: 1px solid var(--divider-color);
+      border-radius: 12px;
+      padding: 12px 16px;
+      background: var(--ha-card-background, var(--card-background-color));
+    }
+    .compact-stat {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+    .compact-stat span {
+      font-size: 0.75em;
+      color: var(--secondary-text-color);
+    }
+    .compact-stat strong {
+      font-size: 1em;
+      color: var(--primary-text-color);
+      overflow-wrap: break-word;
     }
 
     @keyframes flow-left {
@@ -3100,7 +3387,7 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       }
       .gauge {
         width: 100%;
-        max-width: 220px;
+        max-width: 300px;
         margin: 0 auto;
       }
       .disclosure-toggle {

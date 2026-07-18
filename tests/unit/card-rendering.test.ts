@@ -1218,13 +1218,16 @@ describe('hiper-mvhr-card', () => {
     });
 
     describe('metrics', () => {
-      it('the Airflow lower card shows current airflow, target airflow, fan speed, and mapped level', async () => {
+      it('the Airflow lower card shows current airflow, target airflow, fan speed, and current profile', async () => {
         const el = mountSystem();
         await el.updateComplete;
 
         const airflowCard = el.shadowRoot?.querySelector('.airflow-card');
         expect(airflowCard).toBeTruthy();
-        expect(airflowCard?.textContent).toContain('Mapped level');
+        // "Mapped level" is an implementation-detail label; the redesign
+        // shows the same role as "Current profile" instead.
+        expect(airflowCard?.textContent).toContain('Current profile');
+        expect(airflowCard?.textContent).not.toContain('Mapped level');
         expect(airflowCard?.textContent).toContain('Target airflow');
         expect(airflowCard?.textContent).toContain('Fan speed');
         expect(airflowCard?.querySelector('.gauge')).toBeTruthy();
@@ -1482,6 +1485,134 @@ describe('hiper-mvhr-card', () => {
         const el = mountSystem();
         await el.updateComplete;
         expect((el.shadowRoot?.textContent ?? '').toLowerCase()).not.toContain('bypass');
+      });
+    });
+
+    /**
+     * Visual-polish follow-up (user review after the first redesign pass):
+     * overview/shower side-by-side layout robustness, the heat-recovery
+     * badge moved into the centre of the unit graphic, a bigger airflow
+     * gauge, compact calibration/fan-speed tiles, System Status badges, and
+     * a more prominent boost-remaining countdown.
+     */
+    describe('visual polish follow-up', () => {
+      it('adds a container-query fallback so the overview/shower layout reacts to the card\'s own width, not just the viewport', () => {
+        const cssText = HiperMvhrCard.styles.cssText;
+        expect(cssText).toMatch(/container-type:\s*inline-size/);
+        expect(cssText).toMatch(/@container[^{]*max-width/);
+      });
+
+      it('renders the heat-recovery figure as a badge centred in the unit graphic, not a pill in the panel heading', async () => {
+        const el = mountSystem();
+        await el.updateComplete;
+
+        const unit = el.shadowRoot?.querySelector('.system-visual-panel .unit');
+        expect(unit?.querySelector('.recovery-badge-circular')?.textContent).toContain('74%');
+        expect(el.shadowRoot?.querySelector('.panel-heading-row .recovery-pill')).toBeNull();
+      });
+
+      it('does not render the recovery badge when the heat-recovery calculation is not valid', async () => {
+        const el = mountSystem({
+          ...altairHass,
+          states: {
+            ...altairHass.states,
+            ...systemStates,
+            // Supply above extract makes the recovery calculation invalid.
+            'sensor.altair_mvhr_supply_air_temperature': {
+              entity_id: 'sensor.altair_mvhr_supply_air_temperature',
+              state: '20.0',
+              attributes: { unit_of_measurement: '°C' },
+            },
+          },
+        });
+        await el.updateComplete;
+
+        expect(el.shadowRoot?.querySelector('.recovery-badge-circular')).toBeNull();
+      });
+
+      it('the airflow gauge is sized close to double the original 140px', () => {
+        const cssText = HiperMvhrCard.styles.cssText;
+        const gaugeBlock = cssText.match(/\.gauge\s*{[^}]*}/)?.[0] ?? '';
+        expect(gaugeBlock).toMatch(/width:\s*260px/);
+      });
+
+      it('shows calibration and fan-speed diagnostics as a compact tile grid instead of full-width rows', async () => {
+        const el = mountSystem();
+        await el.updateComplete;
+        (el.shadowRoot?.querySelector('.disclosure-toggle') as HTMLButtonElement)?.click();
+        await el.updateComplete;
+
+        const stats = el.shadowRoot?.querySelector('.compact-stats-card');
+        expect(stats).toBeTruthy();
+        expect(stats?.textContent).toContain('Calibration');
+        expect(stats?.textContent).toContain('Progress');
+        expect(stats?.textContent).toContain('Supply fan');
+        expect(stats?.textContent).toContain('Extract fan');
+      });
+
+      it('shows System Status as coloured badges rather than label/value rows', async () => {
+        const el = mountSystem();
+        await el.updateComplete;
+
+        const statusCard = el.shadowRoot?.querySelector('.system-status-card');
+        const badges = statusCard?.querySelectorAll('.status-badge');
+        expect(badges?.length).toBeGreaterThan(0);
+        expect(statusCard?.textContent).toContain('Boost Ready');
+        expect(statusCard?.textContent).toMatch(/system ok/i);
+        // Colour is never the only signal — every badge spells out its
+        // state in words too.
+        badges?.forEach((badge) => expect((badge.textContent ?? '').trim().length).toBeGreaterThan(0));
+      });
+
+      it('gives an active boost a prominent countdown callout in the System Status card', async () => {
+        const el = mountSystem({
+          ...altairHass,
+          states: {
+            ...altairHass.states,
+            ...systemStates,
+            'binary_sensor.altair_mvhr_boost_active': {
+              entity_id: 'binary_sensor.altair_mvhr_boost_active',
+              state: 'on',
+              attributes: {},
+            },
+            'sensor.altair_mvhr_boost_remaining': {
+              entity_id: 'sensor.altair_mvhr_boost_remaining',
+              state: '18',
+              attributes: { unit_of_measurement: 'min' },
+            },
+          },
+        });
+        await el.updateComplete;
+
+        const highlight = el.shadowRoot?.querySelector('.boost-remaining-highlight');
+        expect(highlight?.textContent).toContain('18');
+        expect(highlight?.textContent).toMatch(/boost remaining/i);
+      });
+
+      it('surfaces the boost-remaining countdown in the header pill too, once boost is active', async () => {
+        const el = mountSystem({
+          ...altairHass,
+          states: {
+            ...altairHass.states,
+            ...systemStates,
+            'binary_sensor.altair_mvhr_boost_active': {
+              entity_id: 'binary_sensor.altair_mvhr_boost_active',
+              state: 'on',
+              attributes: {},
+            },
+            'sensor.altair_mvhr_boost_remaining': {
+              entity_id: 'sensor.altair_mvhr_boost_remaining',
+              state: '18',
+              attributes: { unit_of_measurement: 'min' },
+            },
+          },
+        });
+        await el.updateComplete;
+
+        const boostButton = el.shadowRoot?.querySelector(
+          'button[aria-label="Cancel Boost"]',
+        ) as HTMLButtonElement;
+        expect(boostButton?.textContent).toContain('18');
       });
     });
 
