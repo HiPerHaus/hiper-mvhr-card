@@ -82,6 +82,14 @@ export function parseConfig(input: unknown): HiperMvhrCardConfig {
     throw new ConfigValidationError('hiper-mvhr-card: "filter_max_days" must be a positive number');
   }
 
+  const maxAirflow = config.max_airflow;
+  if (
+    maxAirflow !== undefined &&
+    (typeof maxAirflow !== 'number' || !Number.isFinite(maxAirflow) || maxAirflow <= 0)
+  ) {
+    throw new ConfigValidationError('hiper-mvhr-card: "max_airflow" must be a positive number');
+  }
+
   const rawEntities = config.entities ?? {};
   if (typeof rawEntities !== 'object' || Array.isArray(rawEntities) || rawEntities === null) {
     throw new ConfigValidationError(
@@ -141,6 +149,7 @@ export function parseConfig(input: unknown): HiperMvhrCardConfig {
     show_filter: config.show_filter !== false,
     show_calibration: config.show_calibration !== false,
     filter_max_days: filterMaxDays,
+    max_airflow: maxAirflow as number | undefined,
     heat_recovery_method: heatRecoveryMethod,
     show_airflow_animation: config.show_airflow_animation !== false,
     show_advanced_controls: config.show_advanced_controls !== false,

@@ -15,6 +15,11 @@ export const ENTITY_ROLES = [
   'extract_airflow',
   'airflow',
   'target_airflow',
+  'maximum_airflow',
+  'away_airflow',
+  'low_airflow',
+  'home_airflow',
+  'high_airflow',
   'mapped_level',
   // Added for the system-mode Airflow gauge (fraction-source follow-up): a
   // fallback for `mapped_level` when that role isn't available — same 0-10

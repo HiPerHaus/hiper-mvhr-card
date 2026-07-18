@@ -2,6 +2,7 @@ import { LitElement, html, svg, css, nothing, type TemplateResult } from 'lit';
 import { property, state } from 'lit/decorators.js';
 import type { HomeAssistant, LovelaceCard } from '../types/hass';
 import type { HiperMvhrCardConfig } from '../types/config';
+import type { CapabilityProfile } from '../types/capability';
 import type { RoleValue } from '../types/snapshot';
 import { ENTITY_ROLES, type EntityRoleId } from '../types/entity-roles';
 import { parseConfig } from '../data/config-schema';
@@ -13,6 +14,7 @@ import { getProfile } from '../manufacturers';
 import { formatRoleValue, capitalize, formatTimestampMaybe } from '../utils/format';
 import { getRoleIcon } from '../utils/icons';
 import { calculateHeatRecovery, type HeatRecoveryResult } from '../utils/heat-recovery';
+import { calculateAirflowGauge } from '../utils/airflow-gauge';
 
 const CARD_TAG = 'hiper-mvhr-card';
 
@@ -35,6 +37,13 @@ const TEMPERATURE_ROLES: Array<[EntityRoleId, string]> = [
 const AIRFLOW_ROLES: Array<[EntityRoleId, string]> = [
   ['supply_airflow', 'Supply airflow'],
   ['extract_airflow', 'Extract airflow'],
+];
+
+const PRESET_AIRFLOW_ROLES: Array<[EntityRoleId, string]> = [
+  ['away_airflow', 'Away'],
+  ['low_airflow', 'Low'],
+  ['home_airflow', 'Home'],
+  ['high_airflow', 'High'],
 ];
 
 const FAN_ROLES: Array<[EntityRoleId, string]> = [
@@ -93,7 +102,13 @@ const OPTIONAL_AVAILABILITY_ROLES: EntityRoleId[] = [
   'calibration_status',
   'calibration_progress',
   'last_calibration',
+  'calibration_start_control',
   'filter_reset_control',
+  'maximum_airflow',
+  'away_airflow',
+  'low_airflow',
+  'home_airflow',
+  'high_airflow',
   'shower_detected',
   'shower_trigger_temperature',
   'shower_pipe_temperature',
@@ -154,6 +169,13 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
   // `display_mode: system`'s "More controls" disclosure (Phase 10) — always
   // starts collapsed, per-instance UI state rather than persisted config.
   @state() private _advancedOpen = false;
+  @state() private _pendingMode?: string;
+  @state() private _modeError?: string;
+  @state() private _calibrationFeedback?: string;
+  private readonly _presetDrafts = new Map<EntityRoleId, number>();
+  private readonly _presetPending = new Set<EntityRoleId>();
+  private readonly _presetErrors = new Map<EntityRoleId, string>();
+  private readonly _presetTimers = new Map<EntityRoleId, ReturnType<typeof setTimeout>>();
 
   // One ControlDispatcher per active action role, created lazily and kept
   // alive across renders (not a @state field — its pending/error state is
@@ -248,7 +270,16 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
         }
         ${
           system
-            ? this._systemDashboard(snapshot, config, hass, recovery, modeLabel, unitBrand, active)
+            ? this._systemDashboard(
+                snapshot,
+                config,
+                hass,
+                recovery,
+                modeLabel,
+                unitBrand,
+                active,
+                displayProfile,
+              )
             : detailed
               ? this._dashboard(snapshot, config, hass, recovery, modeLabel, unitBrand, active)
               : this._legacyContent(snapshot, config, hass, detailed)
@@ -539,7 +570,8 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     config: HiperMvhrCardConfig,
     hass: HomeAssistant,
   ): TemplateResult {
-    const rows = CONTROL_ROLES.map(([role, label, actionVerb, pendingVerb]) =>
+    const rows = CONTROL_ROLES.filter(([role]) => role !== 'calibration_start_control').map(
+      ([role, label, actionVerb, pendingVerb]) =>
       this._controlRow(role, label, snapshot[role], true, config, hass, actionVerb, pendingVerb),
     ).filter((row): row is TemplateResult => row !== null);
 
@@ -736,13 +768,11 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
               return html`
                 <button
                   type="button"
-                  class="chip ${isActive ? 'active' : ''}"
-                  ?disabled=${!modeEntity}
+                  class="chip ${isActive ? 'active' : ''} ${option.toLowerCase() === 'off' ? 'mode-off' : ''}"
+                  ?disabled=${!modeEntity || Boolean(this._pendingMode)}
                   aria-pressed=${isActive}
                   aria-label=${`Set mode ${this._modeLabel(option)}`}
-                  @click=${() =>
-                    modeEntity &&
-                    this._call(hass, 'select', 'select_option', { entity_id: modeEntity, option })}
+                  @click=${() => modeEntity && this._setMode(hass, modeEntity, option)}
                 >
                   ${this._modeLabel(option)}
                 </button>
@@ -860,10 +890,9 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
    * pill, in place of the old full-width Mode chip row and Boost card that
    * used to live below the visual (see `_systemAdvancedToggle` for where
    * boost duration/Start/Cancel and override now live, for anyone who wants
-   * the fuller controls). No power/off control is rendered: no manufacturer
-   * profile in this repo declares any kind of "turn off" role, and inventing
-   * one the integration doesn't actually expose would violate the "don't
-   * invent unsupported device controls" rule — see docs/manufacturers/*.md.
+   * the fuller controls). `Off` is only shown when the real mode select
+   * advertises it as a supported option; no separate pretend power action is
+   * invented by the card.
    * A separate method from `_header` on purpose — `display_mode: detailed`
    * is not touched by the system-mode build.
    */
@@ -951,15 +980,14 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
                 <label class="header-control">
                   <span class="header-control-label">Operating Mode</span>
                   <select
-                    class="mode-select-pill"
+                    class="mode-select-pill ${currentModeRaw === 'off' ? 'mode-off' : ''}"
                     aria-label="Operating mode"
+                    aria-busy=${Boolean(this._pendingMode)}
+                    ?disabled=${Boolean(this._pendingMode)}
                     @change=${(event: Event) => {
                       const option = (event.currentTarget as HTMLSelectElement).value;
                       if (modeEntity) {
-                        void this._call(hass, 'select', 'select_option', {
-                          entity_id: modeEntity,
-                          option,
-                        });
+                        void this._setMode(hass, modeEntity, option);
                       }
                     }}
                   >
@@ -974,6 +1002,11 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
                       `,
                     )}
                   </select>
+                  ${
+                    this._modeError
+                      ? html`<small class="control-error" role="alert">${this._modeError}</small>`
+                      : ''
+                  }
                 </label>
               `
             : modeLabel
@@ -1030,6 +1063,7 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     modeLabel: string,
     unitBrand: string,
     active: boolean,
+    profile: CapabilityProfile,
   ): TemplateResult {
     // The airflow animation additionally requires a genuinely positive
     // measured reading — `active` alone (required entities reporting) isn't
@@ -1060,7 +1094,7 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
         </section>
 
         <section class="system-lower-grid" aria-label="MVHR details">
-          ${this._systemAirflowCard(snapshot, config)}
+          ${this._systemAirflowCard(snapshot, config, profile)}
           ${this._systemTemperaturesCard(snapshot, recovery)}
           ${this._systemStatusCard(snapshot, config)}
         </section>
@@ -1311,6 +1345,7 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
   private _systemAirflowCard(
     snapshot: Partial<Record<EntityRoleId, RoleValue>>,
     config: HiperMvhrCardConfig,
+    profile: CapabilityProfile,
   ): TemplateResult {
     const airflowValue = snapshot.airflow ?? snapshot.supply_airflow;
     // Split into the bare number and its unit so the gauge can stack them
@@ -1321,11 +1356,19 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     const airflowNumberText = airflowRole ? airflowRole.value : null;
     const airflowUnitText = airflowRole?.unit ?? null;
     const airflowNumber = this._number(snapshot.airflow) ?? this._number(snapshot.supply_airflow);
-    // Altair's mapped/selected speed is a 0-10 scale — read directly as
-    // 0-100% (level 4 -> 40% of the arc, level 10 -> completely full).
-    const levelNumber =
-      this._number(snapshot.mapped_level) ?? this._number(snapshot.selected_speed);
-    const fraction = levelNumber !== undefined ? Math.max(0, Math.min(1, levelNumber / 10)) : 0;
+    const gauge = calculateAirflowGauge({
+      current: airflowNumber,
+      configuredMaximum: config.max_airflow,
+      entityMaximum: this._number(snapshot.maximum_airflow),
+      presetHigh: this._number(snapshot.high_airflow),
+      manufacturerMaximum: profile.defaultMaxAirflow,
+      mappedLevel: this._number(snapshot.mapped_level),
+      selectedSpeed: this._number(snapshot.selected_speed),
+    });
+    const scaleLabel =
+      airflowNumber !== undefined && gauge.maximum !== undefined
+        ? `${airflowNumber} of ${gauge.maximum} ${airflowUnitText ?? 'm³/h'}`
+        : null;
     // "Airflow cards brighten when airflow increases" — a one-shot
     // brightening, only when the reading genuinely went up from the
     // previous render (never on first load, and never on a decrease —
@@ -1371,7 +1414,16 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       >
         <h3>Airflow</h3>
         <div class="airflow-card-body">
-          ${airflowValue ? this._airflowGauge(fraction, airflowNumberText, airflowUnitText) : ''}
+          ${
+            airflowValue
+              ? this._airflowGauge(
+                  gauge.fraction,
+                  airflowNumberText,
+                  airflowUnitText,
+                  scaleLabel,
+                )
+              : ''
+          }
           <div class="airflow-card-rows">${rows}</div>
         </div>
       </section>
@@ -1390,6 +1442,7 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     fraction: number,
     valueText: string | null,
     unitText: string | null,
+    scaleLabel: string | null = null,
   ): TemplateResult {
     const radius = 40;
     const circumference = Math.PI * radius; // semicircle
@@ -1411,6 +1464,7 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
           <strong>${valueText ?? '—'}</strong>
           ${unitText ? html`<b class="gauge-unit">${unitText}</b>` : ''}
           <span>Current Airflow</span>
+          ${scaleLabel ? html`<small class="gauge-scale">${scaleLabel}</small>` : ''}
         </div>
       </div>
     `;
@@ -1678,6 +1732,8 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
               `
             : ''
         }
+        ${this._presetAirflowControls(snapshot, config, hass)}
+        ${this._calibrationControl(snapshot, config, hass)}
         ${this._advancedCompactStats(snapshot, config)}
         ${
           // Summer bypass is not part of the primary hero visual, lower
@@ -1702,6 +1758,218 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
             : ''
         }
         ${this._extraControls(snapshot, config, hass)}
+      </section>
+    `;
+  }
+
+  private _presetAirflowControls(
+    snapshot: Partial<Record<EntityRoleId, RoleValue>>,
+    config: HiperMvhrCardConfig,
+    hass: HomeAssistant,
+  ): TemplateResult {
+    const configured = PRESET_AIRFLOW_ROLES.filter(([role]) => Boolean(config.entities[role]));
+    if (configured.length === 0) {
+      return html``;
+    }
+    const validation = this._presetValidation(snapshot, configured.map(([role]) => role));
+    return html`
+      <section class="preset-controls" aria-label="Airflow presets">
+        <div class="control-block-head"><span>Airflow presets</span></div>
+        <div class="preset-grid">
+          ${configured.map(([role, label]) => {
+            const value = snapshot[role];
+            const entityId = config.entities[role];
+            const minimum = this._attributeNumber(value, 'min');
+            const maximum = this._attributeNumber(value, 'max');
+            const step = this._attributeNumber(value, 'step') ?? 1;
+            const displayed = this._presetDrafts.get(role) ?? this._number(value);
+            const disabled = value?.status !== 'ok' || !entityId || this._presetPending.has(role);
+            return html`
+              <label class="preset-field">
+                <span>${label}</span>
+                <span class="preset-input-wrap">
+                  <input
+                    type="number"
+                    .value=${displayed === undefined ? '' : String(displayed)}
+                    min=${minimum ?? nothing}
+                    max=${maximum ?? nothing}
+                    step=${step}
+                    ?disabled=${disabled}
+                    aria-label=${`${label} airflow`}
+                    aria-busy=${this._presetPending.has(role)}
+                    @input=${(event: Event) => {
+                      const next = Number((event.currentTarget as HTMLInputElement).value);
+                      if (Number.isFinite(next)) {
+                        this._presetDrafts.set(role, next);
+                        this.requestUpdate();
+                      }
+                    }}
+                    @change=${(event: Event) => {
+                      const next = Number((event.currentTarget as HTMLInputElement).value);
+                      if (entityId && Number.isFinite(next)) {
+                        this._schedulePresetUpdate(role, entityId, next, value, snapshot, hass);
+                      }
+                    }}
+                  />
+                  <small>${value?.status === 'ok' ? value.unit ?? 'm³/h' : 'Unavailable'}</small>
+                </span>
+                ${
+                  this._presetErrors.has(role)
+                    ? html`<small class="control-error" role="alert"
+                        >${this._presetErrors.get(role)}</small
+                      >`
+                    : ''
+                }
+              </label>
+            `;
+          })}
+        </div>
+        ${
+          validation
+            ? html`<p class="preset-validation" role="alert">${validation}</p>`
+            : ''
+        }
+      </section>
+    `;
+  }
+
+  private _attributeNumber(value: RoleValue | undefined, key: string): number | undefined {
+    if (value?.status !== 'ok') {
+      return undefined;
+    }
+    const attribute = value.attributes[key];
+    const number = typeof attribute === 'number' ? attribute : Number(attribute);
+    return Number.isFinite(number) ? number : undefined;
+  }
+
+  private _presetValidation(
+    snapshot: Partial<Record<EntityRoleId, RoleValue>>,
+    roles: EntityRoleId[],
+  ): string | null {
+    const values = roles
+      .map((role) => this._presetDrafts.get(role) ?? this._number(snapshot[role]))
+      .filter((value): value is number => value !== undefined);
+    for (let index = 1; index < values.length; index += 1) {
+      if (values[index]! < values[index - 1]!) {
+        return 'Preset airflow must follow Away ≤ Low ≤ Home ≤ High.';
+      }
+    }
+    return null;
+  }
+
+  private _schedulePresetUpdate(
+    role: EntityRoleId,
+    entityId: string,
+    value: number,
+    currentValue: RoleValue | undefined,
+    snapshot: Partial<Record<EntityRoleId, RoleValue>>,
+    hass: HomeAssistant,
+  ): void {
+    this._presetDrafts.set(role, value);
+    this._presetErrors.delete(role);
+    const rangeError = this._presetRangeValidation(value, currentValue);
+    if (rangeError) {
+      this._presetErrors.set(role, rangeError);
+      this.requestUpdate();
+      return;
+    }
+    if (this._presetValidation(snapshot, PRESET_AIRFLOW_ROLES.map(([presetRole]) => presetRole))) {
+      this.requestUpdate();
+      return;
+    }
+    const existing = this._presetTimers.get(role);
+    if (existing) {
+      clearTimeout(existing);
+    }
+    this._presetTimers.set(
+      role,
+      setTimeout(() => {
+        this._presetTimers.delete(role);
+        this._presetPending.add(role);
+        this.requestUpdate();
+        void this._call(hass, 'number', 'set_value', { entity_id: entityId, value })
+          .catch(() => this._presetErrors.set(role, "Couldn't save preset"))
+          .finally(() => {
+            this._presetPending.delete(role);
+            this.requestUpdate();
+          });
+      }, 300),
+    );
+    this.requestUpdate();
+  }
+
+  private _presetRangeValidation(value: number, currentValue: RoleValue | undefined): string | null {
+    const minimum = this._attributeNumber(currentValue, 'min');
+    const maximum = this._attributeNumber(currentValue, 'max');
+    const step = this._attributeNumber(currentValue, 'step');
+    if (minimum !== undefined && value < minimum) {
+      return `Must be at least ${minimum}.`;
+    }
+    if (maximum !== undefined && value > maximum) {
+      return `Must be no more than ${maximum}.`;
+    }
+    if (step !== undefined && step > 0) {
+      const origin = minimum ?? 0;
+      const steps = (value - origin) / step;
+      if (Math.abs(steps - Math.round(steps)) > 1e-6) {
+        return `Must use ${step} increments.`;
+      }
+    }
+    return null;
+  }
+
+  private _calibrationControl(
+    snapshot: Partial<Record<EntityRoleId, RoleValue>>,
+    config: HiperMvhrCardConfig,
+    hass: HomeAssistant,
+  ): TemplateResult {
+    const role: EntityRoleId = 'calibration_start_control';
+    const value = snapshot[role];
+    const entityId = config.entities[role];
+    if (!value || value.status === 'unsupported' || value.status === 'not_configured') {
+      return html``;
+    }
+    const dispatcher = this._getDispatcher(role);
+    const pending = dispatcher.state.status === 'pending';
+    const unavailable = value.status !== 'ok' || !entityId;
+    const error = dispatcher.state.status === 'error' ? dispatcher.state.message : null;
+    return html`
+      <section class="calibration-control" aria-label="Calibration">
+        <div>
+          <strong>Calibration</strong>
+          <small>The unit may change fan speeds during calibration.</small>
+        </div>
+        <button
+          type="button"
+          class="cta calibration-button"
+          ?disabled=${unavailable || pending}
+          aria-busy=${pending}
+          @click=${async () => {
+            const confirmed = globalThis.confirm?.(
+              'Start airflow calibration?\nThe unit may change fan speeds during calibration.',
+            );
+            if (!confirmed || !entityId) {
+              return;
+            }
+            this._calibrationFeedback = undefined;
+            await dispatcher.dispatchAction(hass, entityId);
+            this._calibrationFeedback =
+              dispatcher.state.status === 'idle' ? 'Calibration started' : undefined;
+          }}
+        >
+          ${pending ? 'Starting…' : 'Calibrate airflow'}
+        </button>
+        ${
+          unavailable
+            ? html`<small class="control-error">Calibration unavailable</small>`
+            : error
+              ? html`<small class="control-error" role="alert">${error}</small>`
+              : this._calibrationFeedback
+                ? html`<small class="control-success" role="status"
+                    >${this._calibrationFeedback}</small
+                  >`
+                : ''
+        }
       </section>
     `;
   }
@@ -1865,10 +2133,27 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
           'mdi:arrow-bottom-left-thin',
           'Drawn from the home',
         )}
-        <div
-          class="unit ${animated ? 'active' : ''} ${animated && boostActive ? 'boost-active' : ''}"
-          aria-label="Heat recovery unit"
-        >
+        <div class="unit-stage">
+          ${
+            recovery.status === 'ok'
+              ? html`
+                  <div
+                    class="recovery-badge-plate ${recoveryPulse ? 'recovery-pulse' : ''}"
+                    title="Apparent temperature recovery"
+                    role="img"
+                    aria-label=${`Heat recovery ${recovery.label}`}
+                  >
+                    <strong>${recovery.label}</strong>
+                    <span>Heat Recovery</span>
+                  </div>
+                  <span class="recovery-connector" aria-hidden="true"></span>
+                `
+              : ''
+          }
+          <div
+            class="unit ${animated ? 'active' : ''} ${animated && boostActive ? 'boost-active' : ''}"
+            aria-label="Heat recovery unit"
+          >
           <div class="brand">
             ${unitBrand}${unitBrand.toLowerCase().includes('mvhr') ? '' : html`<br /><span>MVHR</span>`}
           </div>
@@ -2080,10 +2365,8 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
                     transform=${`translate(${x} ${y})`}
                     filter="url(#component-shadow)"
                   >
-                    <path class="fan-mount-frame" d="M-64 -48 H45 V43 H-64 Z M-56 -40 V35 H37 V-40 Z"></path>
-                    <path class="fan-scroll" d="M-58 -43 H30 Q55 -43 58 -18 V34 H33 V13 Q33 -4 15 -4 H-58 Z"></path>
-                    <rect class="fan-motor" x="24" y="-23" width="42" height="45" rx="8"></rect>
-                    <path class="motor-ribs" d="M32 -18 V17 M41 -18 V17 M50 -18 V17 M59 -15 V14"></path>
+                    <path class="fan-scroll" d="M-60 -43 H12 Q48 -43 52 -12 V31 H29 V10 Q29 -8 10 -8 H-60 Z"></path>
+                    <rect class="fan-motor" x="22" y="-15" width="30" height="30" rx="12"></rect>
                     <ellipse class="fan-drum-back" cx="-27" rx="38" ry="35"></ellipse>
                     <path class="fan-drum-depth" d="M-27 -35 H-18 A38 35 0 0 1 -18 35 H-27 A38 35 0 0 0 -27 -35 Z"></path>
                     <circle class="fan-ring" cx="-27" r="33"></circle>
@@ -2157,21 +2440,7 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
               )}
             </g>
           </svg>
-          ${
-            recovery.status === 'ok'
-              ? html`
-                  <div
-                    class="recovery-badge-plate ${recoveryPulse ? 'recovery-pulse' : ''}"
-                    title="Apparent temperature recovery"
-                    role="img"
-                    aria-label=${`Heat recovery ${recovery.label}`}
-                  >
-                    <strong>${recovery.label}</strong>
-                    <span>Heat Recovery</span>
-                  </div>
-                `
-              : ''
-          }
+          </div>
         </div>
         ${path(
           'exhaust',
@@ -2314,7 +2583,28 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       value?.status === 'ok' && Array.isArray(value.attributes.options)
         ? value.attributes.options.filter((option): option is string => typeof option === 'string')
         : ['Away', 'Low', 'Home', 'High'];
-    return options.filter((option) => option.toLowerCase() !== 'boost');
+    return options
+      .filter((option) => option.toLowerCase() !== 'boost')
+      .sort((a, b) => Number(b.toLowerCase() === 'off') - Number(a.toLowerCase() === 'off'));
+  }
+
+  private async _setMode(
+    hass: HomeAssistant,
+    entityId: string,
+    option: string,
+  ): Promise<void> {
+    if (this._pendingMode) {
+      return;
+    }
+    this._pendingMode = option;
+    this._modeError = undefined;
+    try {
+      await this._call(hass, 'select', 'select_option', { entity_id: entityId, option });
+    } catch {
+      this._modeError = `Couldn't set ${this._modeLabel(option)} mode`;
+    } finally {
+      this._pendingMode = undefined;
+    }
   }
 
   private _selectOptions(value: RoleValue | undefined): string[] {
@@ -3217,9 +3507,11 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
         grid-template-rows: auto auto auto;
         min-height: 0;
       }
-      .system-visual-panel .unit {
+      .system-visual-panel .unit-stage {
         grid-column: 1 / -1;
         grid-row: 2;
+      }
+      .system-visual-panel .unit {
         min-height: 180px;
       }
       .system-visual-panel .air-path {
@@ -3287,7 +3579,20 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       min-height: 430px;
       grid-template-columns: minmax(160px, 1fr) minmax(460px, 700px) minmax(160px, 1fr);
     }
+    .unit-stage {
+      grid-column: 2;
+      grid-row: 1 / span 2;
+      width: 100%;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
     .system-visual-panel .unit {
+      grid-column: auto;
+      grid-row: auto;
       min-height: 360px;
       border-radius: 26px;
       background: transparent;
@@ -3491,12 +3796,6 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       stroke-width: 3;
       stroke-linejoin: round;
     }
-    .fan-mount-frame {
-      fill: #4f565b;
-      fill-rule: evenodd;
-      stroke: #a7adb1;
-      stroke-width: 3;
-    }
     .fan-scroll {
       fill: url(#blower-metal);
       stroke: #0a0d0f;
@@ -3520,11 +3819,6 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     .fan-motor {
       fill: url(#blower-metal);
       stroke: #090b0d;
-      stroke-width: 4;
-    }
-    .motor-ribs {
-      fill: none;
-      stroke: #171b1e;
       stroke-width: 4;
     }
     .fan-feet {
@@ -3617,10 +3911,7 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     /* Compact equipment-style information plate: it leaves all four plate
        exchanger quadrants visible while retaining the one-shot update pulse. */
     .recovery-badge-plate {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
+      position: relative;
       z-index: 3;
       width: 176px;
       height: 88px;
@@ -3661,16 +3952,22 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     .recovery-badge-plate.recovery-pulse {
       animation: recovery-pulse 0.7s ease-out;
     }
+    .recovery-connector {
+      width: 1px;
+      height: 10px;
+      background: color-mix(in srgb, var(--success-color), transparent 45%);
+      flex: 0 0 auto;
+    }
     @keyframes recovery-pulse {
       0% {
-        transform: translate(-50%, -50%) scale(1);
+        transform: scale(1);
       }
       35% {
-        transform: translate(-50%, -50%) scale(1.08);
+        transform: scale(1.08);
         box-shadow: 0 8px 18px rgba(0, 0, 0, 0.24);
       }
       100% {
-        transform: translate(-50%, -50%) scale(1);
+        transform: scale(1);
       }
     }
     .system-visual-panel .path-label {
@@ -3941,6 +4238,25 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       letter-spacing: 0.04em;
       margin-top: 4px;
     }
+    .gauge-value .gauge-scale {
+      margin-top: 4px;
+      font-size: 0.72em;
+      color: var(--secondary-text-color);
+      text-transform: none;
+      letter-spacing: normal;
+    }
+    .mode-select-pill.mode-off,
+    .chip.mode-off.active {
+      color: var(--secondary-text-color);
+      background: color-mix(in srgb, var(--secondary-text-color), transparent 88%);
+    }
+    .control-error,
+    .preset-validation {
+      color: var(--error-color) !important;
+    }
+    .control-success {
+      color: var(--success-color) !important;
+    }
 
     /* ---- compact header controls (visual redesign) ---- */
     /* A single bordered "control panel" strip instead of loose floating
@@ -4074,6 +4390,69 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       display: flex;
       flex-direction: column;
       gap: 14px;
+    }
+    .preset-controls,
+    .calibration-control {
+      border: 1px solid var(--divider-color);
+      border-radius: 12px;
+      padding: 14px;
+      background: var(--ha-card-background, var(--card-background-color));
+    }
+    .preset-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 10px;
+    }
+    .preset-field {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      min-width: 0;
+      font-size: 0.82em;
+      color: var(--secondary-text-color);
+    }
+    .preset-input-wrap {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .preset-input-wrap input {
+      width: 100%;
+      min-width: 0;
+      min-height: 42px;
+      box-sizing: border-box;
+      border: 1px solid var(--divider-color);
+      border-radius: 8px;
+      padding: 8px;
+      font: inherit;
+      color: var(--primary-text-color);
+      background: var(--ha-card-background, var(--card-background-color));
+    }
+    .preset-input-wrap small {
+      white-space: nowrap;
+    }
+    .preset-validation {
+      margin: 10px 0 0;
+      font-size: 0.8em;
+    }
+    .calibration-control {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .calibration-control > div {
+      display: flex;
+      flex: 1 1 220px;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .calibration-control small {
+      color: var(--secondary-text-color);
+    }
+    .calibration-button {
+      flex: 0 0 auto;
     }
     /* Calibration + fan-speed diagnostics as compact tiles rather than
        full-width rows (visual-polish follow-up). */
@@ -4226,6 +4605,10 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       .system-visual-wrap {
         min-height: 0;
       }
+      .system-visual-panel .unit-stage {
+        grid-column: 1 / -1;
+        grid-row: 2;
+      }
       .system-visual-panel .unit {
         min-height: 170px;
       }
@@ -4276,6 +4659,12 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       .disclosure-toggle {
         width: 100%;
       }
+      .preset-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      .calibration-button {
+        width: 100%;
+      }
     }
 
     /* Container-query overrides must follow the desktop system-visual
@@ -4288,9 +4677,11 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
         min-height: 0;
         gap: 10px;
       }
-      .system-visual-panel .unit {
+      .system-visual-panel .unit-stage {
         grid-column: 1 / -1;
         grid-row: 2;
+      }
+      .system-visual-panel .unit {
         min-height: 180px;
       }
       .system-visual-panel .air-path {

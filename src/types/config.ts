@@ -32,6 +32,8 @@ export interface HiperMvhrCardConfig {
   show_filter: boolean;
   show_calibration: boolean;
   filter_max_days: number;
+  /** Optional physical airflow capacity used to scale the system gauge. */
+  max_airflow?: number;
   heat_recovery_method: HeatRecoveryMethod;
   /**
    * `display_mode: system` only: whether the airflow visual's duct

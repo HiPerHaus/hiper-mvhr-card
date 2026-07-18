@@ -1259,7 +1259,8 @@ describe('hiper-mvhr-card', () => {
         expect(schematic?.querySelectorAll('.fan-vane')).toHaveLength(36);
         expect(schematic?.querySelectorAll('.fan-blade')).toHaveLength(0);
         expect(schematic?.querySelectorAll('.fan-drum-back')).toHaveLength(2);
-        expect(schematic?.querySelectorAll('.fan-mount-frame')).toHaveLength(2);
+        expect(schematic?.querySelectorAll('.fan-mount-frame')).toHaveLength(0);
+        expect(schematic?.querySelectorAll('.motor-ribs')).toHaveLength(0);
         expect(schematic?.querySelectorAll('.fan-shroud')).toHaveLength(2);
         expect(schematic?.querySelector('.fan-motor')).toBeTruthy();
         expect(schematic?.querySelector('.fan-ring')?.namespaceURI).toBe(
@@ -1276,7 +1277,7 @@ describe('hiper-mvhr-card', () => {
         expect(schematic?.querySelectorAll('.cool-channels path').length).toBeGreaterThan(10);
       });
 
-      it('keeps warm and cool exchanger channels visually separate beneath the centred badge', async () => {
+      it('keeps warm and cool exchanger channels visible beneath the separate recovery plate', async () => {
         const el = mountSystem();
         await el.updateComplete;
 
@@ -1284,8 +1285,12 @@ describe('hiper-mvhr-card', () => {
         expect(unit?.querySelector('.warm-channels')).toBeTruthy();
         expect(unit?.querySelector('.cool-channels')).toBeTruthy();
         expect(unit?.querySelector('.passage-separator')).toBeTruthy();
-        expect(unit?.querySelector('.recovery-badge-plate')?.textContent).toContain('74%');
-        expect(unit?.querySelector('.recovery-badge-plate')?.textContent).toContain('Heat Recovery');
+        const stage = unit?.parentElement;
+        expect(stage?.querySelector(':scope > .recovery-badge-plate')?.textContent).toContain('74%');
+        expect(stage?.querySelector(':scope > .recovery-badge-plate')?.textContent).toContain(
+          'Heat Recovery',
+        );
+        expect(unit?.querySelector('.recovery-badge-plate')).toBeNull();
         expect(unit?.querySelector('.recovery-badge-circular')).toBeNull();
       });
 
@@ -1332,7 +1337,7 @@ describe('hiper-mvhr-card', () => {
         await el.updateComplete;
 
         const unit = el.shadowRoot?.querySelector('.system-visual-panel .unit');
-        const plate = unit?.querySelector('.recovery-badge-plate');
+        const plate = unit?.parentElement?.querySelector(':scope > .recovery-badge-plate');
         expect(plate?.textContent).toContain('74%');
         expect(plate?.textContent).toContain('Heat Recovery');
         expect(unit?.querySelector('.recovery-badge-circular')).toBeNull();
@@ -1357,7 +1362,7 @@ describe('hiper-mvhr-card', () => {
           /@container \(max-width:\s*520px\)[\s\S]*\.system-visual-panel \.particle-3\s*{[^}]*display:\s*none/,
         );
         expect(cssText).toMatch(
-          /@container \(max-width:\s*520px\)[\s\S]*\.system-visual-panel \.unit\s*{[^}]*grid-column:\s*1 \/ -1[^}]*grid-row:\s*2/,
+          /@container \(max-width:\s*520px\)[\s\S]*\.system-visual-panel \.unit-stage\s*{[^}]*grid-column:\s*1 \/ -1[^}]*grid-row:\s*2/,
         );
         expect(cssText).toMatch(
           /\.system-visual-panel \.recovery-badge-plate\s*{[^}]*width:\s*106px[^}]*height:\s*58px/,
@@ -1623,7 +1628,7 @@ describe('hiper-mvhr-card', () => {
         expect(gaugeValue?.textContent?.trim()).toBe('70');
       });
 
-      it('falls back to selected_speed when mapped_level is unavailable', async () => {
+      it('keeps the gauge empty when airflow is unavailable even if selected_speed exists', async () => {
         // `selected_speed` isn't a verified Altair capability (only
         // `mapped_level` is, per docs/manufacturers/altair.md) — it's a
         // generic, feature-flaggable fallback role, so this exercises it the
@@ -1658,7 +1663,7 @@ describe('hiper-mvhr-card', () => {
         };
         await el.updateComplete;
 
-        expect(gaugeFraction(el)).toBeCloseTo(0.6, 5);
+        expect(gaugeFraction(el)).toBeCloseTo(0, 5);
       });
 
       it('reads an empty arc (fraction 0) when neither mapped_level nor selected_speed is available', async () => {
@@ -1684,6 +1689,28 @@ describe('hiper-mvhr-card', () => {
     });
 
     describe('controls', () => {
+      it('puts Off first only when the runtime mode select supports it', async () => {
+        const withOff = mount();
+        set(withOff, {
+          manufacturer: 'vent_axia_sentinel_econiq',
+          display_mode: 'system',
+          entities: { mode: 'select.aerofresh_mode' },
+        });
+        withOff.hass = aerofreshHass;
+        await withOff.updateComplete;
+        const supportedOptions = [
+          ...(withOff.shadowRoot?.querySelectorAll('select[aria-label="Operating mode"] option') ?? []),
+        ].map((option) => (option as HTMLOptionElement).value);
+        expect(supportedOptions[0]).toBe('off');
+
+        const withoutOff = mountSystem();
+        await withoutOff.updateComplete;
+        const unsupportedOptions = [
+          ...(withoutOff.shadowRoot?.querySelectorAll('select[aria-label="Operating mode"] option') ?? []),
+        ].map((option) => (option as HTMLOptionElement).value);
+        expect(unsupportedOptions).not.toContain('off');
+      });
+
       it('sends the internal medium option when Home is chosen from the compact header mode select', async () => {
         const callService = vi.fn().mockResolvedValue(undefined);
         const el = mountSystem();
@@ -1701,6 +1728,110 @@ describe('hiper-mvhr-card', () => {
           entity_id: 'select.altair_mvhr_mode',
           option: 'medium',
         });
+      });
+
+      it('does not send duplicate mode commands while a change is pending', async () => {
+        let resolveCall: (() => void) | undefined;
+        const callService = vi.fn(
+          () => new Promise<void>((resolve) => (resolveCall = resolve)),
+        );
+        const el = mountSystem();
+        el.hass = { ...altairHass, states: { ...altairHass.states, ...systemStates }, callService };
+        await el.updateComplete;
+        const select = el.shadowRoot?.querySelector(
+          'select[aria-label="Operating mode"]',
+        ) as HTMLSelectElement;
+        select.value = 'high';
+        select.dispatchEvent(new Event('change'));
+        select.dispatchEvent(new Event('change'));
+        await el.updateComplete;
+        expect(callService).toHaveBeenCalledTimes(1);
+        expect(select.disabled).toBe(true);
+        resolveCall?.();
+      });
+
+      it('renders native preset number controls, validates their order, and debounces writes', async () => {
+        vi.useFakeTimers();
+        const callService = vi.fn().mockResolvedValue(undefined);
+        const presetEntities = {
+          away_airflow: 'number.mvhr_away',
+          low_airflow: 'number.mvhr_low',
+          home_airflow: 'number.mvhr_home',
+          high_airflow: 'number.mvhr_high',
+        };
+        const presetStates = Object.fromEntries(
+          [
+            ['number.mvhr_away', '50'],
+            ['number.mvhr_low', '70'],
+            ['number.mvhr_home', '95'],
+            ['number.mvhr_high', '120'],
+          ].map(([entity_id, state]) => [
+            entity_id,
+            {
+              entity_id,
+              state,
+              attributes: { min: 20, max: 140, step: 5, unit_of_measurement: 'm³/h' },
+            },
+          ]),
+        );
+        const el = mount();
+        set(el, {
+          manufacturer: 'generic',
+          display_mode: 'system',
+          entities: presetEntities,
+          feature_flags: {
+            away_airflow: true,
+            low_airflow: true,
+            home_airflow: true,
+            high_airflow: true,
+          },
+        });
+        el.hass = { states: presetStates, callService };
+        await el.updateComplete;
+        (el.shadowRoot?.querySelector('.disclosure-toggle') as HTMLButtonElement).click();
+        await el.updateComplete;
+
+        const inputs = el.shadowRoot?.querySelectorAll('.preset-field input') ?? [];
+        expect(inputs).toHaveLength(4);
+        expect((inputs[0] as HTMLInputElement).min).toBe('20');
+        expect((inputs[0] as HTMLInputElement).max).toBe('140');
+        expect((inputs[0] as HTMLInputElement).step).toBe('5');
+
+        const high = inputs[3] as HTMLInputElement;
+        high.value = '125';
+        high.dispatchEvent(new Event('input'));
+        high.dispatchEvent(new Event('change'));
+        expect(callService).not.toHaveBeenCalled();
+        await vi.advanceTimersByTimeAsync(300);
+        expect(callService).toHaveBeenCalledWith('number', 'set_value', {
+          entity_id: 'number.mvhr_high',
+          value: 125,
+        });
+
+        callService.mockClear();
+        const away = inputs[0] as HTMLInputElement;
+        away.value = '90';
+        away.dispatchEvent(new Event('input'));
+        away.dispatchEvent(new Event('change'));
+        await el.updateComplete;
+        await vi.advanceTimersByTimeAsync(300);
+        expect(callService).not.toHaveBeenCalled();
+        expect(el.shadowRoot?.querySelector('.preset-validation')?.textContent).toContain(
+          'Away ≤ Low ≤ Home ≤ High',
+        );
+
+        callService.mockClear();
+        const low = inputs[1] as HTMLInputElement;
+        low.value = '142';
+        low.dispatchEvent(new Event('input'));
+        low.dispatchEvent(new Event('change'));
+        await el.updateComplete;
+        await vi.advanceTimersByTimeAsync(300);
+        expect(callService).not.toHaveBeenCalled();
+        expect(el.shadowRoot?.querySelector('.control-error')?.textContent).toContain(
+          'no more than 140',
+        );
+        vi.useRealTimers();
       });
 
       it('the header boost pill starts boost when ready, and reads Active once boost is on', async () => {
@@ -1915,12 +2046,15 @@ describe('hiper-mvhr-card', () => {
         expect(cssText).toMatch(/@container[^{]*max-width/);
       });
 
-      it('renders the heat-recovery figure as a badge centred in the unit graphic, not a pill in the panel heading', async () => {
+      it('renders the heat-recovery figure above the unit graphic, not over the exchanger', async () => {
         const el = mountSystem();
         await el.updateComplete;
 
         const unit = el.shadowRoot?.querySelector('.system-visual-panel .unit');
-        expect(unit?.querySelector('.recovery-badge-plate')?.textContent).toContain('74%');
+        expect(unit?.parentElement?.querySelector(':scope > .recovery-badge-plate')?.textContent).toContain(
+          '74%',
+        );
+        expect(unit?.querySelector('.recovery-badge-plate')).toBeNull();
         expect(el.shadowRoot?.querySelector('.panel-heading-row .recovery-pill')).toBeNull();
       });
 
@@ -2092,8 +2226,10 @@ describe('hiper-mvhr-card', () => {
         expect(headerControlsBlock).toMatch(/border-radius/);
       });
 
-      it('shows a "Run calibration" button in the advanced drawer when calibration_start_control is enabled', async () => {
+      it('shows a confirmed calibration button in the advanced drawer when calibration_start_control is enabled', async () => {
         const callService = vi.fn().mockResolvedValue(undefined);
+        const confirm = vi.fn().mockReturnValue(true);
+        vi.stubGlobal('confirm', confirm);
         const el = mount();
         set(el, {
           type: 'custom:hiper-mvhr-card',
@@ -2120,15 +2256,18 @@ describe('hiper-mvhr-card', () => {
         await el.updateComplete;
 
         const button = el.shadowRoot?.querySelector(
-          'button[aria-label="Run calibration"]',
+          'button.calibration-button',
         ) as HTMLButtonElement;
         expect(button).toBeTruthy();
-        expect(button.textContent).toContain('Run');
+        expect(button.textContent).toContain('Calibrate airflow');
         button.click();
+        await el.updateComplete;
 
+        expect(confirm).toHaveBeenCalled();
         expect(callService).toHaveBeenCalledWith('button', 'press', {
           entity_id: 'button.mvhr_run_calibration',
         });
+        vi.unstubAllGlobals();
       });
 
       it('does not show a calibration button for a profile that has not declared it supported', async () => {
@@ -2137,7 +2276,39 @@ describe('hiper-mvhr-card', () => {
         (el.shadowRoot?.querySelector('.disclosure-toggle') as HTMLButtonElement)?.click();
         await el.updateComplete;
 
-        expect(el.shadowRoot?.querySelector('button[aria-label="Run calibration"]')).toBeNull();
+        expect(el.shadowRoot?.querySelector('button.calibration-button')).toBeNull();
+      });
+
+      it('shows calibration as unavailable when the configured action entity is unavailable', async () => {
+        const el = mount();
+        set(el, {
+          type: 'custom:hiper-mvhr-card',
+          manufacturer: 'generic',
+          display_mode: 'system',
+          entities: { ...systemEntities, calibration_start_control: 'button.mvhr_run_calibration' },
+          feature_flags: { calibration_start_control: true },
+        });
+        el.hass = {
+          ...altairHass,
+          states: {
+            ...altairHass.states,
+            ...systemStates,
+            'button.mvhr_run_calibration': {
+              entity_id: 'button.mvhr_run_calibration',
+              state: 'unavailable',
+              attributes: {},
+            },
+          },
+        };
+        await el.updateComplete;
+        (el.shadowRoot?.querySelector('.disclosure-toggle') as HTMLButtonElement)?.click();
+        await el.updateComplete;
+
+        const button = el.shadowRoot?.querySelector(
+          'button.calibration-button',
+        ) as HTMLButtonElement;
+        expect(button.disabled).toBe(true);
+        expect(el.shadowRoot?.textContent).toContain('Calibration unavailable');
       });
 
       it('speeds up the schematic-particle and fan animations while boost is active', () => {

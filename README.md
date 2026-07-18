@@ -41,7 +41,8 @@ Minimal configuration:
 type: custom:hiper-mvhr-card
 manufacturer: altair
 display_mode: system
-title: Altair MVHR
+name: Altair MVHR
+max_airflow: 120
 entities:
   mode: select.altair_mvhr_mode
   airflow: sensor.altair_mvhr_airflow
@@ -60,17 +61,26 @@ Full configuration, including the boost/override/calibration entities that popul
 type: custom:hiper-mvhr-card
 manufacturer: altair
 display_mode: system
-title: Altair MVHR
+name: Altair MVHR
 subtitle: Heat Recovery Ventilation System
+max_airflow: 120
 
 show_airflow_animation: true
 show_advanced_controls: true
+feature_flags:
+  maximum_airflow: true
+  away_airflow: true
+  low_airflow: true
+  home_airflow: true
+  high_airflow: true
+  calibration_start_control: true
 
 entities:
   mode: select.altair_mvhr_mode
   effective_mode: sensor.altair_mvhr_effective_mode
   airflow: sensor.altair_mvhr_airflow
   target_airflow: sensor.altair_mvhr_target_airflow
+  maximum_airflow: sensor.altair_mvhr_maximum_airflow
   mapped_level: sensor.altair_mvhr_mapped_airflow_level
 
   supply_temperature: sensor.altair_mvhr_supply_air_temperature
@@ -88,6 +98,12 @@ entities:
   cancel_boost: button.altair_mvhr_cancel_boost
   override_duration: select.altair_mvhr_override_duration
   clear_override: button.altair_mvhr_clear_override
+
+  away_airflow: number.altair_mvhr_away_airflow
+  low_airflow: number.altair_mvhr_low_airflow
+  home_airflow: number.altair_mvhr_home_airflow
+  high_airflow: number.altair_mvhr_high_airflow
+  calibration_start_control: button.altair_mvhr_run_calibration
   calibration_result: sensor.altair_mvhr_airflow_calibration_result
   calibration_status: sensor.altair_mvhr_airflow_calibration_status
   last_calibration: sensor.altair_mvhr_last_airflow_calibration
@@ -108,9 +124,9 @@ show_calibration: true
 heat_recovery_method: automatic
 ```
 
-**Compact header controls.** Mode, Boost, and a shower status indicator (if configured — see below) sit together inside one bordered "control panel" strip in the header, not floating loose in the corner. Mode is a small select and Boost a status/toggle pill, not full-width form fields — the fuller boost-duration input, Start/Cancel Boost buttons, and the override control still exist, just inside "More controls." There's no power/off button: no manufacturer profile in this card declares an "off" role today, so one isn't invented for the header.
+**Compact header controls.** Mode, Boost, and a shower status indicator (if configured — see below) sit together inside one bordered "control panel" strip in the header, not floating loose in the corner. Mode is a small select and Boost a status/toggle pill, not full-width form fields — the fuller boost-duration input, Start/Cancel Boost buttons, and the override control still exist, just inside "More controls." If the mapped mode select exposes `Off`, it appears as the first mode option; if the integration does not expose it, the card does not invent a non-working Off command.
 
-**System Overview.** This is the hero of the card and always gets the card's full width — no side column competes with it. The visual shows four ducts around a large central unit, each with a directional arrow icon as well as a label (never colour alone): Supply and Outdoor read as a cool blue family, Extract as a warm orange family, and Exhaust as a neutral grey family. Extract and Supply show both temperature and the shared measured airflow reading by default; Exhaust and Outdoor show temperature only, since most integrations — Altair included — report one measured airflow value for the whole system, not one per duct. Set `show_airflow_on_all_paths: true` to show that shared reading on all four. When `show_airflow_animation` is on, the measured airflow is genuinely positive, and the required temperature entities are available, the fans spin, the duct stubs on the unit show a small travelling particle animation in the correct direction, and the air-path panels animate too — all of it disabled under `prefers-reduced-motion`. While boost is active, those same animations run a little faster (a real boost mode raises fan speed noticeably) rather than adding anything new to the graphic itself. The heat-recovery percentage sits in a large circular badge centred over the unit's exchanger graphic, and gently pulses for a moment whenever the figure actually changes between updates (never on load, never if it's unchanged).
+**System Overview.** This is the hero of the card and always gets the card's full width — no side column competes with it. The visual shows a cutaway unit with outdoor air on the left, indoor air on the right, internal filters, two internal blowers, and a visible plate exchanger. Air colours are temperature-driven, not permanently assigned by air type: each stream uses live endpoint temperatures and gradients through the exchanger, with neutral styling when readings are unavailable. Extract and Supply show both temperature and the shared measured airflow reading by default; Exhaust and Outdoor show temperature only, since most integrations — Altair included — report one measured airflow value for the whole system, not one per duct. Set `show_airflow_on_all_paths: true` to show that shared reading on all four. When `show_airflow_animation` is on, the measured airflow is genuinely positive, and the required temperature entities are available, the fans spin, the duct stubs on the unit show a small travelling particle animation in the correct direction, and the air-path panels animate too — all of it disabled under `prefers-reduced-motion`. While boost is active, those same animations run a little faster (a real boost mode raises fan speed noticeably) rather than adding anything new to the graphic itself. The heat-recovery percentage sits in a compact plate above the unit, with the exchanger left readable, and gently pulses for a moment whenever the figure actually changes between updates (never on load, never if it's unchanged).
 
 **Shower detection.** Entirely optional, and driven by the same entity-role/availability model as everything else in the card — map none, some, or all three of `shower_detected` / `shower_trigger_temperature` / `shower_pipe_temperature` and the card adapts:
 
@@ -118,7 +134,9 @@ heat_recovery_method: automatic
 - **Configured, but no shower right now** — a quiet "No shower detected" pill next to Boost in the header (this also covers a momentarily unavailable detector — that's treated as inactive, not as an active shower). Nothing is added to the main content area, so there's no empty card taking up space while idle.
 - **Shower detected** (`shower_detected` is `on`) — the header pill switches to an active tone, and a full-width purple banner appears directly above System Overview with a lightweight inline-SVG shower illustration, "Boost active"/"Boost not active" (from the same `boost_active` role the header and status card use), the pipe temperature, the stored trigger temperature, and a **re-arm temperature** the card computes itself as trigger temperature − 10°C (never a separate entity) — matching the shower detector's own rearm rule in the [`ha-altair-mvhr`](https://github.com/HiPerHaus/ha-altair-mvhr) integration. Any one of the three sensors being unavailable simply omits that fact; the banner never shows a placeholder or synthesized reading.
 
-**Lower cards.** Airflow (a semicircular SVG/CSS gauge, no charting library — the number and its unit stack on separate lines — plus target airflow/fan speed/current profile) briefly brightens whenever the current-airflow reading increases from the previous update (never on load, never on a decrease). Temperatures (the same four readings as the visual, plus heat recovery), and System Status (coloured badges for boost/filter/overall state, plus a prominent countdown callout when boost is actually active — never a stray "0 min" when it isn't) — each row only renders when its role is actually configured or supported.
+**Lower cards.** Airflow (a semicircular SVG/CSS gauge, no charting library — the number and its unit stack on separate lines — plus target airflow/fan speed/current profile) now scales measured airflow against the best available capacity: `max_airflow`, then `maximum_airflow`, then `high_airflow`, then a profile default, with mapped level retained only as a final fallback. It also shows a quiet scale hint such as `70 of 120 m³/h` and briefly brightens whenever the current-airflow reading increases from the previous update (never on load, never on a decrease). Temperatures (the same four readings as the visual, plus heat recovery), and System Status (coloured badges for boost/filter/overall state, plus a prominent countdown callout when boost is actually active — never a stray "0 min" when it isn't) — each row only renders when its role is actually configured or supported.
+
+**More controls.** Airflow preset number entities (`away_airflow`, `low_airflow`, `home_airflow`, `high_airflow`) render as native number inputs when mapped and supported, using the entity's min/max/step/unit attributes, debounced writes, pending state, service-error feedback, and Away ≤ Low ≤ Home ≤ High validation. `calibration_start_control` renders a confirmed "Calibrate airflow" action only when a real button/input_button backend is configured and supported.
 
 **Apparent heat-recovery limitation.** Same caveat as detailed mode below: it's `(supply − outdoor) / (extract − outdoor) × 100`, a dashboard-friendly estimate, not a certified efficiency figure, and it correctly reports "Not applicable" for temperature combinations that aren't physically consistent with straightforward recovery (for example a supply temperature above the extract temperature).
 
@@ -147,7 +165,7 @@ Not yet published. Once released, this will be installable via [HACS](https://ha
 
 ```yaml
 type: custom:hiper-mvhr-card
-title: Altair MVHR
+name: Altair MVHR
 subtitle: Heat Recovery Ventilation System
 manufacturer: altair
 display_mode: detailed

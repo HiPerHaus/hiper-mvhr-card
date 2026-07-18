@@ -10,6 +10,8 @@ export interface CapabilityProfile {
   name: string;
   vendor: string;
   models?: string[];
+  /** Verified default physical capacity, used only when no live/configured maximum exists. */
+  defaultMaxAirflow?: number;
   supportedRoles: Partial<Record<EntityRoleId, RoleSupport>>;
   /**
    * Roles this manufacturer is confirmed NOT to support — e.g. the Altair

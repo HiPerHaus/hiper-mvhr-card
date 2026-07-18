@@ -15,7 +15,15 @@ describe('parseConfig', () => {
     expect(result.show_filter).toBe(true);
     expect(result.show_calibration).toBe(true);
     expect(result.filter_max_days).toBe(365);
+    expect(result.max_airflow).toBeUndefined();
     expect(result.heat_recovery_method).toBe('automatic');
+  });
+
+  it('accepts a positive maximum airflow', () => {
+    expect(parseConfig({ manufacturer: 'altair', max_airflow: 120 }).max_airflow).toBe(120);
+    expect(() => parseConfig({ manufacturer: 'altair', max_airflow: 0 })).toThrow(
+      '"max_airflow" must be a positive number',
+    );
   });
 
   it('rejects a non-object config', () => {
