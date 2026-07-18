@@ -3,18 +3,18 @@
  * Copyright 2019 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const q = globalThis, le = q.ShadowRoot && (q.ShadyCSS === void 0 || q.ShadyCSS.nativeShadow) && "adoptedStyleSheets" in Document.prototype && "replace" in CSSStyleSheet.prototype, ce = Symbol(), be = /* @__PURE__ */ new WeakMap();
-let Pe = class {
+const Z = globalThis, ce = Z.ShadowRoot && (Z.ShadyCSS === void 0 || Z.ShadyCSS.nativeShadow) && "adoptedStyleSheets" in Document.prototype && "replace" in CSSStyleSheet.prototype, de = Symbol(), ve = /* @__PURE__ */ new WeakMap();
+let Ue = class {
   constructor(e, t, r) {
-    if (this._$cssResult$ = !0, r !== ce) throw Error("CSSResult is not constructable. Use `unsafeCSS` or `css` instead.");
+    if (this._$cssResult$ = !0, r !== de) throw Error("CSSResult is not constructable. Use `unsafeCSS` or `css` instead.");
     this.cssText = e, this.t = t;
   }
   get styleSheet() {
     let e = this.o;
     const t = this.t;
-    if (le && e === void 0) {
+    if (ce && e === void 0) {
       const r = t !== void 0 && t.length === 1;
-      r && (e = be.get(t)), e === void 0 && ((this.o = e = new CSSStyleSheet()).replaceSync(this.cssText), r && be.set(t, e));
+      r && (e = ve.get(t)), e === void 0 && ((this.o = e = new CSSStyleSheet()).replaceSync(this.cssText), r && ve.set(t, e));
     }
     return e;
   }
@@ -22,20 +22,20 @@ let Pe = class {
     return this.cssText;
   }
 };
-const Qe = (s) => new Pe(typeof s == "string" ? s : s + "", void 0, ce), Ue = (s, ...e) => {
+const Qe = (s) => new Ue(typeof s == "string" ? s : s + "", void 0, de), Ne = (s, ...e) => {
   const t = s.length === 1 ? s[0] : e.reduce((r, a, o) => r + ((i) => {
     if (i._$cssResult$ === !0) return i.cssText;
     if (typeof i == "number") return i;
     throw Error("Value passed to 'css' function must be a 'css' function result: " + i + ". Use 'unsafeCSS' to pass non-literal values, but take care to ensure page security.");
   })(a) + s[o + 1], s[0]);
-  return new Pe(t, s, ce);
+  return new Ue(t, s, de);
 }, Ke = (s, e) => {
-  if (le) s.adoptedStyleSheets = e.map((t) => t instanceof CSSStyleSheet ? t : t.styleSheet);
+  if (ce) s.adoptedStyleSheets = e.map((t) => t instanceof CSSStyleSheet ? t : t.styleSheet);
   else for (const t of e) {
-    const r = document.createElement("style"), a = q.litNonce;
+    const r = document.createElement("style"), a = Z.litNonce;
     a !== void 0 && r.setAttribute("nonce", a), r.textContent = t.cssText, s.appendChild(r);
   }
-}, ve = le ? (s) => s : (s) => s instanceof CSSStyleSheet ? ((e) => {
+}, _e = ce ? (s) => s : (s) => s instanceof CSSStyleSheet ? ((e) => {
   let t = "";
   for (const r of e.cssRules) t += r.cssText;
   return Qe(t);
@@ -45,7 +45,7 @@ const Qe = (s) => new Pe(typeof s == "string" ? s : s + "", void 0, ce), Ue = (s
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const { is: Xe, defineProperty: Je, getOwnPropertyDescriptor: et, getOwnPropertyNames: tt, getOwnPropertySymbols: rt, getPrototypeOf: at } = Object, S = globalThis, _e = S.trustedTypes, ot = _e ? _e.emptyScript : "", te = S.reactiveElementPolyfillSupport, D = (s, e) => s, Z = { toAttribute(s, e) {
+const { is: Xe, defineProperty: Je, getOwnPropertyDescriptor: et, getOwnPropertyNames: tt, getOwnPropertySymbols: rt, getPrototypeOf: at } = Object, S = globalThis, xe = S.trustedTypes, ot = xe ? xe.emptyScript : "", re = S.reactiveElementPolyfillSupport, D = (s, e) => s, W = { toAttribute(s, e) {
   switch (e) {
     case Boolean:
       s = s ? ot : null;
@@ -73,7 +73,7 @@ const { is: Xe, defineProperty: Je, getOwnPropertyDescriptor: et, getOwnProperty
       }
   }
   return t;
-} }, de = (s, e) => !Xe(s, e), we = { attribute: !0, type: String, converter: Z, reflect: !1, useDefault: !1, hasChanged: de };
+} }, pe = (s, e) => !Xe(s, e), we = { attribute: !0, type: String, converter: W, reflect: !1, useDefault: !1, hasChanged: pe };
 Symbol.metadata ?? (Symbol.metadata = Symbol("metadata")), S.litPropertyMetadata ?? (S.litPropertyMetadata = /* @__PURE__ */ new WeakMap());
 let z = class extends HTMLElement {
   static addInitializer(e) {
@@ -129,8 +129,8 @@ let z = class extends HTMLElement {
     const t = [];
     if (Array.isArray(e)) {
       const r = new Set(e.flat(1 / 0).reverse());
-      for (const a of r) t.unshift(ve(a));
-    } else e !== void 0 && t.push(ve(e));
+      for (const a of r) t.unshift(_e(a));
+    } else e !== void 0 && t.push(_e(e));
     return t;
   }
   static _$Eu(e, t) {
@@ -184,7 +184,7 @@ let z = class extends HTMLElement {
     var o;
     const r = this.constructor.elementProperties.get(e), a = this.constructor._$Eu(e, r);
     if (a !== void 0 && r.reflect === !0) {
-      const i = (((o = r.converter) == null ? void 0 : o.toAttribute) !== void 0 ? r.converter : Z).toAttribute(t, r.type);
+      const i = (((o = r.converter) == null ? void 0 : o.toAttribute) !== void 0 ? r.converter : W).toAttribute(t, r.type);
       this._$Em = e, i == null ? this.removeAttribute(a) : this.setAttribute(a, i), this._$Em = null;
     }
   }
@@ -192,7 +192,7 @@ let z = class extends HTMLElement {
     var o, i;
     const r = this.constructor, a = r._$Eh.get(e);
     if (a !== void 0 && this._$Em !== a) {
-      const n = r.getPropertyOptions(a), l = typeof n.converter == "function" ? { fromAttribute: n.converter } : ((o = n.converter) == null ? void 0 : o.fromAttribute) !== void 0 ? n.converter : Z;
+      const n = r.getPropertyOptions(a), l = typeof n.converter == "function" ? { fromAttribute: n.converter } : ((o = n.converter) == null ? void 0 : o.fromAttribute) !== void 0 ? n.converter : W;
       this._$Em = a;
       const u = l.fromAttribute(t, n.type);
       this[a] = u ?? ((i = this._$Ej) == null ? void 0 : i.get(a)) ?? u, this._$Em = null;
@@ -202,7 +202,7 @@ let z = class extends HTMLElement {
     var i;
     if (e !== void 0) {
       const n = this.constructor;
-      if (a === !1 && (o = this[e]), r ?? (r = n.getPropertyOptions(e)), !((r.hasChanged ?? de)(o, t) || r.useDefault && r.reflect && o === ((i = this._$Ej) == null ? void 0 : i.get(e)) && !this.hasAttribute(n._$Eu(e, r)))) return;
+      if (a === !1 && (o = this[e]), r ?? (r = n.getPropertyOptions(e)), !((r.hasChanged ?? pe)(o, t) || r.useDefault && r.reflect && o === ((i = this._$Ej) == null ? void 0 : i.get(e)) && !this.hasAttribute(n._$Eu(e, r)))) return;
       this.C(e, t, r);
     }
     this.isUpdatePending === !1 && (this._$ES = this._$EP());
@@ -278,18 +278,18 @@ let z = class extends HTMLElement {
   firstUpdated(e) {
   }
 };
-z.elementStyles = [], z.shadowRootOptions = { mode: "open" }, z[D("elementProperties")] = /* @__PURE__ */ new Map(), z[D("finalized")] = /* @__PURE__ */ new Map(), te == null || te({ ReactiveElement: z }), (S.reactiveElementVersions ?? (S.reactiveElementVersions = [])).push("2.1.2");
+z.elementStyles = [], z.shadowRootOptions = { mode: "open" }, z[D("elementProperties")] = /* @__PURE__ */ new Map(), z[D("finalized")] = /* @__PURE__ */ new Map(), re == null || re({ ReactiveElement: z }), (S.reactiveElementVersions ?? (S.reactiveElementVersions = [])).push("2.1.2");
 /**
  * @license
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const B = globalThis, xe = (s) => s, W = B.trustedTypes, ye = W ? W.createPolicy("lit-html", { createHTML: (s) => s }) : void 0, Ne = "$lit$", A = `lit$${Math.random().toFixed(9).slice(2)}$`, De = "?" + A, it = `<${De}>`, T = document, I = () => T.createComment(""), j = (s) => s === null || typeof s != "object" && typeof s != "function", pe = Array.isArray, st = (s) => pe(s) || typeof (s == null ? void 0 : s[Symbol.iterator]) == "function", re = `[ 	
-\f\r]`, N = /<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g, $e = /-->/g, ke = />/g, E = RegExp(`>|${re}(?:([^\\s"'>=/]+)(${re}*=${re}*(?:[^ 	
-\f\r"'\`<>=]|("|')|))|$)`, "g"), Ae = /'/g, Se = /"/g, Be = /^(?:script|style|textarea|title)$/i, Ie = (s) => (e, ...t) => ({ _$litType$: s, strings: e, values: t }), d = Ie(1), k = Ie(2), L = Symbol.for("lit-noChange"), g = Symbol.for("lit-nothing"), Ee = /* @__PURE__ */ new WeakMap(), C = T.createTreeWalker(T, 129);
-function je(s, e) {
-  if (!pe(s) || !s.hasOwnProperty("raw")) throw Error("invalid template strings array");
-  return ye !== void 0 ? ye.createHTML(e) : e;
+const B = globalThis, ye = (s) => s, Y = B.trustedTypes, $e = Y ? Y.createPolicy("lit-html", { createHTML: (s) => s }) : void 0, De = "$lit$", A = `lit$${Math.random().toFixed(9).slice(2)}$`, Be = "?" + A, it = `<${Be}>`, T = document, I = () => T.createComment(""), j = (s) => s === null || typeof s != "object" && typeof s != "function", ue = Array.isArray, st = (s) => ue(s) || typeof (s == null ? void 0 : s[Symbol.iterator]) == "function", ae = `[ 	
+\f\r]`, N = /<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g, ke = /-->/g, Ae = />/g, E = RegExp(`>|${ae}(?:([^\\s"'>=/]+)(${ae}*=${ae}*(?:[^ 	
+\f\r"'\`<>=]|("|')|))|$)`, "g"), Se = /'/g, Ee = /"/g, Ie = /^(?:script|style|textarea|title)$/i, je = (s) => (e, ...t) => ({ _$litType$: s, strings: e, values: t }), d = je(1), k = je(2), L = Symbol.for("lit-noChange"), g = Symbol.for("lit-nothing"), Ce = /* @__PURE__ */ new WeakMap(), C = T.createTreeWalker(T, 129);
+function Ve(s, e) {
+  if (!ue(s) || !s.hasOwnProperty("raw")) throw Error("invalid template strings array");
+  return $e !== void 0 ? $e.createHTML(e) : e;
 }
 const nt = (s, e) => {
   const t = s.length - 1, r = [];
@@ -297,11 +297,11 @@ const nt = (s, e) => {
   for (let n = 0; n < t; n++) {
     const l = s[n];
     let u, c, p = -1, h = 0;
-    for (; h < l.length && (i.lastIndex = h, c = i.exec(l), c !== null); ) h = i.lastIndex, i === N ? c[1] === "!--" ? i = $e : c[1] !== void 0 ? i = ke : c[2] !== void 0 ? (Be.test(c[2]) && (a = RegExp("</" + c[2], "g")), i = E) : c[3] !== void 0 && (i = E) : i === E ? c[0] === ">" ? (i = a ?? N, p = -1) : c[1] === void 0 ? p = -2 : (p = i.lastIndex - c[2].length, u = c[1], i = c[3] === void 0 ? E : c[3] === '"' ? Se : Ae) : i === Se || i === Ae ? i = E : i === $e || i === ke ? i = N : (i = E, a = void 0);
+    for (; h < l.length && (i.lastIndex = h, c = i.exec(l), c !== null); ) h = i.lastIndex, i === N ? c[1] === "!--" ? i = ke : c[1] !== void 0 ? i = Ae : c[2] !== void 0 ? (Ie.test(c[2]) && (a = RegExp("</" + c[2], "g")), i = E) : c[3] !== void 0 && (i = E) : i === E ? c[0] === ">" ? (i = a ?? N, p = -1) : c[1] === void 0 ? p = -2 : (p = i.lastIndex - c[2].length, u = c[1], i = c[3] === void 0 ? E : c[3] === '"' ? Ee : Se) : i === Ee || i === Se ? i = E : i === ke || i === Ae ? i = N : (i = E, a = void 0);
     const m = i === E && s[n + 1].startsWith("/>") ? " " : "";
-    o += i === N ? l + it : p >= 0 ? (r.push(u), l.slice(0, p) + Ne + l.slice(p) + A + m) : l + A + (p === -2 ? n : m);
+    o += i === N ? l + it : p >= 0 ? (r.push(u), l.slice(0, p) + De + l.slice(p) + A + m) : l + A + (p === -2 ? n : m);
   }
-  return [je(s, o + (s[t] || "<?>") + (e === 2 ? "</svg>" : e === 3 ? "</math>" : "")), r];
+  return [Ve(s, o + (s[t] || "<?>") + (e === 2 ? "</svg>" : e === 3 ? "</math>" : "")), r];
 };
 class V {
   constructor({ strings: e, _$litType$: t }, r) {
@@ -315,19 +315,19 @@ class V {
     }
     for (; (a = C.nextNode()) !== null && l.length < n; ) {
       if (a.nodeType === 1) {
-        if (a.hasAttributes()) for (const p of a.getAttributeNames()) if (p.endsWith(Ne)) {
+        if (a.hasAttributes()) for (const p of a.getAttributeNames()) if (p.endsWith(De)) {
           const h = c[i++], m = a.getAttribute(p).split(A), v = /([.?@])?(.*)/.exec(h);
-          l.push({ type: 1, index: o, name: v[2], strings: m, ctor: v[1] === "." ? ct : v[1] === "?" ? dt : v[1] === "@" ? pt : Q }), a.removeAttribute(p);
+          l.push({ type: 1, index: o, name: v[2], strings: m, ctor: v[1] === "." ? ct : v[1] === "?" ? dt : v[1] === "@" ? pt : K }), a.removeAttribute(p);
         } else p.startsWith(A) && (l.push({ type: 6, index: o }), a.removeAttribute(p));
-        if (Be.test(a.tagName)) {
+        if (Ie.test(a.tagName)) {
           const p = a.textContent.split(A), h = p.length - 1;
           if (h > 0) {
-            a.textContent = W ? W.emptyScript : "";
+            a.textContent = Y ? Y.emptyScript : "";
             for (let m = 0; m < h; m++) a.append(p[m], I()), C.nextNode(), l.push({ type: 2, index: ++o });
             a.append(p[h], I());
           }
         }
-      } else if (a.nodeType === 8) if (a.data === De) l.push({ type: 2, index: o });
+      } else if (a.nodeType === 8) if (a.data === Be) l.push({ type: 2, index: o });
       else {
         let p = -1;
         for (; (p = a.data.indexOf(A, p + 1)) !== -1; ) l.push({ type: 7, index: o }), p += A.length - 1;
@@ -364,7 +364,7 @@ class lt {
     for (; l !== void 0; ) {
       if (i === l.index) {
         let u;
-        l.type === 2 ? u = new G(o, o.nextSibling, this, e) : l.type === 1 ? u = new l.ctor(o, l.name, l.strings, this, e) : l.type === 6 && (u = new ut(o, this, e)), this._$AV.push(u), l = r[++n];
+        l.type === 2 ? u = new q(o, o.nextSibling, this, e) : l.type === 1 ? u = new l.ctor(o, l.name, l.strings, this, e) : l.type === 6 && (u = new ut(o, this, e)), this._$AV.push(u), l = r[++n];
       }
       i !== (l == null ? void 0 : l.index) && (o = C.nextNode(), i++);
     }
@@ -375,7 +375,7 @@ class lt {
     for (const r of this._$AV) r !== void 0 && (r.strings !== void 0 ? (r._$AI(e, r, t), t += r.strings.length - 2) : r._$AI(e[t])), t++;
   }
 }
-class G {
+class q {
   get _$AU() {
     var e;
     return ((e = this._$AM) == null ? void 0 : e._$AU) ?? this._$Cv;
@@ -408,7 +408,7 @@ class G {
   }
   $(e) {
     var o;
-    const { values: t, _$litType$: r } = e, a = typeof r == "number" ? this._$AC(e) : (r.el === void 0 && (r.el = V.createElement(je(r.h, r.h[0]), this.options)), r);
+    const { values: t, _$litType$: r } = e, a = typeof r == "number" ? this._$AC(e) : (r.el === void 0 && (r.el = V.createElement(Ve(r.h, r.h[0]), this.options)), r);
     if (((o = this._$AH) == null ? void 0 : o._$AD) === a) this._$AH.p(t);
     else {
       const i = new lt(a, this), n = i.u(this.options);
@@ -416,21 +416,21 @@ class G {
     }
   }
   _$AC(e) {
-    let t = Ee.get(e.strings);
-    return t === void 0 && Ee.set(e.strings, t = new V(e)), t;
+    let t = Ce.get(e.strings);
+    return t === void 0 && Ce.set(e.strings, t = new V(e)), t;
   }
   k(e) {
-    pe(this._$AH) || (this._$AH = [], this._$AR());
+    ue(this._$AH) || (this._$AH = [], this._$AR());
     const t = this._$AH;
     let r, a = 0;
-    for (const o of e) a === t.length ? t.push(r = new G(this.O(I()), this.O(I()), this, this.options)) : r = t[a], r._$AI(o), a++;
+    for (const o of e) a === t.length ? t.push(r = new q(this.O(I()), this.O(I()), this, this.options)) : r = t[a], r._$AI(o), a++;
     a < t.length && (this._$AR(r && r._$AB.nextSibling, a), t.length = a);
   }
   _$AR(e = this._$AA.nextSibling, t) {
     var r;
     for ((r = this._$AP) == null ? void 0 : r.call(this, !1, !0, t); e !== this._$AB; ) {
-      const a = xe(e).nextSibling;
-      xe(e).remove(), e = a;
+      const a = ye(e).nextSibling;
+      ye(e).remove(), e = a;
     }
   }
   setConnected(e) {
@@ -438,7 +438,7 @@ class G {
     this._$AM === void 0 && (this._$Cv = e, (t = this._$AP) == null || t.call(this, e));
   }
 }
-class Q {
+class K {
   get tagName() {
     return this.element.tagName;
   }
@@ -463,7 +463,7 @@ class Q {
     e === g ? this.element.removeAttribute(this.name) : this.element.setAttribute(this.name, e ?? "");
   }
 }
-class ct extends Q {
+class ct extends K {
   constructor() {
     super(...arguments), this.type = 3;
   }
@@ -471,7 +471,7 @@ class ct extends Q {
     this.element[this.name] = e === g ? void 0 : e;
   }
 }
-class dt extends Q {
+class dt extends K {
   constructor() {
     super(...arguments), this.type = 4;
   }
@@ -479,7 +479,7 @@ class dt extends Q {
     this.element.toggleAttribute(this.name, !!e && e !== g);
   }
 }
-class pt extends Q {
+class pt extends K {
   constructor(e, t, r, a, o) {
     super(e, t, r, a, o), this.type = 5;
   }
@@ -504,14 +504,14 @@ class ut {
     P(this, e);
   }
 }
-const ae = B.litHtmlPolyfillSupport;
-ae == null || ae(V, G), (B.litHtmlVersions ?? (B.litHtmlVersions = [])).push("3.3.3");
+const oe = B.litHtmlPolyfillSupport;
+oe == null || oe(V, q), (B.litHtmlVersions ?? (B.litHtmlVersions = [])).push("3.3.3");
 const ht = (s, e, t) => {
   const r = (t == null ? void 0 : t.renderBefore) ?? e;
   let a = r._$litPart$;
   if (a === void 0) {
     const o = (t == null ? void 0 : t.renderBefore) ?? null;
-    r._$litPart$ = a = new G(e.insertBefore(I(), o), o, void 0, t ?? {});
+    r._$litPart$ = a = new q(e.insertBefore(I(), o), o, void 0, t ?? {});
   }
   return a._$AI(s), a;
 };
@@ -546,17 +546,17 @@ class H extends z {
     return L;
   }
 }
-var Le;
-H._$litElement$ = !0, H.finalized = !0, (Le = M.litElementHydrateSupport) == null || Le.call(M, { LitElement: H });
-const oe = M.litElementPolyfillSupport;
-oe == null || oe({ LitElement: H });
+var Pe;
+H._$litElement$ = !0, H.finalized = !0, (Pe = M.litElementHydrateSupport) == null || Pe.call(M, { LitElement: H });
+const ie = M.litElementPolyfillSupport;
+ie == null || ie({ LitElement: H });
 (M.litElementVersions ?? (M.litElementVersions = [])).push("4.2.2");
 /**
  * @license
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const mt = { attribute: !0, type: String, converter: Z, reflect: !1, hasChanged: de }, ft = (s = mt, e, t) => {
+const mt = { attribute: !0, type: String, converter: W, reflect: !1, hasChanged: pe }, ft = (s = mt, e, t) => {
   const { kind: r, metadata: a } = t;
   let o = globalThis.litPropertyMetadata.get(a);
   if (o === void 0 && globalThis.litPropertyMetadata.set(a, o = /* @__PURE__ */ new Map()), r === "setter" && ((s = Object.create(s)).wrapped = !0), o.set(t.name, s), r === "accessor") {
@@ -577,7 +577,7 @@ const mt = { attribute: !0, type: String, converter: Z, reflect: !1, hasChanged:
   }
   throw Error("Unsupported decorator location: " + r);
 };
-function ue(s) {
+function he(s) {
   return (e, t) => typeof t == "object" ? ft(s, e, t) : ((r, a, o) => {
     const i = a.hasOwnProperty(o);
     return a.constructor.createProperty(o, r), i ? Object.getOwnPropertyDescriptor(a, o) : void 0;
@@ -588,8 +588,8 @@ function ue(s) {
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-function K(s) {
-  return ue({ ...s, state: !0, attribute: !1 });
+function X(s) {
+  return he({ ...s, state: !0, attribute: !1 });
 }
 const gt = {
   id: "altair",
@@ -682,26 +682,26 @@ const gt = {
   name: "Generic MVHR",
   vendor: "Generic",
   supportedRoles: {}
-}, ne = [
+}, le = [
   "altair",
   "zehnder-comfoair-q",
   "vent_axia_sentinel_econiq",
   "generic"
-], wt = {
+], xt = {
   altair: gt,
   "zehnder-comfoair-q": bt,
   vent_axia_sentinel_econiq: vt,
   generic: _t
 };
-function Ve(s) {
-  return wt[s];
+function Fe(s) {
+  return xt[s];
 }
-var xt = Object.defineProperty, Fe = (s, e, t, r) => {
+var wt = Object.defineProperty, qe = (s, e, t, r) => {
   for (var a = void 0, o = s.length - 1, i; o >= 0; o--)
     (i = s[o]) && (a = i(e, t, a) || a);
-  return a && xt(e, t, a), a;
+  return a && wt(e, t, a), a;
 };
-const Ce = "hiper-mvhr-card-editor", me = class me extends H {
+const Me = "hiper-mvhr-card-editor", fe = class fe extends H {
   setConfig(e) {
     this._config = { ...e };
   }
@@ -717,7 +717,7 @@ const Ce = "hiper-mvhr-card-editor", me = class me extends H {
             .value=${e.manufacturer ?? "generic"}
             @change=${(t) => this._set("manufacturer", t.currentTarget.value)}
           >
-            ${ne.map(
+            ${le.map(
       (t) => d`<option .value=${t}>${t}</option>`
     )}
           </select>
@@ -812,7 +812,7 @@ const Ce = "hiper-mvhr-card-editor", me = class me extends H {
     );
   }
 };
-me.styles = Ue`
+fe.styles = Ne`
     .editor {
       display: grid;
       gap: 12px;
@@ -847,15 +847,15 @@ me.styles = Ue`
       width: auto;
     }
   `;
-let F = me;
-Fe([
-  ue({ attribute: !1 })
+let F = fe;
+qe([
+  he({ attribute: !1 })
 ], F.prototype, "hass");
-Fe([
-  K()
+qe([
+  X()
 ], F.prototype, "_config");
-customElements.get(Ce) || customElements.define(Ce, F);
-const he = [
+customElements.get(Me) || customElements.define(Me, F);
+const me = [
   "mode",
   "effective_mode",
   "outdoor_air_temp",
@@ -930,14 +930,14 @@ const he = [
   "shower_trigger_temperature",
   "shower_pipe_temperature"
 ];
-class x extends Error {
+class w extends Error {
   constructor(e) {
     super(e), this.name = "ConfigValidationError";
   }
 }
-const yt = "homeowner", Me = ["homeowner", "detailed", "system"], Te = ["automatic", "supply_temperature", "disabled"];
-function Re(s) {
-  return he.includes(s);
+const yt = "homeowner", Te = ["homeowner", "detailed", "system"], Re = ["automatic", "supply_temperature", "disabled"];
+function Oe(s) {
+  return me.includes(s);
 }
 const $t = {
   supply_temperature: "supply_air_temp",
@@ -952,64 +952,64 @@ const $t = {
 };
 function kt(s) {
   if (!s || typeof s != "object" || Array.isArray(s))
-    throw new x("hiper-mvhr-card: configuration must be an object");
+    throw new w("hiper-mvhr-card: configuration must be an object");
   const e = s;
   if (typeof e.manufacturer != "string" || e.manufacturer.length === 0)
-    throw new x('hiper-mvhr-card: "manufacturer" is required');
-  if (!ne.includes(e.manufacturer))
-    throw new x(
-      `hiper-mvhr-card: unknown manufacturer "${e.manufacturer}". Supported: ${ne.join(", ")}`
+    throw new w('hiper-mvhr-card: "manufacturer" is required');
+  if (!le.includes(e.manufacturer))
+    throw new w(
+      `hiper-mvhr-card: unknown manufacturer "${e.manufacturer}". Supported: ${le.join(", ")}`
     );
   const t = e.manufacturer, r = e.display_mode ?? yt;
-  if (!Me.includes(r))
-    throw new x(
-      `hiper-mvhr-card: invalid "display_mode" value "${String(e.display_mode)}". Expected one of: ${Me.join(", ")}`
+  if (!Te.includes(r))
+    throw new w(
+      `hiper-mvhr-card: invalid "display_mode" value "${String(e.display_mode)}". Expected one of: ${Te.join(", ")}`
     );
   if (e.name !== void 0 && typeof e.name != "string")
-    throw new x('hiper-mvhr-card: "name" must be a string if provided');
+    throw new w('hiper-mvhr-card: "name" must be a string if provided');
   if (e.title !== void 0 && typeof e.title != "string")
-    throw new x('hiper-mvhr-card: "title" must be a string if provided');
+    throw new w('hiper-mvhr-card: "title" must be a string if provided');
   if (e.subtitle !== void 0 && typeof e.subtitle != "string")
-    throw new x('hiper-mvhr-card: "subtitle" must be a string if provided');
+    throw new w('hiper-mvhr-card: "subtitle" must be a string if provided');
   const a = e.heat_recovery_method ?? "automatic";
-  if (!Te.includes(a))
-    throw new x(
-      `hiper-mvhr-card: invalid "heat_recovery_method" value "${String(e.heat_recovery_method)}". Expected one of: ${Te.join(", ")}`
+  if (!Re.includes(a))
+    throw new w(
+      `hiper-mvhr-card: invalid "heat_recovery_method" value "${String(e.heat_recovery_method)}". Expected one of: ${Re.join(", ")}`
     );
   const o = e.filter_max_days ?? 365;
   if (typeof o != "number" || !Number.isFinite(o) || o <= 0)
-    throw new x('hiper-mvhr-card: "filter_max_days" must be a positive number');
+    throw new w('hiper-mvhr-card: "filter_max_days" must be a positive number');
   const i = e.entities ?? {};
   if (typeof i != "object" || Array.isArray(i) || i === null)
-    throw new x(
+    throw new w(
       'hiper-mvhr-card: "entities" must be a mapping of role to entity id'
     );
   const n = {};
   for (const [c, p] of Object.entries(i)) {
     const h = $t[c] ?? c;
-    if (!Re(h)) {
+    if (!Oe(h)) {
       console.warn(`hiper-mvhr-card: ignoring unknown entity role "${c}" in config`);
       continue;
     }
     if (typeof p != "string" || p.length === 0)
-      throw new x(
+      throw new w(
         `hiper-mvhr-card: entity id for role "${c}" must be a non-empty string`
       );
     n[h] = p;
   }
   const l = e.feature_flags ?? {};
   if (typeof l != "object" || Array.isArray(l) || l === null)
-    throw new x(
+    throw new w(
       'hiper-mvhr-card: "feature_flags" must be a mapping of role to boolean'
     );
   const u = {};
   for (const [c, p] of Object.entries(l)) {
-    if (!Re(c)) {
+    if (!Oe(c)) {
       console.warn(`hiper-mvhr-card: ignoring unknown feature flag role "${c}" in config`);
       continue;
     }
     if (typeof p != "boolean")
-      throw new x(
+      throw new w(
         `hiper-mvhr-card: feature flag "${c}" must be true or false, got ${JSON.stringify(p)}`
       );
     u[c] = p;
@@ -1035,7 +1035,7 @@ function kt(s) {
   };
 }
 function At(s, e) {
-  const t = Ve(s);
+  const t = Fe(s);
   if (!e || Object.keys(e).length === 0)
     return t;
   const r = new Set(t.unsupportedRoles ?? []), a = { ...t.supportedRoles };
@@ -1051,7 +1051,7 @@ function Ct(s) {
 function Mt(s, e, t) {
   var a;
   const r = {};
-  for (const o of he) {
+  for (const o of me) {
     if (!e.supportedRoles[o]) {
       r[o] = { status: "unsupported" };
       continue;
@@ -1198,7 +1198,7 @@ const Dt = {
   shower_trigger_temperature: "mdi:thermometer-water",
   shower_pipe_temperature: "mdi:thermometer-water"
 };
-function ie(s) {
+function se(s) {
   return Dt[s];
 }
 function Bt(s) {
@@ -1218,12 +1218,12 @@ function Bt(s) {
     raw: t
   };
 }
-var It = Object.defineProperty, X = (s, e, t, r) => {
+var It = Object.defineProperty, J = (s, e, t, r) => {
   for (var a = void 0, o = s.length - 1, i; o >= 0; o--)
     (i = s[o]) && (a = i(e, t, a) || a);
   return a && It(e, t, a), a;
 };
-const Y = "hiper-mvhr-card", O = [
+const Q = "hiper-mvhr-card", O = [
   [0, 30, 90, 210],
   [10, 55, 145, 230],
   [16, 165, 205, 235],
@@ -1238,7 +1238,7 @@ const Y = "hiper-mvhr-card", O = [
 ], Vt = [
   ["supply_airflow", "Supply airflow"],
   ["extract_airflow", "Extract airflow"]
-], Oe = [
+], ze = [
   ["supply_fan_speed", "Supply fan"],
   ["extract_fan_speed", "Extract fan"]
 ], Ft = [
@@ -1247,10 +1247,10 @@ const Y = "hiper-mvhr-card", O = [
   ["calibration_result", "Calibration"],
   ["fault_active", "Fault"],
   ["frost_protection_active", "Frost protection"]
-], ze = [
+], He = [
   ["filter_reset_control", "Filter reset", "Reset", "Resetting…"],
   ["calibration_start_control", "Run calibration", "Run", "Running…"]
-], se = {
+], ne = {
   success: "mdi:check-circle",
   warning: "mdi:alert",
   muted: "mdi:information-outline"
@@ -1274,7 +1274,7 @@ const Y = "hiper-mvhr-card", O = [
   "shower_detected",
   "shower_trigger_temperature",
   "shower_pipe_temperature"
-], Gt = new Set(Ge), He = 10, qt = [
+], qt = new Set(Ge), Le = 10, Gt = [
   ["supply_air_temp", "Supply air"],
   ["extract_air_temp", "Extract air"],
   ["outdoor_air_temp", "Outdoor air"],
@@ -1286,7 +1286,7 @@ const Y = "hiper-mvhr-card", O = [
   "idle",
   "none",
   "unknown"
-]), Wt = /* @__PURE__ */ new Set(["on", "true", "problem", "active", "detected"]), fe = class fe extends H {
+]), Wt = /* @__PURE__ */ new Set(["on", "true", "problem", "active", "detected"]), ge = class ge extends H {
   constructor() {
     super(...arguments), this._advancedOpen = !1, this._dispatchers = /* @__PURE__ */ new Map();
   }
@@ -1319,7 +1319,7 @@ const Y = "hiper-mvhr-card", O = [
       return d`<ha-card><div class="error" role="alert">${this._configError}</div></ha-card>`;
     if (!this._config || !this.hass)
       return d``;
-    const e = this._config, t = this.hass, r = e.display_mode === "detailed", a = e.display_mode === "system", o = At(e.manufacturer, e.feature_flags), i = Ve(e.manufacturer), n = Mt(t, o, e.entities), l = Tt(n, o, {
+    const e = this._config, t = this.hass, r = e.display_mode === "detailed", a = e.display_mode === "system", o = At(e.manufacturer, e.feature_flags), i = Fe(e.manufacturer), n = Mt(t, o, e.entities), l = Tt(n, o, {
       ignoreRoles: Ge
     }), u = r || l.label !== "Not configured", c = n.mode ? this._present(n.mode, r) : null, p = e.title ?? e.name ?? i.name, h = e.subtitle ?? "Heat Recovery Ventilation System", m = l.tone !== "warning" && l.label !== "Not configured", v = this._heatRecovery(n, e.heat_recovery_method), y = this._modeLabel(
       (c == null ? void 0 : c.text) ?? this._text(n.effective_mode)
@@ -1349,7 +1349,7 @@ const Y = "hiper-mvhr-card", O = [
           </div>
           ${o ? d`
                   <div class="availability tone-${a.tone}" role="status">
-                    <ha-icon icon=${se[a.tone]} aria-hidden="true"></ha-icon>
+                    <ha-icon icon=${ne[a.tone]} aria-hidden="true"></ha-icon>
                     <span>${a.label}</span>
                   </div>
                 ` : ""}
@@ -1406,7 +1406,7 @@ const Y = "hiper-mvhr-card", O = [
       a.status,
       "Apparent temperature recovery"
     )}
-          ${t.show_fan_speeds ? this._infoTile("Fan speeds", this._pair(Oe, e, !0), "mdi:fan") : ""}
+          ${t.show_fan_speeds ? this._infoTile("Fan speeds", this._pair(ze, e, !0), "mdi:fan") : ""}
           ${this._infoTile("Humidity", this._value(e.indoor_humidity, !0) ?? "—", "mdi:water-percent")}
           ${t.show_filter ? this._filterTile(e, t) : ""}
         </section>
@@ -1429,7 +1429,7 @@ const Y = "hiper-mvhr-card", O = [
     return d`
       <section class="status-strip tone-${r.tone}" aria-label="MVHR status">
         <span class="status-chip">
-          <ha-icon icon=${se[r.tone]} aria-hidden="true"></ha-icon>
+          <ha-icon icon=${ne[r.tone]} aria-hidden="true"></ha-icon>
           <span>${r.label}</span>
         </span>
         ${t.show_calibration ? d`
@@ -1460,7 +1460,7 @@ const Y = "hiper-mvhr-card", O = [
     `;
   }
   _metricCell(e, t, r) {
-    const a = ie(e);
+    const a = se(e);
     return d`
       <div class="metric tone-${r.tone}">
         ${a ? d`<ha-icon icon=${a} aria-hidden="true"></ha-icon>` : ""}
@@ -1475,7 +1475,7 @@ const Y = "hiper-mvhr-card", O = [
     const n = t.map(([c, p]) => {
       const h = r[c], m = h ? this._present(h, a) : null;
       return m ? this._statusRow(c, p, m) : null;
-    }).filter((c) => c !== null), l = ze.map(
+    }).filter((c) => c !== null), l = He.map(
       ([c, p, h, m]) => this._controlRow(
         c,
         p,
@@ -1504,7 +1504,7 @@ const Y = "hiper-mvhr-card", O = [
    * Altair/Zehnder/Aerofresh, which don't declare this role supported.
    */
   _extraControls(e, t, r) {
-    const a = ze.map(
+    const a = He.map(
       ([o, i, n, l]) => this._controlRow(o, i, e[o], !0, t, r, n, l)
     ).filter((o) => o !== null);
     return a.length === 0 ? d`` : d`
@@ -1514,7 +1514,7 @@ const Y = "hiper-mvhr-card", O = [
     `;
   }
   _statusRow(e, t, r) {
-    const a = ie(e);
+    const a = se(e);
     return d`
       <div class="status-row tone-${r.tone}">
         ${a ? d`<ha-icon icon=${a} aria-hidden="true"></ha-icon>` : ""}
@@ -1541,7 +1541,7 @@ const Y = "hiper-mvhr-card", O = [
     const u = o.entities[e];
     if (!u)
       return null;
-    const c = this._getDispatcher(e), p = c.state, h = ie(e);
+    const c = this._getDispatcher(e), p = c.state, h = se(e);
     return d`
       <div class="status-row">
         ${h ? d`<ha-icon icon=${h} aria-hidden="true"></ha-icon>` : ""}
@@ -1621,13 +1621,13 @@ const Y = "hiper-mvhr-card", O = [
           <span class="control-group-label">Mode</span>
           <div class="mode-buttons" role="group" aria-label="Operating mode">
             ${n.map((f) => {
-      const w = u !== void 0 && f.toLowerCase() === u;
+      const x = u !== void 0 && f.toLowerCase() === u;
       return d`
                 <button
                   type="button"
-                  class="chip ${w ? "active" : ""}"
+                  class="chip ${x ? "active" : ""}"
                   ?disabled=${!a}
-                  aria-pressed=${w}
+                  aria-pressed=${x}
                   aria-label=${`Set mode ${this._modeLabel(f)}`}
                   @click=${() => a && this._call(r, "select", "select_option", { entity_id: a, option: f })}
                 >
@@ -1656,10 +1656,10 @@ const Y = "hiper-mvhr-card", O = [
               ?disabled=${!o}
               aria-label="Boost duration"
               @change=${(f) => {
-      const w = Number(f.currentTarget.value);
-      o && Number.isFinite(w) && this._call(r, "number", "set_value", {
+      const x = Number(f.currentTarget.value);
+      o && Number.isFinite(x) && this._call(r, "number", "set_value", {
         entity_id: o,
-        value: w
+        value: x
       });
     }}
             />
@@ -1700,10 +1700,10 @@ const Y = "hiper-mvhr-card", O = [
               ?disabled=${!i}
               aria-label="Override duration"
               @change=${(f) => {
-      const w = f.currentTarget.value;
+      const x = f.currentTarget.value;
       i && this._call(r, "select", "select_option", {
         entity_id: i,
-        option: w
+        option: x
       });
     }}
             >
@@ -1758,7 +1758,7 @@ const Y = "hiper-mvhr-card", O = [
             <h2 class="title">${e}</h2>
             <span class="status-dot dot-${n.tone}" aria-hidden="true"></span>
             <span class="availability tone-${n.tone}" role="status">
-              <ha-icon icon=${se[n.tone]} aria-hidden="true"></ha-icon>
+              <ha-icon icon=${ne[n.tone]} aria-hidden="true"></ha-icon>
               <span>${n.label}</span>
             </span>
           </div>
@@ -1798,10 +1798,10 @@ const Y = "hiper-mvhr-card", O = [
                     class="mode-select-pill"
                     aria-label="Operating mode"
                     @change=${(f) => {
-      const w = f.currentTarget.value;
+      const x = f.currentTarget.value;
       o && this._call(r, "select", "select_option", {
         entity_id: o,
-        option: w
+        option: x
       });
     }}
                   >
@@ -1922,7 +1922,7 @@ const Y = "hiper-mvhr-card", O = [
    */
   _shower(e) {
     var l, u;
-    const t = e.shower_detected, r = !!t && (t == null ? void 0 : t.status) !== "unsupported" && (t == null ? void 0 : t.status) !== "not_configured", a = (t == null ? void 0 : t.status) === "ok" && t.value.toLowerCase() === "on", o = e.shower_trigger_temperature, i = this._number(o), n = i === void 0 ? null : `${(i - He).toFixed(1)}${(o == null ? void 0 : o.status) === "ok" && o.unit ? ` ${o.unit}` : ""}`;
+    const t = e.shower_detected, r = !!t && (t == null ? void 0 : t.status) !== "unsupported" && (t == null ? void 0 : t.status) !== "not_configured", a = (t == null ? void 0 : t.status) === "ok" && t.value.toLowerCase() === "on", o = e.shower_trigger_temperature, i = this._number(o), n = i === void 0 ? null : `${(i - Le).toFixed(1)}${(o == null ? void 0 : o.status) === "ok" && o.unit ? ` ${o.unit}` : ""}`;
     return {
       render: r,
       active: a,
@@ -2005,7 +2005,7 @@ const Y = "hiper-mvhr-card", O = [
                     <dt>Re-arm at</dt>
                     <dd>
                       ${e.rearmTemperature}<small
-                        >(${He}°C below trigger)</small
+                        >(${Le}°C below trigger)</small
                       >
                     </dd>
                   </div>
@@ -2070,7 +2070,7 @@ const Y = "hiper-mvhr-card", O = [
     const r = e.airflow ?? e.supply_airflow, a = (r == null ? void 0 : r.status) === "ok" ? r : void 0, o = a ? a.value : null, i = (a == null ? void 0 : a.unit) ?? null, n = this._number(e.airflow) ?? this._number(e.supply_airflow), l = this._number(e.mapped_level) ?? this._number(e.selected_speed), u = l !== void 0 ? Math.max(0, Math.min(1, l / 10)) : 0, c = n !== void 0 && this._prevAirflowNumber !== void 0 && n > this._prevAirflowNumber;
     this._prevAirflowNumber = n ?? this._prevAirflowNumber;
     const p = [];
-    return t.show_fan_speeds && e.supply_fan_speed && e.extract_fan_speed && p.push(this._diagnosticRow("mdi:fan", "Fan speed", this._pair(Oe, e, !0))), e.mapped_level && p.push(
+    return t.show_fan_speeds && e.supply_fan_speed && e.extract_fan_speed && p.push(this._diagnosticRow("mdi:fan", "Fan speed", this._pair(ze, e, !0))), e.mapped_level && p.push(
       this._diagnosticRow(
         "mdi:tune-variant",
         "Current profile",
@@ -2129,7 +2129,7 @@ const Y = "hiper-mvhr-card", O = [
    * brief), plus the heat-recovery percentage.
    */
   _systemTemperaturesCard(e, t) {
-    const r = qt.map(([a, o]) => {
+    const r = Gt.map(([a, o]) => {
       const i = e[a];
       return i ? this._diagnosticRow("mdi:thermometer", o, this._value(i, !0)) : null;
     }).filter((a) => a !== null);
@@ -2381,31 +2381,31 @@ const Y = "hiper-mvhr-card", O = [
       supply: this._temperatureColour(u.supply)
     }, p = u.extract !== null && u.exhaust !== null ? this._temperatureColour((u.extract + u.exhaust) / 2) : this._temperatureColour(null), h = u.outdoor !== null && u.supply !== null ? this._temperatureColour((u.outdoor + u.supply) / 2) : this._temperatureColour(null), m = this._number(e.filter_remaining) !== void 0, v = this._number(e.supply_fan_speed) !== void 0, y = this._number(e.extract_fan_speed) !== void 0, f = o.status === "ok" && this._prevRecoveryLabel !== void 0 && this._prevRecoveryLabel !== o.label;
     this._prevRecoveryLabel = o.status === "ok" ? o.label : this._prevRecoveryLabel;
-    const w = (b, _, $, U, J, qe, Ze) => {
-      const ge = l || U ? n : null, ee = this._number(e[$]) ?? null, We = this._temperatureColour(ee), Ye = this._temperatureColour(ee, 0.13);
+    const x = (b, _, $, U, G, ee, Ze) => {
+      const be = l || U ? n : null, te = this._number(e[$]) ?? null, We = this._temperatureColour(te), Ye = this._temperatureColour(te, 0.13);
       return d`
         <div
-          class="air-path ${b} ${r ? "active" : ""} ${r && i ? "boost-active" : ""}"
+          class="air-path ${b}"
           data-side=${b === "extract" || b === "supply" ? "indoor" : "outdoor"}
           data-flow=${b === "extract" || b === "outdoor" ? "inward" : "outward"}
-          data-temperature=${ee ?? "unavailable"}
+          data-temperature=${te ?? "unavailable"}
           style=${`--stream-color:${We};--stream-soft:${Ye}`}
         >
           <span class="path-label">
-            <ha-icon icon=${J} aria-hidden="true"></ha-icon>
+            <ha-icon icon=${G} aria-hidden="true"></ha-icon>
             ${_}
-            <ha-icon class="path-arrow" icon=${qe} aria-label=${Ze}></ha-icon>
+            <ha-icon class="path-arrow" icon=${ee} aria-label=${Ze}></ha-icon>
           </span>
           <span class="path-temp">${this._value(e[$], !0) ?? "—"}</span>
-          ${ge ? d`<span class="path-airflow"
-                  ><ha-icon icon="mdi:weather-windy" aria-hidden="true"></ha-icon>${ge}</span
+          ${be ? d`<span class="path-airflow"
+                  ><ha-icon icon="mdi:weather-windy" aria-hidden="true"></ha-icon>${be}</span
                 >` : ""}
         </div>
       `;
     };
     return d`
       <div class="visual-wrap system-visual-wrap">
-        ${w(
+        ${x(
       "outdoor",
       "Outdoor air",
       "outdoor_air_temp",
@@ -2414,7 +2414,7 @@ const Y = "hiper-mvhr-card", O = [
       "mdi:arrow-bottom-right-thin",
       "Drawn from outdoors"
     )}
-        ${w(
+        ${x(
       "extract",
       "Extract air",
       "extract_air_temp",
@@ -2638,19 +2638,24 @@ const Y = "hiper-mvhr-card", O = [
                     transform=${`translate(${_} ${$})`}
                     filter="url(#component-shadow)"
                   >
+                    <path class="fan-mount-frame" d="M-64 -48 H45 V43 H-64 Z M-56 -40 V35 H37 V-40 Z"></path>
                     <path class="fan-scroll" d="M-58 -43 H30 Q55 -43 58 -18 V34 H33 V13 Q33 -4 15 -4 H-58 Z"></path>
                     <rect class="fan-motor" x="24" y="-23" width="42" height="45" rx="8"></rect>
                     <path class="motor-ribs" d="M32 -18 V17 M41 -18 V17 M50 -18 V17 M59 -15 V14"></path>
-                    <circle class="fan-ring" cx="-20" r="34"></circle>
+                    <ellipse class="fan-drum-back" cx="-27" rx="38" ry="35"></ellipse>
+                    <path class="fan-drum-depth" d="M-27 -35 H-18 A38 35 0 0 1 -18 35 H-27 A38 35 0 0 0 -27 -35 Z"></path>
+                    <circle class="fan-ring" cx="-27" r="33"></circle>
                     <g class="fan-rotor">
-                      ${[0, 45, 90, 135, 180, 225, 270, 315].map(
-        (J) => k`<path
-                          class="fan-blade"
-                          d="M-20 -4 C-12 -31 1 -31 4 -20 C5 -9 -8 -3 -20 4 Z"
-                          transform=${`rotate(${J} -20 0)`}
+                      ${Array.from({ length: 18 }, (G, ee) => ee * 20).map(
+        (G) => k`<path
+                          class="fan-vane"
+                          d="M-31 -27 Q-21 -34 -13 -27 L-17 -21 Q-23 -26 -29 -20 Z"
+                          transform=${`rotate(${G} -27 0)`}
                         ></path>`
       )}
-                      <circle class="fan-hub" cx="-20" r="8"></circle>
+                      <circle class="fan-shroud" cx="-27" r="24"></circle>
+                      <circle class="fan-hub" cx="-27" r="9"></circle>
+                      <circle class="fan-axle" cx="-27" r="3"></circle>
                     </g>
                     <path class="fan-feet" d="M-45 39 v9 h18 v-9 M26 39 v9 h18 v-9"></path>
                   </g>
@@ -2711,7 +2716,7 @@ const Y = "hiper-mvhr-card", O = [
           </svg>
           ${o.status === "ok" ? d`
                   <div
-                    class="recovery-badge-circular ${f ? "recovery-pulse" : ""}"
+                    class="recovery-badge-plate ${f ? "recovery-pulse" : ""}"
                     title="Apparent temperature recovery"
                     role="img"
                     aria-label=${`Heat recovery ${o.label}`}
@@ -2721,7 +2726,7 @@ const Y = "hiper-mvhr-card", O = [
                   </div>
                 ` : ""}
         </div>
-        ${w(
+        ${x(
       "exhaust",
       "Exhaust air",
       "exhaust_air_temp",
@@ -2730,7 +2735,7 @@ const Y = "hiper-mvhr-card", O = [
       "mdi:arrow-bottom-left-thin",
       "Flowing outdoors"
     )}
-        ${w(
+        ${x(
       "supply",
       "Supply air",
       "supply_air_temp",
@@ -2836,8 +2841,8 @@ const Y = "hiper-mvhr-card", O = [
    */
   _dashboardStatus(e) {
     var a, o;
-    for (const i of he) {
-      if (Gt.has(i))
+    for (const i of me) {
+      if (qt.has(i))
         continue;
       const n = e[i];
       if ((n == null ? void 0 : n.status) === "entity_missing" || (n == null ? void 0 : n.status) === "unavailable")
@@ -2857,7 +2862,7 @@ const Y = "hiper-mvhr-card", O = [
     await ((o = e.callService) == null ? void 0 : o.call(e, t, r, a));
   }
 };
-fe.styles = Ue`
+ge.styles = Ne`
     :host {
       display: block;
       width: 100%;
@@ -3410,13 +3415,9 @@ fe.styles = Ue`
     @media (prefers-reduced-motion: reduce) {
       .air-path.active::after,
       .unit.active .fan,
-      .system-visual-panel .exhaust.active::after,
-      .system-visual-panel .outdoor.active::after,
-      .system-visual-panel .supply.active::after,
-      .system-visual-panel .extract.active::after,
       .system-visual-panel .unit.active .fan-rotor,
       .system-visual-panel .unit.active .airflow-particle,
-      .recovery-badge-circular.recovery-pulse,
+      .recovery-badge-plate.recovery-pulse,
       .airflow-card.airflow-brighten,
       .droplet {
         animation: none;
@@ -3958,15 +3959,31 @@ fe.styles = Ue`
       stroke-width: 3;
       stroke-linejoin: round;
     }
+    .fan-mount-frame {
+      fill: #4f565b;
+      fill-rule: evenodd;
+      stroke: #a7adb1;
+      stroke-width: 3;
+    }
     .fan-scroll {
       fill: url(#blower-metal);
       stroke: #0a0d0f;
       stroke-width: 4;
     }
-    .fan-ring {
-      fill: #090c0e;
-      stroke: #9ca2a6;
+    .fan-drum-back {
+      fill: #080b0d;
+      stroke: #c0c5c8;
       stroke-width: 5;
+    }
+    .fan-drum-depth {
+      fill: url(#blower-metal);
+      stroke: #262b2f;
+      stroke-width: 2;
+    }
+    .fan-ring {
+      fill: #101417;
+      stroke: #9ca2a6;
+      stroke-width: 3;
     }
     .fan-motor {
       fill: url(#blower-metal);
@@ -3988,15 +4005,25 @@ fe.styles = Ue`
       transform-box: fill-box;
       transform-origin: center;
     }
-    .fan-blade {
-      fill: #868e94;
+    .fan-vane {
+      fill: #697279;
       stroke: #1a1e21;
-      stroke-width: 1.2;
+      stroke-width: 1;
+    }
+    .fan-shroud {
+      fill: none;
+      stroke: #a1a8ad;
+      stroke-width: 3;
     }
     .fan-hub {
-      fill: #c3c8cb;
+      fill: url(#blower-metal);
       stroke: #24292d;
       stroke-width: 3;
+    }
+    .fan-axle {
+      fill: #d6dadd;
+      stroke: #343a3e;
+      stroke-width: 1.5;
     }
     .fan-assembly.unavailable {
       opacity: 0.58;
@@ -4055,21 +4082,17 @@ fe.styles = Ue`
         opacity: 0;
       }
     }
-    /* The heat-recovery figure, centred over the exchanger graphic — "make
-       the heat exchanger the hero" / "move the heat recovery number into
-       the centre of the HRV" (visual-polish follow-up). A plain circle so
-       it reads instantly at a glance, success-toned since it only renders
-       when the calculation is actually valid (recovery.status === 'ok';
-       see _heatRecovery/calculateHeatRecovery). */
-    .recovery-badge-circular {
+    /* Compact equipment-style information plate: it leaves all four plate
+       exchanger quadrants visible while retaining the one-shot update pulse. */
+    .recovery-badge-plate {
       position: absolute;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
       z-index: 3;
-      width: 132px;
-      height: 132px;
-      border-radius: 50%;
+      width: 176px;
+      height: 88px;
+      border-radius: 12px;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -4082,16 +4105,16 @@ fe.styles = Ue`
         transparent 4%
       );
       border: 3px solid color-mix(in srgb, var(--success-color), transparent 25%);
-      box-shadow: 0 0 0 6px color-mix(in srgb, var(--success-color), transparent 90%);
+      box-shadow: 0 5px 14px rgba(0, 0, 0, 0.2);
       cursor: default;
     }
-    .recovery-badge-circular strong {
-      font-size: 1.9em;
+    .recovery-badge-plate strong {
+      font-size: 2em;
       font-weight: 800;
       color: var(--success-color);
       line-height: 1.1;
     }
-    .recovery-badge-circular span {
+    .recovery-badge-plate span {
       font-size: 0.68em;
       font-weight: 700;
       color: var(--secondary-text-color);
@@ -4103,7 +4126,7 @@ fe.styles = Ue`
        round 3). Only ever applied for one render, the instant the figure
        actually changes (see _systemHeroVisual's recoveryPulse), so it
        naturally plays once and stops rather than needing to be removed. */
-    .recovery-badge-circular.recovery-pulse {
+    .recovery-badge-plate.recovery-pulse {
       animation: recovery-pulse 0.7s ease-out;
     }
     @keyframes recovery-pulse {
@@ -4112,7 +4135,7 @@ fe.styles = Ue`
       }
       35% {
         transform: translate(-50%, -50%) scale(1.08);
-        box-shadow: 0 0 0 10px color-mix(in srgb, var(--success-color), transparent 82%);
+        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.24);
       }
       100% {
         transform: translate(-50%, -50%) scale(1);
@@ -4141,36 +4164,13 @@ fe.styles = Ue`
       background: var(--stream-soft);
       border-color: color-mix(in srgb, var(--stream-color), transparent 45%);
     }
-    /* Direction-aware duct animation for system mode's top/bottom
-       arrangement (Phase 6/7): Exhaust (top-left) and Supply (top-right)
-       both flow away from the unit; Extract (bottom-left) and Outdoor
-       (bottom-right) both flow toward it. The detailed-mode hero visual's
-       own single "flow" keyframe is untouched — these selectors only match
-       elements inside .system-visual-panel. */
-    .system-visual-panel .exhaust.active::after {
-      animation: flow-right 1.8s linear infinite;
-    }
-    .system-visual-panel .outdoor.active::after {
-      animation: flow-left 1.8s linear infinite;
-    }
-    .system-visual-panel .supply.active::after {
-      animation: flow-left 1.8s linear infinite;
-    }
-    .system-visual-panel .extract.active::after {
-      animation: flow-right 1.8s linear infinite;
-    }
-    /* "Moving particles" instead of a plain translating stripe — a row of
-       small dots drifting through each air-path panel (visual-polish
-       follow-up, round 2: "make the exchanger look more alive"). Reuses the
-       exact same flow-left/flow-right keyframes and active/reduced-motion
-       gating already in place above; only the dot pattern is new, and it's
-       scoped to .system-visual-panel so display_mode: detailed's own
-       striped .air-path::after is untouched. */
+    /* System-mode endpoint cards are deliberately static. Their live tint,
+       not decorative movement, communicates temperature. */
     .system-visual-panel .air-path::after {
-      background: radial-gradient(circle, var(--stream-color) 1.6px, transparent 1.8px);
-      background-size: 20px 20px;
-      background-repeat: repeat;
-      opacity: 0.4;
+      content: none;
+      display: none;
+      animation: none;
+      background: none;
     }
     /* "Particles accelerate slightly during Boost" and the fans spin a
        little faster with them — a real boost mode raises fan speed
@@ -4180,14 +4180,6 @@ fe.styles = Ue`
        keyframes, just a shorter duration — .boost-active is only ever
        applied alongside .active, so this never overrides a stopped
        animation into a running one. */
-    .system-visual-panel .exhaust.active.boost-active::after,
-    .system-visual-panel .outdoor.active.boost-active::after {
-      animation-duration: 1s;
-    }
-    .system-visual-panel .supply.active.boost-active::after,
-    .system-visual-panel .extract.active.boost-active::after {
-      animation-duration: 1s;
-    }
     .system-visual-panel .unit.active.boost-active .fan-rotor {
       animation-duration: 1.6s;
     }
@@ -4635,9 +4627,9 @@ fe.styles = Ue`
       .system-visual-panel .unit {
         min-height: 320px;
       }
-      .recovery-badge-circular {
-        width: 108px;
-        height: 108px;
+      .recovery-badge-plate {
+        width: 148px;
+        height: 76px;
       }
       /* Tablet: the three lower cards wrap to two columns instead of
          three, and the shower banner stacks to a column. */
@@ -4780,28 +4772,39 @@ fe.styles = Ue`
       .system-visual-panel .particle-3 {
         display: none;
       }
+      .system-visual-panel .recovery-badge-plate {
+        width: 106px;
+        height: 58px;
+        border-radius: 8px;
+      }
+      .system-visual-panel .recovery-badge-plate strong {
+        font-size: 1.45em;
+      }
+      .system-visual-panel .recovery-badge-plate span {
+        font-size: 0.54em;
+      }
       .system-lower-grid {
         grid-template-columns: minmax(0, 1fr);
       }
     }
   `;
-let R = fe;
-X([
-  ue({ attribute: !1 })
+let R = ge;
+J([
+  he({ attribute: !1 })
 ], R.prototype, "hass");
-X([
-  K()
+J([
+  X()
 ], R.prototype, "_config");
-X([
-  K()
+J([
+  X()
 ], R.prototype, "_configError");
-X([
-  K()
+J([
+  X()
 ], R.prototype, "_advancedOpen");
-customElements.get(Y) || customElements.define(Y, R);
+customElements.get(Q) || customElements.define(Q, R);
 window.customCards = window.customCards ?? [];
-window.customCards.some((s) => s.type === Y) || window.customCards.push({
-  type: Y,
+window.customCards.some((s) => s.type === Q) || window.customCards.push({
+  type: Q,
   name: "HiPer MVHR Card",
   description: "Universal MVHR dashboard card for Home Assistant"
 });

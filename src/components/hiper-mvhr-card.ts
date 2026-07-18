@@ -1822,7 +1822,7 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       const direction = key === 'extract' || key === 'outdoor' ? 'inward' : 'outward';
       return html`
         <div
-          class="air-path ${key} ${animated ? 'active' : ''} ${animated && boostActive ? 'boost-active' : ''}"
+          class="air-path ${key}"
           data-side=${side}
           data-flow=${direction}
           data-temperature=${temperature ?? 'unavailable'}
@@ -2080,19 +2080,24 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
                     transform=${`translate(${x} ${y})`}
                     filter="url(#component-shadow)"
                   >
+                    <path class="fan-mount-frame" d="M-64 -48 H45 V43 H-64 Z M-56 -40 V35 H37 V-40 Z"></path>
                     <path class="fan-scroll" d="M-58 -43 H30 Q55 -43 58 -18 V34 H33 V13 Q33 -4 15 -4 H-58 Z"></path>
                     <rect class="fan-motor" x="24" y="-23" width="42" height="45" rx="8"></rect>
                     <path class="motor-ribs" d="M32 -18 V17 M41 -18 V17 M50 -18 V17 M59 -15 V14"></path>
-                    <circle class="fan-ring" cx="-20" r="34"></circle>
+                    <ellipse class="fan-drum-back" cx="-27" rx="38" ry="35"></ellipse>
+                    <path class="fan-drum-depth" d="M-27 -35 H-18 A38 35 0 0 1 -18 35 H-27 A38 35 0 0 0 -27 -35 Z"></path>
+                    <circle class="fan-ring" cx="-27" r="33"></circle>
                     <g class="fan-rotor">
-                      ${[0, 45, 90, 135, 180, 225, 270, 315].map(
+                      ${Array.from({ length: 18 }, (_, index) => index * 20).map(
                         (rotation) => svg`<path
-                          class="fan-blade"
-                          d="M-20 -4 C-12 -31 1 -31 4 -20 C5 -9 -8 -3 -20 4 Z"
-                          transform=${`rotate(${rotation} -20 0)`}
+                          class="fan-vane"
+                          d="M-31 -27 Q-21 -34 -13 -27 L-17 -21 Q-23 -26 -29 -20 Z"
+                          transform=${`rotate(${rotation} -27 0)`}
                         ></path>`,
                       )}
-                      <circle class="fan-hub" cx="-20" r="8"></circle>
+                      <circle class="fan-shroud" cx="-27" r="24"></circle>
+                      <circle class="fan-hub" cx="-27" r="9"></circle>
+                      <circle class="fan-axle" cx="-27" r="3"></circle>
                     </g>
                     <path class="fan-feet" d="M-45 39 v9 h18 v-9 M26 39 v9 h18 v-9"></path>
                   </g>
@@ -2156,7 +2161,7 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
             recovery.status === 'ok'
               ? html`
                   <div
-                    class="recovery-badge-circular ${recoveryPulse ? 'recovery-pulse' : ''}"
+                    class="recovery-badge-plate ${recoveryPulse ? 'recovery-pulse' : ''}"
                     title="Apparent temperature recovery"
                     role="img"
                     aria-label=${`Heat recovery ${recovery.label}`}
@@ -2942,13 +2947,9 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     @media (prefers-reduced-motion: reduce) {
       .air-path.active::after,
       .unit.active .fan,
-      .system-visual-panel .exhaust.active::after,
-      .system-visual-panel .outdoor.active::after,
-      .system-visual-panel .supply.active::after,
-      .system-visual-panel .extract.active::after,
       .system-visual-panel .unit.active .fan-rotor,
       .system-visual-panel .unit.active .airflow-particle,
-      .recovery-badge-circular.recovery-pulse,
+      .recovery-badge-plate.recovery-pulse,
       .airflow-card.airflow-brighten,
       .droplet {
         animation: none;
@@ -3490,15 +3491,31 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       stroke-width: 3;
       stroke-linejoin: round;
     }
+    .fan-mount-frame {
+      fill: #4f565b;
+      fill-rule: evenodd;
+      stroke: #a7adb1;
+      stroke-width: 3;
+    }
     .fan-scroll {
       fill: url(#blower-metal);
       stroke: #0a0d0f;
       stroke-width: 4;
     }
-    .fan-ring {
-      fill: #090c0e;
-      stroke: #9ca2a6;
+    .fan-drum-back {
+      fill: #080b0d;
+      stroke: #c0c5c8;
       stroke-width: 5;
+    }
+    .fan-drum-depth {
+      fill: url(#blower-metal);
+      stroke: #262b2f;
+      stroke-width: 2;
+    }
+    .fan-ring {
+      fill: #101417;
+      stroke: #9ca2a6;
+      stroke-width: 3;
     }
     .fan-motor {
       fill: url(#blower-metal);
@@ -3520,15 +3537,25 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       transform-box: fill-box;
       transform-origin: center;
     }
-    .fan-blade {
-      fill: #868e94;
+    .fan-vane {
+      fill: #697279;
       stroke: #1a1e21;
-      stroke-width: 1.2;
+      stroke-width: 1;
+    }
+    .fan-shroud {
+      fill: none;
+      stroke: #a1a8ad;
+      stroke-width: 3;
     }
     .fan-hub {
-      fill: #c3c8cb;
+      fill: url(#blower-metal);
       stroke: #24292d;
       stroke-width: 3;
+    }
+    .fan-axle {
+      fill: #d6dadd;
+      stroke: #343a3e;
+      stroke-width: 1.5;
     }
     .fan-assembly.unavailable {
       opacity: 0.58;
@@ -3587,21 +3614,17 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
         opacity: 0;
       }
     }
-    /* The heat-recovery figure, centred over the exchanger graphic — "make
-       the heat exchanger the hero" / "move the heat recovery number into
-       the centre of the HRV" (visual-polish follow-up). A plain circle so
-       it reads instantly at a glance, success-toned since it only renders
-       when the calculation is actually valid (recovery.status === 'ok';
-       see _heatRecovery/calculateHeatRecovery). */
-    .recovery-badge-circular {
+    /* Compact equipment-style information plate: it leaves all four plate
+       exchanger quadrants visible while retaining the one-shot update pulse. */
+    .recovery-badge-plate {
       position: absolute;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
       z-index: 3;
-      width: 132px;
-      height: 132px;
-      border-radius: 50%;
+      width: 176px;
+      height: 88px;
+      border-radius: 12px;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -3614,16 +3637,16 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
         transparent 4%
       );
       border: 3px solid color-mix(in srgb, var(--success-color), transparent 25%);
-      box-shadow: 0 0 0 6px color-mix(in srgb, var(--success-color), transparent 90%);
+      box-shadow: 0 5px 14px rgba(0, 0, 0, 0.2);
       cursor: default;
     }
-    .recovery-badge-circular strong {
-      font-size: 1.9em;
+    .recovery-badge-plate strong {
+      font-size: 2em;
       font-weight: 800;
       color: var(--success-color);
       line-height: 1.1;
     }
-    .recovery-badge-circular span {
+    .recovery-badge-plate span {
       font-size: 0.68em;
       font-weight: 700;
       color: var(--secondary-text-color);
@@ -3635,7 +3658,7 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
        round 3). Only ever applied for one render, the instant the figure
        actually changes (see _systemHeroVisual's recoveryPulse), so it
        naturally plays once and stops rather than needing to be removed. */
-    .recovery-badge-circular.recovery-pulse {
+    .recovery-badge-plate.recovery-pulse {
       animation: recovery-pulse 0.7s ease-out;
     }
     @keyframes recovery-pulse {
@@ -3644,7 +3667,7 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       }
       35% {
         transform: translate(-50%, -50%) scale(1.08);
-        box-shadow: 0 0 0 10px color-mix(in srgb, var(--success-color), transparent 82%);
+        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.24);
       }
       100% {
         transform: translate(-50%, -50%) scale(1);
@@ -3673,36 +3696,13 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       background: var(--stream-soft);
       border-color: color-mix(in srgb, var(--stream-color), transparent 45%);
     }
-    /* Direction-aware duct animation for system mode's top/bottom
-       arrangement (Phase 6/7): Exhaust (top-left) and Supply (top-right)
-       both flow away from the unit; Extract (bottom-left) and Outdoor
-       (bottom-right) both flow toward it. The detailed-mode hero visual's
-       own single "flow" keyframe is untouched — these selectors only match
-       elements inside .system-visual-panel. */
-    .system-visual-panel .exhaust.active::after {
-      animation: flow-right 1.8s linear infinite;
-    }
-    .system-visual-panel .outdoor.active::after {
-      animation: flow-left 1.8s linear infinite;
-    }
-    .system-visual-panel .supply.active::after {
-      animation: flow-left 1.8s linear infinite;
-    }
-    .system-visual-panel .extract.active::after {
-      animation: flow-right 1.8s linear infinite;
-    }
-    /* "Moving particles" instead of a plain translating stripe — a row of
-       small dots drifting through each air-path panel (visual-polish
-       follow-up, round 2: "make the exchanger look more alive"). Reuses the
-       exact same flow-left/flow-right keyframes and active/reduced-motion
-       gating already in place above; only the dot pattern is new, and it's
-       scoped to .system-visual-panel so display_mode: detailed's own
-       striped .air-path::after is untouched. */
+    /* System-mode endpoint cards are deliberately static. Their live tint,
+       not decorative movement, communicates temperature. */
     .system-visual-panel .air-path::after {
-      background: radial-gradient(circle, var(--stream-color) 1.6px, transparent 1.8px);
-      background-size: 20px 20px;
-      background-repeat: repeat;
-      opacity: 0.4;
+      content: none;
+      display: none;
+      animation: none;
+      background: none;
     }
     /* "Particles accelerate slightly during Boost" and the fans spin a
        little faster with them — a real boost mode raises fan speed
@@ -3712,14 +3712,6 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
        keyframes, just a shorter duration — .boost-active is only ever
        applied alongside .active, so this never overrides a stopped
        animation into a running one. */
-    .system-visual-panel .exhaust.active.boost-active::after,
-    .system-visual-panel .outdoor.active.boost-active::after {
-      animation-duration: 1s;
-    }
-    .system-visual-panel .supply.active.boost-active::after,
-    .system-visual-panel .extract.active.boost-active::after {
-      animation-duration: 1s;
-    }
     .system-visual-panel .unit.active.boost-active .fan-rotor {
       animation-duration: 1.6s;
     }
@@ -4167,9 +4159,9 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       .system-visual-panel .unit {
         min-height: 320px;
       }
-      .recovery-badge-circular {
-        width: 108px;
-        height: 108px;
+      .recovery-badge-plate {
+        width: 148px;
+        height: 76px;
       }
       /* Tablet: the three lower cards wrap to two columns instead of
          three, and the shower banner stacks to a column. */
@@ -4311,6 +4303,17 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       }
       .system-visual-panel .particle-3 {
         display: none;
+      }
+      .system-visual-panel .recovery-badge-plate {
+        width: 106px;
+        height: 58px;
+        border-radius: 8px;
+      }
+      .system-visual-panel .recovery-badge-plate strong {
+        font-size: 1.45em;
+      }
+      .system-visual-panel .recovery-badge-plate span {
+        font-size: 0.54em;
       }
       .system-lower-grid {
         grid-template-columns: minmax(0, 1fr);

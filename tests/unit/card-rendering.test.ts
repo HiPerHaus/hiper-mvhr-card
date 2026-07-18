@@ -1256,7 +1256,11 @@ describe('hiper-mvhr-card', () => {
         expect(schematic?.querySelector('.mounting-brackets')).toBeTruthy();
         expect(schematic?.querySelector('.duct-highlights')).toBeTruthy();
         expect(schematic?.querySelectorAll('.filter-pleat').length).toBeGreaterThan(10);
-        expect(schematic?.querySelectorAll('.fan-blade')).toHaveLength(16);
+        expect(schematic?.querySelectorAll('.fan-vane')).toHaveLength(36);
+        expect(schematic?.querySelectorAll('.fan-blade')).toHaveLength(0);
+        expect(schematic?.querySelectorAll('.fan-drum-back')).toHaveLength(2);
+        expect(schematic?.querySelectorAll('.fan-mount-frame')).toHaveLength(2);
+        expect(schematic?.querySelectorAll('.fan-shroud')).toHaveLength(2);
         expect(schematic?.querySelector('.fan-motor')).toBeTruthy();
         expect(schematic?.querySelector('.fan-ring')?.namespaceURI).toBe(
           'http://www.w3.org/2000/svg',
@@ -1280,7 +1284,9 @@ describe('hiper-mvhr-card', () => {
         expect(unit?.querySelector('.warm-channels')).toBeTruthy();
         expect(unit?.querySelector('.cool-channels')).toBeTruthy();
         expect(unit?.querySelector('.passage-separator')).toBeTruthy();
-        expect(unit?.querySelector('.recovery-badge-circular')?.textContent).toContain('74%');
+        expect(unit?.querySelector('.recovery-badge-plate')?.textContent).toContain('74%');
+        expect(unit?.querySelector('.recovery-badge-plate')?.textContent).toContain('Heat Recovery');
+        expect(unit?.querySelector('.recovery-badge-circular')).toBeNull();
       });
 
       it('extract and supply show measured airflow; outdoor and exhaust omit it by default', async () => {
@@ -1296,6 +1302,66 @@ describe('hiper-mvhr-card', () => {
         expect(supply?.querySelector('.path-airflow')).toBeTruthy();
         expect(outdoor?.querySelector('.path-airflow')).toBeNull();
         expect(exhaust?.querySelector('.path-airflow')).toBeNull();
+      });
+
+      it('keeps external temperature cards static while retaining internal airflow particles', async () => {
+        const el = mountSystem();
+        await el.updateComplete;
+
+        const cards = [
+          ...(el.shadowRoot?.querySelectorAll('.system-visual-wrap > .air-path') ?? []),
+        ];
+        expect(cards).toHaveLength(4);
+        for (const card of cards) {
+          expect(card.classList.contains('active')).toBe(false);
+          expect(card.classList.contains('boost-active')).toBe(false);
+          expect(card.querySelector('.airflow-particle')).toBeNull();
+        }
+        expect(el.shadowRoot?.querySelectorAll('.unit .airflow-particle')).toHaveLength(12);
+
+        const cssText = HiperMvhrCard.styles.cssText;
+        const endpointAfterRule =
+          cssText.match(/\.system-visual-panel \.air-path::after\s*{[^}]*}/)?.[0] ?? '';
+        expect(endpointAfterRule).toMatch(/content:\s*none/);
+        expect(endpointAfterRule).toMatch(/display:\s*none/);
+        expect(endpointAfterRule).not.toMatch(/radial-gradient/);
+      });
+
+      it('uses a compact rectangular recovery plate that leaves the exchanger structure present', async () => {
+        const el = mountSystem();
+        await el.updateComplete;
+
+        const unit = el.shadowRoot?.querySelector('.system-visual-panel .unit');
+        const plate = unit?.querySelector('.recovery-badge-plate');
+        expect(plate?.textContent).toContain('74%');
+        expect(plate?.textContent).toContain('Heat Recovery');
+        expect(unit?.querySelector('.recovery-badge-circular')).toBeNull();
+        expect(unit?.querySelector('.exchanger-outline')).toBeTruthy();
+        expect(unit?.querySelector('.warm-channels')).toBeTruthy();
+        expect(unit?.querySelector('.cool-channels')).toBeTruthy();
+
+        const cssText = HiperMvhrCard.styles.cssText;
+        const plateRule = cssText.match(/\.recovery-badge-plate\s*{[^}]*}/)?.[0] ?? '';
+        expect(plateRule).toMatch(/width:\s*176px/);
+        expect(plateRule).toMatch(/height:\s*88px/);
+        expect(plateRule).toMatch(/border-radius:\s*12px/);
+        expect(plateRule).not.toMatch(/border-radius:\s*50%/);
+      });
+
+      it('scales the rectangular plate and reduces internal particles at the 430px container layout', () => {
+        const cssText = HiperMvhrCard.styles.cssText;
+        expect(cssText).toMatch(
+          /@container \(max-width:\s*520px\)[\s\S]*\.system-visual-panel \.recovery-badge-plate\s*{[^}]*width:\s*106px[^}]*height:\s*58px/,
+        );
+        expect(cssText).toMatch(
+          /@container \(max-width:\s*520px\)[\s\S]*\.system-visual-panel \.particle-3\s*{[^}]*display:\s*none/,
+        );
+        expect(cssText).toMatch(
+          /@container \(max-width:\s*520px\)[\s\S]*\.system-visual-panel \.unit\s*{[^}]*grid-column:\s*1 \/ -1[^}]*grid-row:\s*2/,
+        );
+        expect(cssText).toMatch(
+          /\.system-visual-panel \.recovery-badge-plate\s*{[^}]*width:\s*106px[^}]*height:\s*58px/,
+        );
       });
 
       it('show_airflow_on_all_paths shows measured airflow on all four paths', async () => {
@@ -1854,7 +1920,7 @@ describe('hiper-mvhr-card', () => {
         await el.updateComplete;
 
         const unit = el.shadowRoot?.querySelector('.system-visual-panel .unit');
-        expect(unit?.querySelector('.recovery-badge-circular')?.textContent).toContain('74%');
+        expect(unit?.querySelector('.recovery-badge-plate')?.textContent).toContain('74%');
         expect(el.shadowRoot?.querySelector('.panel-heading-row .recovery-pill')).toBeNull();
       });
 
@@ -1874,7 +1940,7 @@ describe('hiper-mvhr-card', () => {
         });
         await el.updateComplete;
 
-        expect(el.shadowRoot?.querySelector('.recovery-badge-circular')).toBeNull();
+        expect(el.shadowRoot?.querySelector('.recovery-badge-plate')).toBeNull();
       });
 
       it('the airflow gauge is sized close to double the original 140px', () => {
@@ -2090,14 +2156,14 @@ describe('hiper-mvhr-card', () => {
           await el.updateComplete;
 
           expect(
-            el.shadowRoot?.querySelector('.recovery-badge-circular.recovery-pulse'),
+            el.shadowRoot?.querySelector('.recovery-badge-plate.recovery-pulse'),
           ).toBeNull();
         });
 
         it('pulses the recovery badge only on the render where the figure actually changes', async () => {
           const el = mountSystem();
           await el.updateComplete;
-          expect(el.shadowRoot?.querySelector('.recovery-badge-circular')?.textContent).toContain(
+          expect(el.shadowRoot?.querySelector('.recovery-badge-plate')?.textContent).toContain(
             '74%',
           );
 
@@ -2116,7 +2182,7 @@ describe('hiper-mvhr-card', () => {
             },
           };
           await el.updateComplete;
-          const badge = el.shadowRoot?.querySelector('.recovery-badge-circular');
+          const badge = el.shadowRoot?.querySelector('.recovery-badge-plate');
           expect(badge?.textContent).not.toContain('74%');
           expect(badge?.classList.contains('recovery-pulse')).toBe(true);
 
@@ -2143,7 +2209,7 @@ describe('hiper-mvhr-card', () => {
           await el.updateComplete;
           expect(
             el.shadowRoot
-              ?.querySelector('.recovery-badge-circular')
+              ?.querySelector('.recovery-badge-plate')
               ?.classList.contains('recovery-pulse'),
           ).toBe(false);
         });
