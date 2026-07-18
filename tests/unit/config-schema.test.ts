@@ -28,7 +28,9 @@ describe('parseConfig', () => {
   });
 
   it('throws a clear error for an unknown manufacturer', () => {
-    expect(() => parseConfig({ manufacturer: 'not-a-real-brand' })).toThrow(/unknown manufacturer/i);
+    expect(() => parseConfig({ manufacturer: 'not-a-real-brand' })).toThrow(
+      /unknown manufacturer/i,
+    );
   });
 
   it('throws for an invalid display_mode value', () => {
@@ -37,13 +39,26 @@ describe('parseConfig', () => {
     );
   });
 
-  it('accepts both display_mode values implemented this phase (commissioning is not one of them yet)', () => {
-    for (const display_mode of ['homeowner', 'detailed']) {
+  it('accepts all three display_mode values implemented so far (commissioning is not one of them yet)', () => {
+    for (const display_mode of ['homeowner', 'detailed', 'system']) {
       expect(() => parseConfig({ manufacturer: 'generic', display_mode })).not.toThrow();
     }
     expect(() => parseConfig({ manufacturer: 'generic', display_mode: 'commissioning' })).toThrow(
       ConfigValidationError,
     );
+  });
+
+  it('display_mode: system parses like any other display mode, and the old "view" key is never reintroduced', () => {
+    const result = parseConfig({
+      manufacturer: 'altair',
+      display_mode: 'system',
+      // A stray "view" key (the old, pre-Phase-2 config field name) must be
+      // silently ignored like any other unrecognised top-level key — it
+      // must never be read as an alias for display_mode.
+      view: 'homeowner',
+    });
+    expect(result.display_mode).toBe('system');
+    expect(result).not.toHaveProperty('view');
   });
 
   it('keeps only known entity roles, silently ignoring unrecognised ones', () => {
@@ -78,12 +93,12 @@ describe('parseConfig', () => {
   });
 
   it('throws when an entity id is not a non-empty string', () => {
-    expect(() => parseConfig({ manufacturer: 'generic', entities: { supply_air_temp: '' } })).toThrow(
-      ConfigValidationError,
-    );
-    expect(() => parseConfig({ manufacturer: 'generic', entities: { supply_air_temp: 42 } })).toThrow(
-      ConfigValidationError,
-    );
+    expect(() =>
+      parseConfig({ manufacturer: 'generic', entities: { supply_air_temp: '' } }),
+    ).toThrow(ConfigValidationError);
+    expect(() =>
+      parseConfig({ manufacturer: 'generic', entities: { supply_air_temp: 42 } }),
+    ).toThrow(ConfigValidationError);
   });
 
   it('parses feature_flags, ignoring unknown roles', () => {
@@ -95,8 +110,12 @@ describe('parseConfig', () => {
   });
 
   it('rejects "entities" or "feature_flags" that are arrays', () => {
-    expect(() => parseConfig({ manufacturer: 'generic', entities: [] })).toThrow(ConfigValidationError);
-    expect(() => parseConfig({ manufacturer: 'generic', feature_flags: [] })).toThrow(ConfigValidationError);
+    expect(() => parseConfig({ manufacturer: 'generic', entities: [] })).toThrow(
+      ConfigValidationError,
+    );
+    expect(() => parseConfig({ manufacturer: 'generic', feature_flags: [] })).toThrow(
+      ConfigValidationError,
+    );
   });
 
   it('rejects a non-boolean feature flag value instead of coercing it', () => {
@@ -134,9 +153,26 @@ describe('parseConfig', () => {
     expect(result.filter_max_days).toBe(180);
     expect(result.heat_recovery_method).toBe('disabled');
 
-    expect(() => parseConfig({ manufacturer: 'altair', filter_max_days: 0 })).toThrow(ConfigValidationError);
+    expect(() => parseConfig({ manufacturer: 'altair', filter_max_days: 0 })).toThrow(
+      ConfigValidationError,
+    );
     expect(() => parseConfig({ manufacturer: 'altair', heat_recovery_method: 'magic' })).toThrow(
       ConfigValidationError,
     );
+  });
+
+  it('defaults the system-mode-only options to true and lets them be turned off', () => {
+    const defaults = parseConfig({ manufacturer: 'altair', display_mode: 'system' });
+    expect(defaults.show_airflow_animation).toBe(true);
+    expect(defaults.show_advanced_controls).toBe(true);
+
+    const disabled = parseConfig({
+      manufacturer: 'altair',
+      display_mode: 'system',
+      show_airflow_animation: false,
+      show_advanced_controls: false,
+    });
+    expect(disabled.show_airflow_animation).toBe(false);
+    expect(disabled.show_advanced_controls).toBe(false);
   });
 });

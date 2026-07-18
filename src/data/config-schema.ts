@@ -10,12 +10,8 @@ export class ConfigValidationError extends Error {
 }
 
 const DEFAULT_DISPLAY_MODE: DisplayMode = 'homeowner';
-const DISPLAY_MODES: DisplayMode[] = ['homeowner', 'detailed'];
-const HEAT_RECOVERY_METHODS: HeatRecoveryMethod[] = [
-  'automatic',
-  'supply_temperature',
-  'disabled',
-];
+const DISPLAY_MODES: DisplayMode[] = ['homeowner', 'detailed', 'system'];
+const HEAT_RECOVERY_METHODS: HeatRecoveryMethod[] = ['automatic', 'supply_temperature', 'disabled'];
 
 function isEntityRole(value: string): value is EntityRoleId {
   return (ENTITY_ROLES as readonly string[]).includes(value);
@@ -88,7 +84,9 @@ export function parseConfig(input: unknown): HiperMvhrCardConfig {
 
   const rawEntities = config.entities ?? {};
   if (typeof rawEntities !== 'object' || Array.isArray(rawEntities) || rawEntities === null) {
-    throw new ConfigValidationError('hiper-mvhr-card: "entities" must be a mapping of role to entity id');
+    throw new ConfigValidationError(
+      'hiper-mvhr-card: "entities" must be a mapping of role to entity id',
+    );
   }
   const entities: Partial<Record<EntityRoleId, string>> = {};
   for (const [role, entityId] of Object.entries(rawEntities as Record<string, unknown>)) {
@@ -107,7 +105,9 @@ export function parseConfig(input: unknown): HiperMvhrCardConfig {
 
   const rawFlags = config.feature_flags ?? {};
   if (typeof rawFlags !== 'object' || Array.isArray(rawFlags) || rawFlags === null) {
-    throw new ConfigValidationError('hiper-mvhr-card: "feature_flags" must be a mapping of role to boolean');
+    throw new ConfigValidationError(
+      'hiper-mvhr-card: "feature_flags" must be a mapping of role to boolean',
+    );
   }
   const featureFlags: Partial<Record<EntityRoleId, boolean>> = {};
   for (const [role, enabled] of Object.entries(rawFlags as Record<string, unknown>)) {
@@ -142,5 +142,7 @@ export function parseConfig(input: unknown): HiperMvhrCardConfig {
     show_calibration: config.show_calibration !== false,
     filter_max_days: filterMaxDays,
     heat_recovery_method: heatRecoveryMethod,
+    show_airflow_animation: config.show_airflow_animation !== false,
+    show_advanced_controls: config.show_advanced_controls !== false,
   };
 }

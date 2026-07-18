@@ -917,4 +917,528 @@ describe('hiper-mvhr-card', () => {
       });
     });
   });
+
+  /**
+   * `display_mode: system` — the flagship, full-width visual panel
+   * (ROADMAP.md "Add visual MVHR system display mode"). A homeowner-facing
+   * mode that leads with the airflow visual; `detailed` (tested above) is
+   * untouched by any of this.
+   *
+   * Note on the example values: the brief's supply temperature
+   * ("approximately 15.7–16.0 °C") is above its extract temperature
+   * (13.0 °C), which the existing, unmodified `calculateHeatRecovery`
+   * formula correctly treats as physically implausible ("Not applicable" —
+   * apparent recovery can't exceed the extract/outdoor delta). These tests
+   * use a supply temperature (12.0 °C) that keeps the same outdoor/extract
+   * pair internally consistent with that formula, producing a genuine ~74%
+   * rather than forcing the literal example numbers through a calculation
+   * that would (correctly) reject them.
+   */
+  describe('system mode (flagship visual panel)', () => {
+    const systemEntities = {
+      mode: 'select.altair_mvhr_mode',
+      airflow: 'sensor.altair_mvhr_airflow',
+      target_airflow: 'sensor.altair_mvhr_target_airflow',
+      mapped_level: 'sensor.altair_mvhr_mapped_airflow_level',
+      supply_temperature: 'sensor.altair_mvhr_supply_air_temperature',
+      extract_temperature: 'sensor.altair_mvhr_extract_air_temperature',
+      outdoor_temperature: 'sensor.altair_mvhr_outdoor_air_temperature',
+      exhaust_temperature: 'sensor.altair_mvhr_exhaust_air_temperature',
+      supply_fan_speed: 'sensor.altair_mvhr_supply_fan_speed',
+      extract_fan_speed: 'sensor.altair_mvhr_extract_fan_speed',
+      indoor_humidity: 'sensor.altair_mvhr_indoor_humidity',
+      filter_days: 'sensor.altair_mvhr_filter_days_remaining',
+      boost_active: 'binary_sensor.altair_mvhr_boost_active',
+      boost_remaining: 'sensor.altair_mvhr_boost_remaining',
+      boost_duration: 'number.altair_mvhr_boost_duration',
+      start_boost: 'button.altair_mvhr_start_boost',
+      cancel_boost: 'button.altair_mvhr_cancel_boost',
+      override_duration: 'select.altair_mvhr_override_duration',
+      clear_override: 'button.altair_mvhr_clear_override',
+      calibration_result: 'sensor.altair_mvhr_airflow_calibration_result',
+      calibration_status: 'sensor.altair_mvhr_airflow_calibration_status',
+      last_calibration: 'sensor.altair_mvhr_last_airflow_calibration',
+    };
+
+    const systemStates: HomeAssistant['states'] = {
+      'sensor.altair_mvhr_outdoor_air_temperature': {
+        entity_id: 'sensor.altair_mvhr_outdoor_air_temperature',
+        state: '9.2',
+        attributes: { unit_of_measurement: '°C' },
+      },
+      'sensor.altair_mvhr_supply_air_temperature': {
+        entity_id: 'sensor.altair_mvhr_supply_air_temperature',
+        state: '12.0',
+        attributes: { unit_of_measurement: '°C' },
+      },
+      'sensor.altair_mvhr_extract_air_temperature': {
+        entity_id: 'sensor.altair_mvhr_extract_air_temperature',
+        state: '13.0',
+        attributes: { unit_of_measurement: '°C' },
+      },
+      'sensor.altair_mvhr_exhaust_air_temperature': {
+        entity_id: 'sensor.altair_mvhr_exhaust_air_temperature',
+        state: '10.5',
+        attributes: { unit_of_measurement: '°C' },
+      },
+      'sensor.altair_mvhr_airflow': {
+        entity_id: 'sensor.altair_mvhr_airflow',
+        state: '70',
+        attributes: { unit_of_measurement: 'm³/h' },
+      },
+      'sensor.altair_mvhr_target_airflow': {
+        entity_id: 'sensor.altair_mvhr_target_airflow',
+        state: '95',
+        attributes: { unit_of_measurement: 'm³/h' },
+      },
+      'sensor.altair_mvhr_mapped_airflow_level': {
+        entity_id: 'sensor.altair_mvhr_mapped_airflow_level',
+        state: '4',
+        attributes: {},
+      },
+      'sensor.altair_mvhr_supply_fan_speed': {
+        entity_id: 'sensor.altair_mvhr_supply_fan_speed',
+        state: '1164',
+        attributes: { unit_of_measurement: 'rpm' },
+      },
+      'sensor.altair_mvhr_extract_fan_speed': {
+        entity_id: 'sensor.altair_mvhr_extract_fan_speed',
+        state: '1164',
+        attributes: { unit_of_measurement: 'rpm' },
+      },
+      'sensor.altair_mvhr_indoor_humidity': {
+        entity_id: 'sensor.altair_mvhr_indoor_humidity',
+        state: '61',
+        attributes: { unit_of_measurement: '%' },
+      },
+      'sensor.altair_mvhr_filter_days_remaining': {
+        entity_id: 'sensor.altair_mvhr_filter_days_remaining',
+        state: '353',
+        attributes: { unit_of_measurement: 'd' },
+      },
+      'select.altair_mvhr_mode': {
+        entity_id: 'select.altair_mvhr_mode',
+        state: 'medium',
+        attributes: { options: ['away', 'low', 'medium', 'high'] },
+      },
+      'sensor.altair_mvhr_airflow_calibration_result': {
+        entity_id: 'sensor.altair_mvhr_airflow_calibration_result',
+        state: 'calibrated',
+        attributes: {},
+      },
+    };
+
+    function mountSystem(
+      hass: HomeAssistant = { ...altairHass, states: { ...altairHass.states, ...systemStates } },
+    ): HiperMvhrCard {
+      const el = mount();
+      set(el, {
+        type: 'custom:hiper-mvhr-card',
+        title: 'Altair MVHR',
+        manufacturer: 'altair',
+        display_mode: 'system',
+        entities: systemEntities,
+      });
+      el.hass = hass;
+      return el;
+    }
+
+    describe('configuration', () => {
+      it('accepts display_mode: system and old configs (homeowner/detailed) keep working', async () => {
+        for (const display_mode of ['homeowner', 'detailed', 'system'] as const) {
+          const el = mount();
+          expect(() =>
+            set(el, { manufacturer: 'altair', display_mode, entities: {} }),
+          ).not.toThrow();
+          el.hass = altairHass;
+          await el.updateComplete;
+          expect(el.shadowRoot?.querySelector('ha-card')).toBeTruthy();
+          el.remove();
+        }
+      });
+    });
+
+    describe('rendering architecture', () => {
+      it('renders the hero visual, and neither the legacy content nor the detailed dashboard', async () => {
+        const el = mountSystem();
+        await el.updateComplete;
+
+        expect(el.shadowRoot?.querySelector('.mvhr-system')).toBeTruthy();
+        expect(el.shadowRoot?.querySelector('.system-visual-panel')).toBeTruthy();
+        expect(el.shadowRoot?.querySelector('.content')).toBeNull();
+        expect(el.shadowRoot?.querySelector('.mvhr-dashboard')).toBeNull();
+      });
+
+      it('detailed mode still renders its own dashboard, unaffected by system mode existing', async () => {
+        const el = mount();
+        set(el, {
+          type: 'custom:hiper-mvhr-card',
+          manufacturer: 'altair',
+          display_mode: 'detailed',
+          entities: systemEntities,
+        });
+        el.hass = { ...altairHass, states: { ...altairHass.states, ...systemStates } };
+        await el.updateComplete;
+
+        expect(el.shadowRoot?.querySelector('.mvhr-dashboard')).toBeTruthy();
+        expect(el.shadowRoot?.querySelector('.mvhr-system')).toBeNull();
+      });
+
+      it('homeowner mode is unchanged (still the legacy compact content)', async () => {
+        const el = mount();
+        set(el, {
+          manufacturer: 'altair',
+          display_mode: 'homeowner',
+          entities: {
+            outdoor_air_temp: 'sensor.altair_outdoor_temp',
+            supply_air_temp: 'sensor.altair_supply_temp',
+          },
+        });
+        el.hass = altairHass;
+        await el.updateComplete;
+
+        expect(el.shadowRoot?.querySelector('.content')).toBeTruthy();
+        expect(el.shadowRoot?.querySelector('.mvhr-system')).toBeNull();
+        expect(el.shadowRoot?.querySelector('.mvhr-dashboard')).toBeNull();
+      });
+
+      it('controls render outside the hero visual', async () => {
+        const el = mountSystem();
+        await el.updateComplete;
+
+        const visual = el.shadowRoot?.querySelector('.system-visual-panel');
+        const controls = el.shadowRoot?.querySelector('.system-controls');
+        expect(controls).toBeTruthy();
+        expect(visual?.contains(controls ?? null)).toBe(false);
+      });
+
+      it('the advanced/diagnostics drawer is collapsed by default', async () => {
+        const el = mountSystem();
+        await el.updateComplete;
+
+        expect(el.shadowRoot?.querySelector('.advanced-drawer')).toBeNull();
+        const toggle = el.shadowRoot?.querySelector('.disclosure-toggle');
+        expect(toggle).toBeTruthy();
+        expect(toggle?.getAttribute('aria-expanded')).toBe('false');
+      });
+
+      it('opens the advanced drawer when the disclosure is clicked, revealing mapped level and override', async () => {
+        const el = mountSystem();
+        await el.updateComplete;
+
+        (el.shadowRoot?.querySelector('.disclosure-toggle') as HTMLButtonElement)?.click();
+        await el.updateComplete;
+
+        const drawer = el.shadowRoot?.querySelector('.advanced-drawer');
+        expect(drawer).toBeTruthy();
+        expect(drawer?.textContent).toContain('Mapped level');
+        expect(drawer?.textContent).toContain('Override');
+      });
+
+      it('Altair never gets a bypass row, even in the advanced drawer', async () => {
+        const el = mountSystem();
+        await el.updateComplete;
+        (el.shadowRoot?.querySelector('.disclosure-toggle') as HTMLButtonElement)?.click();
+        await el.updateComplete;
+
+        expect((el.shadowRoot?.textContent ?? '').toLowerCase()).not.toContain('bypass');
+      });
+
+      it('Zehnder shows a bypass row in the advanced drawer when the profile supports and maps it', async () => {
+        const el = mount();
+        set(el, {
+          manufacturer: 'zehnder-comfoair-q',
+          display_mode: 'system',
+          entities: {
+            mode: 'select.comfoair_mode',
+            outdoor_air_temp: 'sensor.comfoair_outdoor_temp',
+            supply_air_temp: 'sensor.comfoair_supply_temp',
+            extract_air_temp: 'sensor.comfoair_extract_temp',
+            exhaust_air_temp: 'sensor.comfoair_exhaust_temp',
+            bypass_state: 'binary_sensor.comfoair_bypass',
+            filter_remaining: 'sensor.comfoair_filter_remaining',
+          },
+        });
+        el.hass = zehnderHass;
+        await el.updateComplete;
+        (el.shadowRoot?.querySelector('.disclosure-toggle') as HTMLButtonElement)?.click();
+        await el.updateComplete;
+
+        const drawer = el.shadowRoot?.querySelector('.advanced-drawer');
+        expect(drawer?.textContent).toMatch(/summer bypass/i);
+        expect(drawer?.textContent).toMatch(/on/i);
+      });
+    });
+
+    describe('air paths', () => {
+      it('renders all four path labels with a positive-direction arrangement', async () => {
+        const el = mountSystem();
+        await el.updateComplete;
+
+        expect(el.shadowRoot?.querySelectorAll('.system-visual-panel .air-path')).toHaveLength(4);
+        const text = el.shadowRoot?.textContent ?? '';
+        expect(text).toContain('Extract air');
+        expect(text).toContain('Exhaust air');
+        expect(text).toContain('Outdoor air');
+        expect(text).toContain('Supply air');
+      });
+
+      it('extract and supply show measured airflow; outdoor and exhaust omit it by default', async () => {
+        const el = mountSystem();
+        await el.updateComplete;
+
+        const extract = el.shadowRoot?.querySelector('.system-visual-panel .air-path.extract');
+        const supply = el.shadowRoot?.querySelector('.system-visual-panel .air-path.supply');
+        const outdoor = el.shadowRoot?.querySelector('.system-visual-panel .air-path.outdoor');
+        const exhaust = el.shadowRoot?.querySelector('.system-visual-panel .air-path.exhaust');
+
+        expect(extract?.querySelector('.path-airflow')).toBeTruthy();
+        expect(supply?.querySelector('.path-airflow')).toBeTruthy();
+        expect(outdoor?.querySelector('.path-airflow')).toBeNull();
+        expect(exhaust?.querySelector('.path-airflow')).toBeNull();
+      });
+
+      it('show_airflow_on_all_paths shows measured airflow on all four paths', async () => {
+        const el = mount();
+        set(el, {
+          type: 'custom:hiper-mvhr-card',
+          manufacturer: 'altair',
+          display_mode: 'system',
+          entities: systemEntities,
+          show_airflow_on_all_paths: true,
+        });
+        el.hass = { ...altairHass, states: { ...altairHass.states, ...systemStates } };
+        await el.updateComplete;
+
+        const outdoor = el.shadowRoot?.querySelector('.system-visual-panel .air-path.outdoor');
+        const exhaust = el.shadowRoot?.querySelector('.system-visual-panel .air-path.exhaust');
+        expect(outdoor?.querySelector('.path-airflow')).toBeTruthy();
+        expect(exhaust?.querySelector('.path-airflow')).toBeTruthy();
+      });
+    });
+
+    describe('metrics', () => {
+      it('the primary metrics row omits mapped level', async () => {
+        const el = mountSystem();
+        await el.updateComplete;
+
+        const primaryRow = el.shadowRoot?.querySelector('.system-metrics-row');
+        expect(primaryRow?.textContent).not.toContain('Mapped level');
+      });
+
+      it('mapped level appears only in the advanced diagnostics drawer', async () => {
+        const el = mountSystem();
+        await el.updateComplete;
+
+        expect(el.shadowRoot?.textContent).not.toContain('Mapped level');
+        (el.shadowRoot?.querySelector('.disclosure-toggle') as HTMLButtonElement)?.click();
+        await el.updateComplete;
+
+        expect(el.shadowRoot?.querySelector('.advanced-drawer')?.textContent).toContain(
+          'Mapped level',
+        );
+      });
+
+      it('renders the apparent heat-recovery calculation correctly (~74% for these values), not a hard-coded figure', async () => {
+        const el = mountSystem();
+        await el.updateComplete;
+
+        expect(el.shadowRoot?.textContent).toContain('74%');
+      });
+
+      it('formats the last-calibration timestamp instead of rendering it raw', async () => {
+        const el = mount();
+        set(el, {
+          type: 'custom:hiper-mvhr-card',
+          manufacturer: 'altair',
+          display_mode: 'system',
+          entities: systemEntities,
+        });
+        el.hass = {
+          ...altairHass,
+          states: {
+            ...altairHass.states,
+            ...systemStates,
+            'sensor.altair_mvhr_last_airflow_calibration': {
+              entity_id: 'sensor.altair_mvhr_last_airflow_calibration',
+              state: '2026-07-16T08:30:00',
+              attributes: {},
+            },
+          },
+        };
+        await el.updateComplete;
+
+        const text = el.shadowRoot?.textContent ?? '';
+        expect(text).not.toContain('2026-07-16T08:30:00');
+      });
+    });
+
+    describe('controls', () => {
+      it('sends the internal medium option when the visible Home mode button is pressed', async () => {
+        const callService = vi.fn().mockResolvedValue(undefined);
+        const el = mountSystem();
+        el.hass = { ...altairHass, states: { ...altairHass.states, ...systemStates }, callService };
+        await el.updateComplete;
+
+        const homeButton = Array.from(el.shadowRoot?.querySelectorAll('button') ?? []).find(
+          (button) => button.textContent?.trim() === 'Home',
+        );
+        homeButton?.click();
+
+        expect(callService).toHaveBeenCalledWith('select', 'select_option', {
+          entity_id: 'select.altair_mvhr_mode',
+          option: 'medium',
+        });
+      });
+
+      it('starts and cancels boost, and sets the boost duration, via the documented services', async () => {
+        const callService = vi.fn().mockResolvedValue(undefined);
+        const el = mountSystem();
+        el.hass = { ...altairHass, states: { ...altairHass.states, ...systemStates }, callService };
+        await el.updateComplete;
+
+        (
+          el.shadowRoot?.querySelector('input[aria-label="Boost duration"]') as HTMLInputElement
+        ).value = '20';
+        el.shadowRoot
+          ?.querySelector('input[aria-label="Boost duration"]')
+          ?.dispatchEvent(new Event('change'));
+        (
+          el.shadowRoot?.querySelector('button[aria-label="Start Boost"]') as HTMLButtonElement
+        ).click();
+
+        expect(callService).toHaveBeenCalledWith('number', 'set_value', {
+          entity_id: 'number.altair_mvhr_boost_duration',
+          value: 20,
+        });
+        expect(callService).toHaveBeenCalledWith('button', 'press', {
+          entity_id: 'button.altair_mvhr_start_boost',
+        });
+      });
+
+      it('override duration and clear-override controls are available in the advanced area, not the main view', async () => {
+        const el = mountSystem();
+        await el.updateComplete;
+
+        expect(el.shadowRoot?.querySelector('button[aria-label="Clear override"]')).toBeNull();
+        (el.shadowRoot?.querySelector('.disclosure-toggle') as HTMLButtonElement)?.click();
+        await el.updateComplete;
+
+        expect(el.shadowRoot?.querySelector('button[aria-label="Clear override"]')).toBeTruthy();
+        expect(el.shadowRoot?.querySelector('select[aria-label="Override duration"]')).toBeTruthy();
+      });
+    });
+
+    describe('status', () => {
+      it('optional missing diagnostics (fault/frost/calibration internals) do not trigger a communication issue', async () => {
+        const el = mountSystem();
+        await el.updateComplete;
+
+        expect(el.shadowRoot?.textContent).toMatch(/system ok/i);
+        expect(el.shadowRoot?.textContent).not.toMatch(/communication issue/i);
+      });
+
+      it('a required, configured-but-unavailable entity produces a communication issue', async () => {
+        const el = mountSystem({
+          ...altairHass,
+          states: {
+            ...altairHass.states,
+            ...systemStates,
+            'sensor.altair_mvhr_supply_air_temperature': {
+              entity_id: 'sensor.altair_mvhr_supply_air_temperature',
+              state: 'unavailable',
+              attributes: { unit_of_measurement: '°C' },
+            },
+          },
+        });
+        await el.updateComplete;
+
+        expect(el.shadowRoot?.textContent).toMatch(/communication issue/i);
+      });
+
+      it('shows a calibration-required status when the calibration result says so', async () => {
+        const el = mountSystem({
+          ...altairHass,
+          states: {
+            ...altairHass.states,
+            ...systemStates,
+            'sensor.altair_mvhr_airflow_calibration_result': {
+              entity_id: 'sensor.altair_mvhr_airflow_calibration_result',
+              state: 'not_calibrated',
+              attributes: {},
+            },
+          },
+        });
+        await el.updateComplete;
+
+        expect(el.shadowRoot?.textContent).toMatch(/calibration required/i);
+      });
+
+      it('shows a fault status when a fault entity is configured and active', async () => {
+        const el = mount();
+        set(el, {
+          type: 'custom:hiper-mvhr-card',
+          manufacturer: 'altair',
+          display_mode: 'system',
+          entities: { ...systemEntities, fault_active: 'binary_sensor.altair_fault' },
+        });
+        el.hass = {
+          ...altairHass,
+          states: {
+            ...altairHass.states,
+            ...systemStates,
+            'binary_sensor.altair_fault': {
+              entity_id: 'binary_sensor.altair_fault',
+              state: 'on',
+              attributes: {},
+            },
+          },
+        };
+        await el.updateComplete;
+
+        expect(el.shadowRoot?.textContent).toMatch(/fault/i);
+      });
+    });
+
+    describe('responsive design', () => {
+      it('the host and card use full width, with no restrictive max-width', () => {
+        const cssText = HiperMvhrCard.styles.cssText;
+        const hostBlock = cssText.match(/:host\s*{[^}]*}/)?.[0] ?? '';
+        const cardBlock = cssText.match(/ha-card\s*{[^}]*}/)?.[0] ?? '';
+        expect(hostBlock).toMatch(/width:\s*100%/);
+        expect(cardBlock).toMatch(/width:\s*100%/);
+        expect(cardBlock).toMatch(/max-width:\s*none/);
+      });
+
+      it('has a mobile breakpoint that gives the system visual a 2-column (2x2) layout', () => {
+        const cssText = HiperMvhrCard.styles.cssText;
+        expect(cssText).toMatch(/@media[^{]*max-width:\s*599px/);
+        expect(cssText).toMatch(/repeat\(2,\s*minmax\(0,\s*1fr\)\)/);
+      });
+
+      it('the system metrics row locks to 2 columns on mobile (via the shared .metrics-grid rule)', async () => {
+        const el = mountSystem();
+        await el.updateComplete;
+        expect(
+          el.shadowRoot?.querySelector('.system-metrics-row')?.classList.contains('metrics-grid'),
+        ).toBe(true);
+      });
+
+      it('respects prefers-reduced-motion for the duct and fan animations', () => {
+        const cssText = HiperMvhrCard.styles.cssText;
+        const reducedMotionBlock =
+          cssText.match(/@media \(prefers-reduced-motion: reduce\)\s*{[^}]*}/)?.[0] ?? '';
+        expect(reducedMotionBlock).toMatch(/animation:\s*none/);
+        expect(reducedMotionBlock).toMatch(/system-visual-panel/);
+      });
+    });
+
+    describe('regression', () => {
+      it('Altair still never renders a bypass control or status anywhere in system mode', async () => {
+        const el = mountSystem();
+        await el.updateComplete;
+        expect((el.shadowRoot?.textContent ?? '').toLowerCase()).not.toContain('bypass');
+      });
+    });
+  });
 });

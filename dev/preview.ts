@@ -135,6 +135,103 @@ function withStates(overrides: HomeAssistant['states']): HomeAssistant {
   };
 }
 
+// `display_mode: system`'s own realistic value set (ROADMAP.md "Add visual
+// MVHR system display mode"). Note: the brief's supply temperature
+// ("approximately 15.7–16.0 °C") sits above its extract temperature
+// (13.0 °C), which the existing, unmodified apparent-recovery formula
+// correctly treats as physically implausible ("Not applicable"). 12.0 °C
+// keeps the same outdoor/extract pair internally consistent with that
+// formula, producing a genuine ~74% instead of forcing numbers through a
+// calculation that would (correctly) reject them — see
+// tests/unit/card-rendering.test.ts's "system mode" suite for the same call.
+const systemStates: HomeAssistant['states'] = {
+  'sensor.altair_mvhr_outdoor_air_temperature': {
+    entity_id: 'sensor.altair_mvhr_outdoor_air_temperature',
+    state: '9.2',
+    attributes: { unit_of_measurement: '°C' },
+  },
+  'sensor.altair_mvhr_supply_air_temperature': {
+    entity_id: 'sensor.altair_mvhr_supply_air_temperature',
+    state: '12.0',
+    attributes: { unit_of_measurement: '°C' },
+  },
+  'sensor.altair_mvhr_extract_air_temperature': {
+    entity_id: 'sensor.altair_mvhr_extract_air_temperature',
+    state: '13.0',
+    attributes: { unit_of_measurement: '°C' },
+  },
+  'sensor.altair_mvhr_exhaust_air_temperature': {
+    entity_id: 'sensor.altair_mvhr_exhaust_air_temperature',
+    state: '10.5',
+    attributes: { unit_of_measurement: '°C' },
+  },
+  'sensor.altair_mvhr_airflow': {
+    entity_id: 'sensor.altair_mvhr_airflow',
+    state: '70',
+    attributes: { unit_of_measurement: 'm³/h' },
+  },
+  'sensor.altair_mvhr_target_airflow': {
+    entity_id: 'sensor.altair_mvhr_target_airflow',
+    state: '95',
+    attributes: { unit_of_measurement: 'm³/h' },
+  },
+  'sensor.altair_mvhr_mapped_airflow_level': {
+    entity_id: 'sensor.altair_mvhr_mapped_airflow_level',
+    state: '4',
+    attributes: {},
+  },
+  'sensor.altair_mvhr_supply_fan_speed': {
+    entity_id: 'sensor.altair_mvhr_supply_fan_speed',
+    state: '1164',
+    attributes: { unit_of_measurement: 'rpm' },
+  },
+  'sensor.altair_mvhr_extract_fan_speed': {
+    entity_id: 'sensor.altair_mvhr_extract_fan_speed',
+    state: '1164',
+    attributes: { unit_of_measurement: 'rpm' },
+  },
+  'sensor.altair_mvhr_indoor_humidity': {
+    entity_id: 'sensor.altair_mvhr_indoor_humidity',
+    state: '61',
+    attributes: { unit_of_measurement: '%' },
+  },
+  'sensor.altair_mvhr_filter_days_remaining': {
+    entity_id: 'sensor.altair_mvhr_filter_days_remaining',
+    state: '353',
+    attributes: { unit_of_measurement: 'd' },
+  },
+  'select.altair_mvhr_mode': {
+    entity_id: 'select.altair_mvhr_mode',
+    state: 'medium',
+    attributes: { options: ['away', 'low', 'medium', 'high'] },
+  },
+  'sensor.altair_mvhr_airflow_calibration_result': {
+    entity_id: 'sensor.altair_mvhr_airflow_calibration_result',
+    state: 'calibrated',
+    attributes: {},
+  },
+};
+
+const systemAltairHass: HomeAssistant = {
+  ...altairHass,
+  states: { ...altairHass.states, ...systemStates },
+};
+
+function withSystemStates(overrides: HomeAssistant['states']): HomeAssistant {
+  return {
+    ...systemAltairHass,
+    states: {
+      ...systemAltairHass.states,
+      ...overrides,
+    },
+  };
+}
+
+const systemAltairConfig = {
+  ...altairConfig,
+  display_mode: 'system',
+};
+
 const scenarios = [
   {
     title: 'Altair 160 — detailed desktop (dark)',
@@ -231,6 +328,105 @@ const scenarios = [
     }),
     className: 'mobile dark',
     config: altairConfig,
+  },
+  {
+    title: 'System mode — desktop (dark)',
+    hass: systemAltairHass,
+    className: 'desktop dark',
+    config: systemAltairConfig,
+  },
+  {
+    title: 'System mode — desktop (light)',
+    hass: systemAltairHass,
+    className: 'desktop',
+    config: systemAltairConfig,
+  },
+  {
+    title: 'System mode — tablet (~760px)',
+    hass: systemAltairHass,
+    className: 'tablet',
+    config: systemAltairConfig,
+  },
+  {
+    title: 'System mode — 430px',
+    hass: systemAltairHass,
+    className: 'w430',
+    config: systemAltairConfig,
+  },
+  {
+    title: 'System mode — 375px',
+    hass: systemAltairHass,
+    className: 'w375',
+    config: systemAltairConfig,
+  },
+  {
+    title: 'System mode — boost active',
+    hass: withSystemStates({
+      'binary_sensor.altair_mvhr_boost_active': {
+        entity_id: 'binary_sensor.altair_mvhr_boost_active',
+        state: 'on',
+        attributes: {},
+      },
+      'sensor.altair_mvhr_boost_remaining': {
+        entity_id: 'sensor.altair_mvhr_boost_remaining',
+        state: '18',
+        attributes: { unit_of_measurement: 'min' },
+      },
+    }),
+    className: 'desktop dark',
+    config: systemAltairConfig,
+  },
+  {
+    title: 'System mode — calibration required',
+    hass: withSystemStates({
+      'sensor.altair_mvhr_airflow_calibration_result': {
+        entity_id: 'sensor.altair_mvhr_airflow_calibration_result',
+        state: 'not_calibrated',
+        attributes: {},
+      },
+    }),
+    className: 'desktop',
+    config: systemAltairConfig,
+  },
+  {
+    title: 'System mode — communication issue (supply temperature unavailable)',
+    hass: withSystemStates({
+      'sensor.altair_mvhr_supply_air_temperature': {
+        entity_id: 'sensor.altair_mvhr_supply_air_temperature',
+        state: 'unavailable',
+        attributes: { unit_of_measurement: '°C' },
+      },
+    }),
+    className: 'mobile dark',
+    config: systemAltairConfig,
+  },
+  {
+    title: 'System mode — advanced diagnostics (click "More controls" to expand)',
+    hass: systemAltairHass,
+    className: 'desktop',
+    config: systemAltairConfig,
+  },
+  {
+    title: 'System mode — Zehnder (bypass supported and mapped; expand "More controls" to see it)',
+    hass: zehnderHass,
+    className: 'desktop',
+    config: {
+      type: 'custom:hiper-mvhr-card',
+      manufacturer: 'zehnder-comfoair-q',
+      display_mode: 'system',
+      title: 'Zehnder ComfoAir Q',
+      entities: {
+        mode: 'select.comfoair_mode',
+        outdoor_air_temp: 'sensor.comfoair_outdoor_temp',
+        supply_air_temp: 'sensor.comfoair_supply_temp',
+        extract_air_temp: 'sensor.comfoair_extract_temp',
+        exhaust_air_temp: 'sensor.comfoair_exhaust_temp',
+        supply_airflow: 'sensor.comfoair_supply_flow',
+        extract_airflow: 'sensor.comfoair_extract_flow',
+        bypass_state: 'binary_sensor.comfoair_bypass',
+        filter_remaining: 'sensor.comfoair_filter_remaining',
+      },
+    },
   },
   {
     title: 'Zehnder ComfoAir Q — homeowner (filter at 0%, a valid zero reading)',

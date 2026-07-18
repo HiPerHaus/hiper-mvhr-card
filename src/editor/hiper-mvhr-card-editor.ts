@@ -39,6 +39,7 @@ export class HiperMvhrCardEditor extends LitElement {
           >
             <option value="homeowner">homeowner</option>
             <option value="detailed">detailed</option>
+            <option value="system">system</option>
           </select>
         </label>
         <label>
@@ -74,12 +75,26 @@ export class HiperMvhrCardEditor extends LitElement {
             'show_airflow_on_all_paths',
             config.show_airflow_on_all_paths === true,
           )}
+          ${this._checkbox(
+            'Show airflow animation (system mode)',
+            'show_airflow_animation',
+            config.show_airflow_animation !== false,
+          )}
+          ${this._checkbox(
+            'Show advanced controls (system mode)',
+            'show_advanced_controls',
+            config.show_advanced_controls !== false,
+          )}
         </div>
       </div>
     `;
   }
 
-  private _textField(label: string, key: keyof HiperMvhrCardConfig, value: string | undefined): TemplateResult {
+  private _textField(
+    label: string,
+    key: keyof HiperMvhrCardConfig,
+    value: string | undefined,
+  ): TemplateResult {
     return html`
       <label>
         <span>${label}</span>
@@ -91,7 +106,11 @@ export class HiperMvhrCardEditor extends LitElement {
     `;
   }
 
-  private _checkbox(label: string, key: keyof HiperMvhrCardConfig, checked: boolean): TemplateResult {
+  private _checkbox(
+    label: string,
+    key: keyof HiperMvhrCardConfig,
+    checked: boolean,
+  ): TemplateResult {
     return html`
       <label class="check">
         <input

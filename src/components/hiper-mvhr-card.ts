@@ -114,6 +114,9 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
 
   @state() private _config?: HiperMvhrCardConfig;
   @state() private _configError?: string;
+  // `display_mode: system`'s "More controls" disclosure (Phase 10) — always
+  // starts collapsed, per-instance UI state rather than persisted config.
+  @state() private _advancedOpen = false;
 
   // One ControlDispatcher per active action role, created lazily and kept
   // alive across renders (not a @state field — its pending/error state is
@@ -168,6 +171,7 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     const config = this._config;
     const hass = this.hass;
     const detailed = config.display_mode === 'detailed';
+    const system = config.display_mode === 'system';
     const profile = resolveCapabilities(config.manufacturer, config.feature_flags);
     const displayProfile = getProfile(config.manufacturer);
     const snapshot = resolveSnapshot(hass, profile, config.entities);
@@ -189,12 +193,18 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     const unitBrand = config.title ?? displayProfile.name;
 
     return html`
-      <ha-card>
-        ${this._header(title, subtitle, modeLabel, availability, showAvailability)}
+      <ha-card class=${system ? 'card-system' : ''}>
         ${
-          detailed
-            ? this._dashboard(snapshot, config, hass, recovery, modeLabel, unitBrand, active)
-            : this._legacyContent(snapshot, config, hass, detailed)
+          system
+            ? this._systemHeader(title, subtitle, modeLabel, snapshot)
+            : this._header(title, subtitle, modeLabel, availability, showAvailability)
+        }
+        ${
+          system
+            ? this._systemDashboard(snapshot, config, hass, recovery, modeLabel, unitBrand, active)
+            : detailed
+              ? this._dashboard(snapshot, config, hass, recovery, modeLabel, unitBrand, active)
+              : this._legacyContent(snapshot, config, hass, detailed)
         }
       </ha-card>
     `;
@@ -277,12 +287,7 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     unitBrand: string,
     active: boolean,
   ): TemplateResult {
-    const status = this._dashboardStatus(snapshot);
     const hasControls = config.show_controls && this._hasControls(snapshot, config);
-    const lastCalibration =
-      snapshot.last_calibration?.status === 'ok'
-        ? formatTimestampMaybe(snapshot.last_calibration.value)
-        : null;
 
     return html`
       <div class="mvhr-dashboard ${hasControls ? '' : 'no-controls'}">
@@ -316,22 +321,45 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
           ${this._infoTile('Humidity', this._value(snapshot.indoor_humidity, true) ?? '—', 'mdi:water-percent')}
           ${config.show_filter ? this._filterTile(snapshot, config) : ''}
         </section>
-        <section class="status-strip tone-${status.tone}" aria-label="MVHR status">
-          <span class="status-chip">
-            <ha-icon icon=${TONE_ICONS[status.tone]} aria-hidden="true"></ha-icon>
-            <span>${status.label}</span>
-          </span>
-          ${
-            config.show_calibration
-              ? html`
-                  <span>Calibration: ${this._value(snapshot.calibration_result, true) ?? '—'}</span>
-                  ${lastCalibration ? html`<span>Last calibration: ${lastCalibration}</span>` : ''}
-                `
-              : ''
-          }
-        </section>
-        ${this._extraControls(snapshot, config, hass)}
+        ${this._statusStrip(snapshot, config)} ${this._extraControls(snapshot, config, hass)}
       </div>
+    `;
+  }
+
+  /**
+   * The bottom health status strip — System OK / Fault detected /
+   * Calibrating… / Calibration required / Communication issue, plus a
+   * calibration summary and its last-run timestamp. Shared verbatim between
+   * `display_mode: detailed` (`_dashboard`) and `display_mode: system`
+   * (`_systemDashboard`) — Phase 11 of the system-mode build asks for
+   * exactly the same content the dashboard rebuild already produced, so
+   * this was extracted rather than re-implemented.
+   */
+  private _statusStrip(
+    snapshot: Partial<Record<EntityRoleId, RoleValue>>,
+    config: HiperMvhrCardConfig,
+  ): TemplateResult {
+    const status = this._dashboardStatus(snapshot);
+    const lastCalibration =
+      snapshot.last_calibration?.status === 'ok'
+        ? formatTimestampMaybe(snapshot.last_calibration.value)
+        : null;
+
+    return html`
+      <section class="status-strip tone-${status.tone}" aria-label="MVHR status">
+        <span class="status-chip">
+          <ha-icon icon=${TONE_ICONS[status.tone]} aria-hidden="true"></ha-icon>
+          <span>${status.label}</span>
+        </span>
+        ${
+          config.show_calibration
+            ? html`
+                <span>Calibration: ${this._value(snapshot.calibration_result, true) ?? '—'}</span>
+                ${lastCalibration ? html`<span>Last calibration: ${lastCalibration}</span>` : ''}
+              `
+            : ''
+        }
+      </section>
     `;
   }
 
@@ -763,6 +791,460 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     `;
   }
 
+  /**
+   * `display_mode: system`'s header (Phase 4 of the system-mode build) —
+   * same title/dot/mode-pill/subtitle shape as `_header`, but the right-hand
+   * status text uses the same System OK / Communication issue / Fault
+   * detected / Calibration required vocabulary as the status strip
+   * (`_dashboardStatus`) instead of the generic availability summary's
+   * "All sensors reporting" wording, which this mode deliberately never
+   * shows. A separate method from `_header` on purpose — `display_mode:
+   * detailed` is not touched by the system-mode build.
+   */
+  private _systemHeader(
+    title: string,
+    subtitle: string,
+    modeLabel: string,
+    snapshot: Partial<Record<EntityRoleId, RoleValue>>,
+  ): TemplateResult {
+    const status = this._dashboardStatus(snapshot);
+    return html`
+      <div class="header mvhr-header">
+        <div class="header-row">
+          <div class="header-title-group">
+            <h2 class="title">${title}</h2>
+            <span class="status-dot dot-${status.tone}" aria-hidden="true"></span>
+            ${modeLabel ? html`<span class="mode-pill">${modeLabel}</span>` : ''}
+          </div>
+          <div class="availability tone-${status.tone}" role="status">
+            <ha-icon icon=${TONE_ICONS[status.tone]} aria-hidden="true"></ha-icon>
+            <span>${status.label}</span>
+          </div>
+        </div>
+        <div class="subheader">${subtitle}</div>
+      </div>
+    `;
+  }
+
+  /**
+   * `display_mode: system`'s entire card body — the flagship, full-width
+   * visual panel (ROADMAP.md "Add visual MVHR system display mode"). In
+   * order: a large airflow visual, a compact primary metrics row (no mapped
+   * level — that's diagnostic, not something a homeowner needs up front),
+   * simple Mode/Boost controls with a "More controls" disclosure, the same
+   * status strip `display_mode: detailed` uses, and the disclosure's
+   * contents when open. Neither `_legacyContent` nor `_dashboard` render
+   * alongside this — `display_mode: detailed` is unaffected by this method
+   * existing.
+   */
+  private _systemDashboard(
+    snapshot: Partial<Record<EntityRoleId, RoleValue>>,
+    config: HiperMvhrCardConfig,
+    hass: HomeAssistant,
+    recovery: HeatRecoveryResult,
+    modeLabel: string,
+    unitBrand: string,
+    active: boolean,
+  ): TemplateResult {
+    const hasControls = config.show_controls && this._hasControls(snapshot, config);
+    // The airflow animation additionally requires a genuinely positive
+    // measured reading — `active` alone (required entities reporting) isn't
+    // enough on its own here (Phase 7: "stop animation when ... airflow is
+    // zero"), and the config can turn the whole animation off outright.
+    const airflowNumber = this._number(snapshot.airflow) ?? this._number(snapshot.supply_airflow);
+    const animated = config.show_airflow_animation && active && (airflowNumber ?? 0) > 0;
+
+    return html`
+      <div class="mvhr-system">
+        <section class="visual-panel system-visual-panel" aria-label="MVHR airflow diagram">
+          ${this._systemHeroVisual(snapshot, config, animated, unitBrand, recovery)}
+        </section>
+        <section class="metrics-grid system-metrics-row" aria-label="MVHR metrics">
+          ${this._infoTile(
+            'Airflow',
+            this._value(snapshot.airflow, true) ??
+              this._value(snapshot.supply_airflow, true) ??
+              '—',
+            'mdi:weather-windy',
+          )}
+          ${this._infoTile('Target', this._value(snapshot.target_airflow, true) ?? '—', 'mdi:target')}
+          ${this._infoTile(
+            'Recovery',
+            recovery.label,
+            'mdi:heat-wave',
+            recovery.status,
+            'Apparent temperature recovery',
+          )}
+          ${this._infoTile('Humidity', this._value(snapshot.indoor_humidity, true) ?? '—', 'mdi:water-percent')}
+          ${config.show_filter ? this._filterTile(snapshot, config) : ''}
+          ${
+            config.show_fan_speeds
+              ? this._infoTile('Fans', this._pair(FAN_ROLES, snapshot, true), 'mdi:fan')
+              : ''
+          }
+        </section>
+        ${hasControls ? this._systemControls(snapshot, config, hass) : ''}
+        ${this._statusStrip(snapshot, config)}
+        ${config.show_advanced_controls ? this._advancedDrawer(snapshot, config, hass) : ''}
+      </div>
+    `;
+  }
+
+  /**
+   * Phase 10: the "simple homeowner controls" — Mode as a large segmented
+   * control and Boost, plus a "More controls" disclosure toggle for
+   * everything in `_advancedDrawer`. The disclosure always starts
+   * collapsed; `config.show_advanced_controls` controls whether it's
+   * offered at all, not whether it starts open.
+   */
+  private _systemControls(
+    snapshot: Partial<Record<EntityRoleId, RoleValue>>,
+    config: HiperMvhrCardConfig,
+    hass: HomeAssistant,
+  ): TemplateResult {
+    const modeEntity = config.entities.mode;
+    const durationEntity = config.entities.boost_duration;
+    const modeOptions = this._modeOptions(snapshot.mode);
+    const currentModeRaw = this._state(snapshot.mode)?.toLowerCase();
+    const boostActive = this._state(snapshot.boost_active) === 'on';
+    const boostRemaining =
+      snapshot.boost_remaining?.status === 'ok' ? this._value(snapshot.boost_remaining) : null;
+    const hasBoost = [snapshot.boost_duration, snapshot.start_boost, snapshot.cancel_boost].some(
+      (value) => value?.status === 'ok',
+    );
+
+    return html`
+      <section class="system-controls" aria-label="MVHR controls">
+        <div class="control-group">
+          <span class="control-group-label">Mode</span>
+          <div class="mode-buttons" role="group" aria-label="Operating mode">
+            ${modeOptions.map((option) => {
+              const isActive =
+                currentModeRaw !== undefined && option.toLowerCase() === currentModeRaw;
+              return html`
+                <button
+                  type="button"
+                  class="chip ${isActive ? 'active' : ''}"
+                  ?disabled=${!modeEntity}
+                  aria-pressed=${isActive}
+                  aria-label=${`Set mode ${this._modeLabel(option)}`}
+                  @click=${() =>
+                    modeEntity &&
+                    this._call(hass, 'select', 'select_option', { entity_id: modeEntity, option })}
+                >
+                  ${this._modeLabel(option)}
+                </button>
+              `;
+            })}
+          </div>
+        </div>
+
+        ${
+          hasBoost
+            ? html`
+                <div class="control-group boost-group">
+                  <div class="control-block-head">
+                    <span class="control-group-label">Boost</span>
+                    <strong class="state-pill ${boostActive ? 'is-active' : ''}"
+                      >${boostActive ? 'Active' : 'Ready'}</strong
+                    >
+                  </div>
+                  ${boostRemaining ? html`<small>${boostRemaining} remaining</small>` : ''}
+                  <label class="field">
+                    <span>Duration (minutes)</span>
+                    <input
+                      type="number"
+                      min="1"
+                      step="1"
+                      .value=${this._state(snapshot.boost_duration) ?? ''}
+                      ?disabled=${!durationEntity}
+                      aria-label="Boost duration"
+                      @change=${(event: Event) => {
+                        const value = Number((event.currentTarget as HTMLInputElement).value);
+                        if (durationEntity && Number.isFinite(value)) {
+                          void this._call(hass, 'number', 'set_value', {
+                            entity_id: durationEntity,
+                            value,
+                          });
+                        }
+                      }}
+                    />
+                  </label>
+                  <div class="button-row">
+                    <button
+                      type="button"
+                      class="cta"
+                      aria-label="Start Boost"
+                      ?disabled=${boostActive || !config.entities.start_boost}
+                      @click=${() => this._press(hass, config.entities.start_boost)}
+                    >
+                      Start Boost
+                    </button>
+                    <button
+                      type="button"
+                      class="cta ghost"
+                      aria-label="Cancel Boost"
+                      ?disabled=${!boostActive || !config.entities.cancel_boost}
+                      @click=${() => this._press(hass, config.entities.cancel_boost)}
+                    >
+                      Cancel Boost
+                    </button>
+                  </div>
+                </div>
+              `
+            : ''
+        }
+        ${
+          config.show_advanced_controls
+            ? html`
+                <button
+                  type="button"
+                  class="disclosure-toggle"
+                  aria-expanded=${this._advancedOpen}
+                  aria-controls="mvhr-advanced-drawer"
+                  @click=${() => {
+                    this._advancedOpen = !this._advancedOpen;
+                  }}
+                >
+                  ${this._advancedOpen ? 'Hide advanced' : 'More controls'}
+                </button>
+              `
+            : ''
+        }
+      </section>
+    `;
+  }
+
+  /**
+   * Phase 10's collapsible "More controls" contents: override, mapped
+   * level, calibration internals, individual fan RPM, and the raw target
+   * airflow reading — everything the primary metrics row and the simple
+   * controls deliberately leave out so they don't dominate the main view.
+   * Collapsed by default (`_advancedOpen` starts `false`); renders nothing
+   * until opened.
+   */
+  private _advancedDrawer(
+    snapshot: Partial<Record<EntityRoleId, RoleValue>>,
+    config: HiperMvhrCardConfig,
+    hass: HomeAssistant,
+  ): TemplateResult {
+    if (!this._advancedOpen) {
+      return html``;
+    }
+
+    const overrideEntity = config.entities.override_duration;
+    const overrideOptions = this._selectOptions(snapshot.override_duration);
+    const overrideRemaining =
+      snapshot.override_remaining?.status === 'ok'
+        ? this._value(snapshot.override_remaining)
+        : null;
+    const hasOverride = [snapshot.override_duration, snapshot.clear_override].some(
+      (value) => value?.status === 'ok',
+    );
+
+    return html`
+      <section class="advanced-drawer" id="mvhr-advanced-drawer" aria-label="Advanced diagnostics">
+        ${
+          hasOverride
+            ? html`
+                <div class="control-block">
+                  <div class="control-block-head">
+                    <span>Override</span>
+                    <strong
+                      >${
+                        this._value(snapshot.override_duration) ?? 'Until next schedule change'
+                      }</strong
+                    >
+                  </div>
+                  ${overrideRemaining ? html`<small>${overrideRemaining} remaining</small>` : ''}
+                  <label class="field">
+                    <span>Duration</span>
+                    <select
+                      ?disabled=${!overrideEntity}
+                      aria-label="Override duration"
+                      @change=${(event: Event) => {
+                        const option = (event.currentTarget as HTMLSelectElement).value;
+                        if (overrideEntity) {
+                          void this._call(hass, 'select', 'select_option', {
+                            entity_id: overrideEntity,
+                            option,
+                          });
+                        }
+                      }}
+                    >
+                      ${overrideOptions.map(
+                        (option) => html`
+                          <option
+                            .value=${option}
+                            ?selected=${this._state(snapshot.override_duration) === option}
+                          >
+                            ${this._modeLabel(option)}
+                          </option>
+                        `,
+                      )}
+                    </select>
+                  </label>
+                  <button
+                    type="button"
+                    class="cta ghost full"
+                    aria-label="Clear override"
+                    ?disabled=${!config.entities.clear_override}
+                    @click=${() => this._press(hass, config.entities.clear_override)}
+                  >
+                    Clear override
+                  </button>
+                </div>
+              `
+            : ''
+        }
+        <div class="status-list">
+          ${
+            // Summer bypass is not part of the primary hero visual or metrics
+            // in system mode for any manufacturer (Phase 6/9's air-path and
+            // metrics lists are deliberately bypass-free, generically — not
+            // an Altair-specific carve-out). It only ever appears here, and
+            // only when the active profile actually declares it supported
+            // (Zehnder/Aerofresh) — Altair's profile marks it unsupported, so
+            // `_value` returns null and this omits the row entirely, exactly
+            // like every other unsupported role (SPECIFICATION.md §6), with
+            // no manufacturer conditional written here to make that happen.
+            snapshot.bypass_state && snapshot.bypass_state.status !== 'unsupported'
+              ? this._diagnosticRow(
+                  'mdi:valve',
+                  'Summer bypass',
+                  this._value(snapshot.bypass_state, true),
+                )
+              : ''
+          }
+          ${this._diagnosticRow('mdi:tune-variant', 'Mapped level', this._value(snapshot.mapped_level, true))}
+          ${this._diagnosticRow('mdi:target', 'Target airflow', this._value(snapshot.target_airflow, true))}
+          ${
+            config.show_calibration
+              ? this._diagnosticRow(
+                  'mdi:progress-check',
+                  'Calibration status',
+                  this._value(snapshot.calibration_status, true),
+                )
+              : ''
+          }
+          ${
+            config.show_calibration
+              ? this._diagnosticRow(
+                  'mdi:progress-clock',
+                  'Calibration progress',
+                  this._value(snapshot.calibration_progress, true),
+                )
+              : ''
+          }
+          ${
+            config.show_fan_speeds
+              ? this._diagnosticRow(
+                  'mdi:fan',
+                  'Supply fan',
+                  this._value(snapshot.supply_fan_speed, true),
+                )
+              : ''
+          }
+          ${
+            config.show_fan_speeds
+              ? this._diagnosticRow(
+                  'mdi:fan',
+                  'Extract fan',
+                  this._value(snapshot.extract_fan_speed, true),
+                )
+              : ''
+          }
+        </div>
+        ${this._extraControls(snapshot, config, hass)}
+      </section>
+    `;
+  }
+
+  private _diagnosticRow(icon: string, label: string, value: string | null): TemplateResult {
+    return html`
+      <div class="status-row">
+        <ha-icon icon=${icon} aria-hidden="true"></ha-icon>
+        <span class="status-label">${label}</span>
+        <span class="status-value">${value ?? '—'}</span>
+      </div>
+    `;
+  }
+
+  /**
+   * Phase 5-7 (system mode variant): the same four-air-path-around-a-unit
+   * concept as `_heroVisual`, but a distinct method — `display_mode:
+   * detailed` keeps its own left/right (inbound-left/outbound-right)
+   * arrangement untouched, while system mode uses the top/bottom
+   * (outbound-top/inbound-bottom) arrangement its spec calls for: Exhaust
+   * (top-left) and Supply (top-right) both flow away from the unit; Extract
+   * (bottom-left) and Outdoor (bottom-right) both flow toward it. The
+   * `.system-visual-panel` CSS scope gives each path's flow direction its
+   * own animation (`flow-left`/`flow-right`) matching this arrangement,
+   * distinct from `_heroVisual`'s single shared `flow` keyframe.
+   */
+  private _systemHeroVisual(
+    snapshot: Partial<Record<EntityRoleId, RoleValue>>,
+    config: HiperMvhrCardConfig,
+    animated: boolean,
+    unitBrand: string,
+    recovery: HeatRecoveryResult,
+  ): TemplateResult {
+    const sharedAirflow =
+      this._value(snapshot.airflow, true) ?? this._value(snapshot.supply_airflow, true);
+    const showAllAirflows = config.show_airflow_on_all_paths;
+
+    const path = (
+      key: string,
+      label: string,
+      role: EntityRoleId,
+      showAirflowByDefault: boolean,
+      endpointIcon: string,
+    ) => {
+      const airflow = showAllAirflows || showAirflowByDefault ? sharedAirflow : null;
+      return html`
+        <div class="air-path ${key} ${animated ? 'active' : ''}">
+          <span class="path-label">
+            <ha-icon icon=${endpointIcon} aria-hidden="true"></ha-icon>
+            ${label}
+          </span>
+          <span class="path-temp">${this._value(snapshot[role], true) ?? '—'}</span>
+          ${
+            airflow
+              ? html`<span class="path-airflow"
+                  ><ha-icon icon="mdi:weather-windy" aria-hidden="true"></ha-icon>${airflow}</span
+                >`
+              : ''
+          }
+        </div>
+      `;
+    };
+
+    return html`
+      <div class="visual-wrap system-visual-wrap">
+        ${path('exhaust', 'Exhaust air', 'exhaust_air_temp', false, 'mdi:tree')}
+        ${path('supply', 'Supply air', 'supply_air_temp', true, 'mdi:home')}
+        <div class="unit ${animated ? 'active' : ''}" aria-label="Heat recovery unit">
+          <div class="brand">
+            ${unitBrand}${unitBrand.toLowerCase().includes('mvhr') ? '' : html`<br /><span>MVHR</span>`}
+          </div>
+          <div class="duct duct-top" aria-hidden="true"></div>
+          <div class="duct duct-bottom" aria-hidden="true"></div>
+          <div class="duct duct-left" aria-hidden="true"></div>
+          <div class="duct duct-right" aria-hidden="true"></div>
+          <div class="exchanger" aria-hidden="true"></div>
+          <ha-icon class="fan fan-a" icon="mdi:fan" aria-hidden="true"></ha-icon>
+          <ha-icon class="fan fan-b" icon="mdi:fan" aria-hidden="true"></ha-icon>
+          <div class="recovery-badge" title="Apparent temperature recovery">
+            <strong class="recovery-value">${recovery.label}</strong>
+            <span class="recovery-label">Heat Recovery</span>
+          </div>
+        </div>
+        ${path('extract', 'Extract air', 'extract_air_temp', true, 'mdi:home')}
+        ${path('outdoor', 'Outdoor air', 'outdoor_air_temp', false, 'mdi:tree')}
+      </div>
+    `;
+  }
+
   private _infoTile(
     label: string,
     value: string,
@@ -941,10 +1423,12 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
   static styles = css`
     :host {
       display: block;
+      width: 100%;
     }
 
     ha-card {
       width: 100%;
+      max-width: none;
       box-sizing: border-box;
       overflow: hidden;
     }
@@ -1487,7 +1971,13 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .air-path.active::after {
+      .air-path.active::after,
+      .unit.active .fan,
+      .system-visual-panel .exhaust.active::after,
+      .system-visual-panel .outdoor.active::after,
+      .system-visual-panel .supply.active::after,
+      .system-visual-panel .extract.active::after,
+      .system-visual-panel .unit.active .fan {
         animation: none;
       }
     }
@@ -1601,6 +2091,126 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       color: var(--error-color);
     }
 
+    /* ---- display_mode: system — flagship full-width visual panel ---- */
+    .mvhr-system {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 4px 16px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .system-visual-panel {
+      min-width: 0;
+    }
+    .system-visual-wrap {
+      min-height: 460px;
+      grid-template-columns: minmax(200px, 1fr) minmax(300px, 360px) minmax(200px, 1fr);
+    }
+    .system-visual-panel .unit {
+      min-height: 320px;
+    }
+    .system-visual-panel .fan {
+      --mdc-icon-size: 26px;
+    }
+    .system-visual-panel .path-label {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .system-visual-panel .path-label ha-icon,
+    .system-visual-panel .path-airflow ha-icon {
+      --mdc-icon-size: 15px;
+    }
+    /* Direction-aware duct animation for system mode's top/bottom
+       arrangement (Phase 6/7): Exhaust (top-left) and Supply (top-right)
+       both flow away from the unit; Extract (bottom-left) and Outdoor
+       (bottom-right) both flow toward it. The detailed-mode hero visual's
+       own single "flow" keyframe is untouched — these selectors only match
+       elements inside .system-visual-panel. */
+    .system-visual-panel .exhaust.active::after {
+      animation: flow-left 1.8s linear infinite;
+    }
+    .system-visual-panel .outdoor.active::after {
+      animation: flow-left 1.8s linear infinite;
+    }
+    .system-visual-panel .supply.active::after {
+      animation: flow-right 1.8s linear infinite;
+    }
+    .system-visual-panel .extract.active::after {
+      animation: flow-right 1.8s linear infinite;
+    }
+    .system-visual-panel .unit.active .fan {
+      animation: spin 6s linear infinite;
+    }
+    .system-metrics-row {
+      grid-area: auto;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    }
+    .system-controls {
+      border: 1px solid var(--divider-color);
+      border-radius: 16px;
+      padding: 16px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      gap: 20px;
+      box-sizing: border-box;
+      background: color-mix(
+        in srgb,
+        var(--ha-card-background, var(--card-background-color)),
+        var(--primary-color) 4%
+      );
+    }
+    .system-controls .control-group {
+      flex: 1 1 220px;
+      min-width: 0;
+    }
+    .system-controls .boost-group .control-block-head {
+      margin-bottom: 4px;
+    }
+    .disclosure-toggle {
+      align-self: center;
+      font: inherit;
+      font-weight: 700;
+      font-size: 0.9em;
+      color: var(--primary-color);
+      background: none;
+      border: 1px solid var(--divider-color);
+      border-radius: 999px;
+      padding: 10px 16px;
+      min-height: 44px;
+      cursor: pointer;
+      box-sizing: border-box;
+    }
+    .disclosure-toggle:focus-visible {
+      outline: 2px solid var(--primary-color);
+      outline-offset: 2px;
+    }
+    .advanced-drawer {
+      border-top: 1px solid var(--divider-color);
+      padding-top: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    @keyframes flow-left {
+      to {
+        transform: translateX(-20px);
+      }
+    }
+    @keyframes flow-right {
+      to {
+        transform: translateX(20px);
+      }
+    }
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
     @media (max-width: 360px) {
       .metric-grid {
         grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
@@ -1634,6 +2244,13 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       }
       .metrics-grid {
         grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      }
+      .system-visual-wrap {
+        grid-template-columns: minmax(150px, 1fr) minmax(240px, 300px) minmax(150px, 1fr);
+        min-height: 380px;
+      }
+      .system-visual-panel .unit {
+        min-height: 260px;
       }
     }
 
@@ -1677,6 +2294,26 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       }
       .status-strip {
         gap: 6px 14px;
+      }
+      .mvhr-system {
+        padding-left: 12px;
+        padding-right: 12px;
+      }
+      .system-visual-panel {
+        padding: 12px;
+      }
+      .system-visual-wrap {
+        min-height: 0;
+      }
+      .system-controls {
+        flex-direction: column;
+      }
+      .system-controls .control-group {
+        flex-basis: auto;
+        width: 100%;
+      }
+      .disclosure-toggle {
+        width: 100%;
       }
     }
   `;
