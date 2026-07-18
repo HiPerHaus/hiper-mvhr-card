@@ -3,222 +3,222 @@
  * Copyright 2019 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const B = globalThis, tt = B.ShadowRoot && (B.ShadyCSS === void 0 || B.ShadyCSS.nativeShadow) && "adoptedStyleSheets" in Document.prototype && "replace" in CSSStyleSheet.prototype, et = Symbol(), lt = /* @__PURE__ */ new WeakMap();
-let Et = class {
-  constructor(t, e, r) {
-    if (this._$cssResult$ = !0, r !== et) throw Error("CSSResult is not constructable. Use `unsafeCSS` or `css` instead.");
-    this.cssText = t, this.t = e;
+const D = globalThis, ee = D.ShadowRoot && (D.ShadyCSS === void 0 || D.ShadyCSS.nativeShadow) && "adoptedStyleSheets" in Document.prototype && "replace" in CSSStyleSheet.prototype, te = Symbol(), le = /* @__PURE__ */ new WeakMap();
+let Ee = class {
+  constructor(e, t, r) {
+    if (this._$cssResult$ = !0, r !== te) throw Error("CSSResult is not constructable. Use `unsafeCSS` or `css` instead.");
+    this.cssText = e, this.t = t;
   }
   get styleSheet() {
-    let t = this.o;
-    const e = this.t;
-    if (tt && t === void 0) {
-      const r = e !== void 0 && e.length === 1;
-      r && (t = lt.get(e)), t === void 0 && ((this.o = t = new CSSStyleSheet()).replaceSync(this.cssText), r && lt.set(e, t));
+    let e = this.o;
+    const t = this.t;
+    if (ee && e === void 0) {
+      const r = t !== void 0 && t.length === 1;
+      r && (e = le.get(t)), e === void 0 && ((this.o = e = new CSSStyleSheet()).replaceSync(this.cssText), r && le.set(t, e));
     }
-    return t;
+    return e;
   }
   toString() {
     return this.cssText;
   }
 };
-const Ht = (a) => new Et(typeof a == "string" ? a : a + "", void 0, et), Ct = (a, ...t) => {
-  const e = a.length === 1 ? a[0] : t.reduce((r, i, o) => r + ((s) => {
+const Ne = (a) => new Ee(typeof a == "string" ? a : a + "", void 0, te), Ce = (a, ...e) => {
+  const t = a.length === 1 ? a[0] : e.reduce((r, i, o) => r + ((s) => {
     if (s._$cssResult$ === !0) return s.cssText;
     if (typeof s == "number") return s;
     throw Error("Value passed to 'css' function must be a 'css' function result: " + s + ". Use 'unsafeCSS' to pass non-literal values, but take care to ensure page security.");
   })(i) + a[o + 1], a[0]);
-  return new Et(e, a, et);
-}, Lt = (a, t) => {
-  if (tt) a.adoptedStyleSheets = t.map((e) => e instanceof CSSStyleSheet ? e : e.styleSheet);
-  else for (const e of t) {
-    const r = document.createElement("style"), i = B.litNonce;
-    i !== void 0 && r.setAttribute("nonce", i), r.textContent = e.cssText, a.appendChild(r);
+  return new Ee(t, a, te);
+}, Le = (a, e) => {
+  if (ee) a.adoptedStyleSheets = e.map((t) => t instanceof CSSStyleSheet ? t : t.styleSheet);
+  else for (const t of e) {
+    const r = document.createElement("style"), i = D.litNonce;
+    i !== void 0 && r.setAttribute("nonce", i), r.textContent = t.cssText, a.appendChild(r);
   }
-}, ct = tt ? (a) => a : (a) => a instanceof CSSStyleSheet ? ((t) => {
-  let e = "";
-  for (const r of t.cssRules) e += r.cssText;
-  return Ht(e);
+}, ce = ee ? (a) => a : (a) => a instanceof CSSStyleSheet ? ((e) => {
+  let t = "";
+  for (const r of e.cssRules) t += r.cssText;
+  return Ne(t);
 })(a) : a;
 /**
  * @license
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const { is: Ut, defineProperty: Dt, getOwnPropertyDescriptor: It, getOwnPropertyNames: Bt, getOwnPropertySymbols: jt, getPrototypeOf: Vt } = Object, y = globalThis, dt = y.trustedTypes, Ft = dt ? dt.emptyScript : "", G = y.reactiveElementPolyfillSupport, M = (a, t) => a, j = { toAttribute(a, t) {
-  switch (t) {
+const { is: Ue, defineProperty: Be, getOwnPropertyDescriptor: De, getOwnPropertyNames: Ie, getOwnPropertySymbols: je, getPrototypeOf: Ve } = Object, w = globalThis, de = w.trustedTypes, Fe = de ? de.emptyScript : "", Y = w.reactiveElementPolyfillSupport, M = (a, e) => a, I = { toAttribute(a, e) {
+  switch (e) {
     case Boolean:
-      a = a ? Ft : null;
+      a = a ? Fe : null;
       break;
     case Object:
     case Array:
       a = a == null ? a : JSON.stringify(a);
   }
   return a;
-}, fromAttribute(a, t) {
-  let e = a;
-  switch (t) {
+}, fromAttribute(a, e) {
+  let t = a;
+  switch (e) {
     case Boolean:
-      e = a !== null;
+      t = a !== null;
       break;
     case Number:
-      e = a === null ? null : Number(a);
+      t = a === null ? null : Number(a);
       break;
     case Object:
     case Array:
       try {
-        e = JSON.parse(a);
+        t = JSON.parse(a);
       } catch {
-        e = null;
+        t = null;
       }
   }
-  return e;
-} }, rt = (a, t) => !Ut(a, t), ut = { attribute: !0, type: String, converter: j, reflect: !1, useDefault: !1, hasChanged: rt };
-Symbol.metadata ?? (Symbol.metadata = Symbol("metadata")), y.litPropertyMetadata ?? (y.litPropertyMetadata = /* @__PURE__ */ new WeakMap());
+  return t;
+} }, re = (a, e) => !Ue(a, e), ue = { attribute: !0, type: String, converter: I, reflect: !1, useDefault: !1, hasChanged: re };
+Symbol.metadata ?? (Symbol.metadata = Symbol("metadata")), w.litPropertyMetadata ?? (w.litPropertyMetadata = /* @__PURE__ */ new WeakMap());
 let C = class extends HTMLElement {
-  static addInitializer(t) {
-    this._$Ei(), (this.l ?? (this.l = [])).push(t);
+  static addInitializer(e) {
+    this._$Ei(), (this.l ?? (this.l = [])).push(e);
   }
   static get observedAttributes() {
     return this.finalize(), this._$Eh && [...this._$Eh.keys()];
   }
-  static createProperty(t, e = ut) {
-    if (e.state && (e.attribute = !1), this._$Ei(), this.prototype.hasOwnProperty(t) && ((e = Object.create(e)).wrapped = !0), this.elementProperties.set(t, e), !e.noAccessor) {
-      const r = Symbol(), i = this.getPropertyDescriptor(t, r, e);
-      i !== void 0 && Dt(this.prototype, t, i);
+  static createProperty(e, t = ue) {
+    if (t.state && (t.attribute = !1), this._$Ei(), this.prototype.hasOwnProperty(e) && ((t = Object.create(t)).wrapped = !0), this.elementProperties.set(e, t), !t.noAccessor) {
+      const r = Symbol(), i = this.getPropertyDescriptor(e, r, t);
+      i !== void 0 && Be(this.prototype, e, i);
     }
   }
-  static getPropertyDescriptor(t, e, r) {
-    const { get: i, set: o } = It(this.prototype, t) ?? { get() {
-      return this[e];
+  static getPropertyDescriptor(e, t, r) {
+    const { get: i, set: o } = De(this.prototype, e) ?? { get() {
+      return this[t];
     }, set(s) {
-      this[e] = s;
+      this[t] = s;
     } };
     return { get: i, set(s) {
       const n = i == null ? void 0 : i.call(this);
-      o == null || o.call(this, s), this.requestUpdate(t, n, r);
+      o == null || o.call(this, s), this.requestUpdate(e, n, r);
     }, configurable: !0, enumerable: !0 };
   }
-  static getPropertyOptions(t) {
-    return this.elementProperties.get(t) ?? ut;
+  static getPropertyOptions(e) {
+    return this.elementProperties.get(e) ?? ue;
   }
   static _$Ei() {
     if (this.hasOwnProperty(M("elementProperties"))) return;
-    const t = Vt(this);
-    t.finalize(), t.l !== void 0 && (this.l = [...t.l]), this.elementProperties = new Map(t.elementProperties);
+    const e = Ve(this);
+    e.finalize(), e.l !== void 0 && (this.l = [...e.l]), this.elementProperties = new Map(e.elementProperties);
   }
   static finalize() {
     if (this.hasOwnProperty(M("finalized"))) return;
     if (this.finalized = !0, this._$Ei(), this.hasOwnProperty(M("properties"))) {
-      const e = this.properties, r = [...Bt(e), ...jt(e)];
-      for (const i of r) this.createProperty(i, e[i]);
+      const t = this.properties, r = [...Ie(t), ...je(t)];
+      for (const i of r) this.createProperty(i, t[i]);
     }
-    const t = this[Symbol.metadata];
-    if (t !== null) {
-      const e = litPropertyMetadata.get(t);
-      if (e !== void 0) for (const [r, i] of e) this.elementProperties.set(r, i);
+    const e = this[Symbol.metadata];
+    if (e !== null) {
+      const t = litPropertyMetadata.get(e);
+      if (t !== void 0) for (const [r, i] of t) this.elementProperties.set(r, i);
     }
     this._$Eh = /* @__PURE__ */ new Map();
-    for (const [e, r] of this.elementProperties) {
-      const i = this._$Eu(e, r);
-      i !== void 0 && this._$Eh.set(i, e);
+    for (const [t, r] of this.elementProperties) {
+      const i = this._$Eu(t, r);
+      i !== void 0 && this._$Eh.set(i, t);
     }
     this.elementStyles = this.finalizeStyles(this.styles);
   }
-  static finalizeStyles(t) {
-    const e = [];
-    if (Array.isArray(t)) {
-      const r = new Set(t.flat(1 / 0).reverse());
-      for (const i of r) e.unshift(ct(i));
-    } else t !== void 0 && e.push(ct(t));
-    return e;
+  static finalizeStyles(e) {
+    const t = [];
+    if (Array.isArray(e)) {
+      const r = new Set(e.flat(1 / 0).reverse());
+      for (const i of r) t.unshift(ce(i));
+    } else e !== void 0 && t.push(ce(e));
+    return t;
   }
-  static _$Eu(t, e) {
-    const r = e.attribute;
-    return r === !1 ? void 0 : typeof r == "string" ? r : typeof t == "string" ? t.toLowerCase() : void 0;
+  static _$Eu(e, t) {
+    const r = t.attribute;
+    return r === !1 ? void 0 : typeof r == "string" ? r : typeof e == "string" ? e.toLowerCase() : void 0;
   }
   constructor() {
     super(), this._$Ep = void 0, this.isUpdatePending = !1, this.hasUpdated = !1, this._$Em = null, this._$Ev();
   }
   _$Ev() {
+    var e;
+    this._$ES = new Promise((t) => this.enableUpdating = t), this._$AL = /* @__PURE__ */ new Map(), this._$E_(), this.requestUpdate(), (e = this.constructor.l) == null || e.forEach((t) => t(this));
+  }
+  addController(e) {
     var t;
-    this._$ES = new Promise((e) => this.enableUpdating = e), this._$AL = /* @__PURE__ */ new Map(), this._$E_(), this.requestUpdate(), (t = this.constructor.l) == null || t.forEach((e) => e(this));
+    (this._$EO ?? (this._$EO = /* @__PURE__ */ new Set())).add(e), this.renderRoot !== void 0 && this.isConnected && ((t = e.hostConnected) == null || t.call(e));
   }
-  addController(t) {
-    var e;
-    (this._$EO ?? (this._$EO = /* @__PURE__ */ new Set())).add(t), this.renderRoot !== void 0 && this.isConnected && ((e = t.hostConnected) == null || e.call(t));
-  }
-  removeController(t) {
-    var e;
-    (e = this._$EO) == null || e.delete(t);
+  removeController(e) {
+    var t;
+    (t = this._$EO) == null || t.delete(e);
   }
   _$E_() {
-    const t = /* @__PURE__ */ new Map(), e = this.constructor.elementProperties;
-    for (const r of e.keys()) this.hasOwnProperty(r) && (t.set(r, this[r]), delete this[r]);
-    t.size > 0 && (this._$Ep = t);
+    const e = /* @__PURE__ */ new Map(), t = this.constructor.elementProperties;
+    for (const r of t.keys()) this.hasOwnProperty(r) && (e.set(r, this[r]), delete this[r]);
+    e.size > 0 && (this._$Ep = e);
   }
   createRenderRoot() {
-    const t = this.shadowRoot ?? this.attachShadow(this.constructor.shadowRootOptions);
-    return Lt(t, this.constructor.elementStyles), t;
+    const e = this.shadowRoot ?? this.attachShadow(this.constructor.shadowRootOptions);
+    return Le(e, this.constructor.elementStyles), e;
   }
   connectedCallback() {
-    var t;
-    this.renderRoot ?? (this.renderRoot = this.createRenderRoot()), this.enableUpdating(!0), (t = this._$EO) == null || t.forEach((e) => {
+    var e;
+    this.renderRoot ?? (this.renderRoot = this.createRenderRoot()), this.enableUpdating(!0), (e = this._$EO) == null || e.forEach((t) => {
       var r;
-      return (r = e.hostConnected) == null ? void 0 : r.call(e);
+      return (r = t.hostConnected) == null ? void 0 : r.call(t);
     });
   }
-  enableUpdating(t) {
+  enableUpdating(e) {
   }
   disconnectedCallback() {
-    var t;
-    (t = this._$EO) == null || t.forEach((e) => {
+    var e;
+    (e = this._$EO) == null || e.forEach((t) => {
       var r;
-      return (r = e.hostDisconnected) == null ? void 0 : r.call(e);
+      return (r = t.hostDisconnected) == null ? void 0 : r.call(t);
     });
   }
-  attributeChangedCallback(t, e, r) {
-    this._$AK(t, r);
+  attributeChangedCallback(e, t, r) {
+    this._$AK(e, r);
   }
-  _$ET(t, e) {
+  _$ET(e, t) {
     var o;
-    const r = this.constructor.elementProperties.get(t), i = this.constructor._$Eu(t, r);
+    const r = this.constructor.elementProperties.get(e), i = this.constructor._$Eu(e, r);
     if (i !== void 0 && r.reflect === !0) {
-      const s = (((o = r.converter) == null ? void 0 : o.toAttribute) !== void 0 ? r.converter : j).toAttribute(e, r.type);
-      this._$Em = t, s == null ? this.removeAttribute(i) : this.setAttribute(i, s), this._$Em = null;
+      const s = (((o = r.converter) == null ? void 0 : o.toAttribute) !== void 0 ? r.converter : I).toAttribute(t, r.type);
+      this._$Em = e, s == null ? this.removeAttribute(i) : this.setAttribute(i, s), this._$Em = null;
     }
   }
-  _$AK(t, e) {
+  _$AK(e, t) {
     var o, s;
-    const r = this.constructor, i = r._$Eh.get(t);
+    const r = this.constructor, i = r._$Eh.get(e);
     if (i !== void 0 && this._$Em !== i) {
-      const n = r.getPropertyOptions(i), l = typeof n.converter == "function" ? { fromAttribute: n.converter } : ((o = n.converter) == null ? void 0 : o.fromAttribute) !== void 0 ? n.converter : j;
+      const n = r.getPropertyOptions(i), l = typeof n.converter == "function" ? { fromAttribute: n.converter } : ((o = n.converter) == null ? void 0 : o.fromAttribute) !== void 0 ? n.converter : I;
       this._$Em = i;
-      const u = l.fromAttribute(e, n.type);
+      const u = l.fromAttribute(t, n.type);
       this[i] = u ?? ((s = this._$Ej) == null ? void 0 : s.get(i)) ?? u, this._$Em = null;
     }
   }
-  requestUpdate(t, e, r, i = !1, o) {
+  requestUpdate(e, t, r, i = !1, o) {
     var s;
-    if (t !== void 0) {
+    if (e !== void 0) {
       const n = this.constructor;
-      if (i === !1 && (o = this[t]), r ?? (r = n.getPropertyOptions(t)), !((r.hasChanged ?? rt)(o, e) || r.useDefault && r.reflect && o === ((s = this._$Ej) == null ? void 0 : s.get(t)) && !this.hasAttribute(n._$Eu(t, r)))) return;
-      this.C(t, e, r);
+      if (i === !1 && (o = this[e]), r ?? (r = n.getPropertyOptions(e)), !((r.hasChanged ?? re)(o, t) || r.useDefault && r.reflect && o === ((s = this._$Ej) == null ? void 0 : s.get(e)) && !this.hasAttribute(n._$Eu(e, r)))) return;
+      this.C(e, t, r);
     }
     this.isUpdatePending === !1 && (this._$ES = this._$EP());
   }
-  C(t, e, { useDefault: r, reflect: i, wrapped: o }, s) {
-    r && !(this._$Ej ?? (this._$Ej = /* @__PURE__ */ new Map())).has(t) && (this._$Ej.set(t, s ?? e ?? this[t]), o !== !0 || s !== void 0) || (this._$AL.has(t) || (this.hasUpdated || r || (e = void 0), this._$AL.set(t, e)), i === !0 && this._$Em !== t && (this._$Eq ?? (this._$Eq = /* @__PURE__ */ new Set())).add(t));
+  C(e, t, { useDefault: r, reflect: i, wrapped: o }, s) {
+    r && !(this._$Ej ?? (this._$Ej = /* @__PURE__ */ new Map())).has(e) && (this._$Ej.set(e, s ?? t ?? this[e]), o !== !0 || s !== void 0) || (this._$AL.has(e) || (this.hasUpdated || r || (t = void 0), this._$AL.set(e, t)), i === !0 && this._$Em !== e && (this._$Eq ?? (this._$Eq = /* @__PURE__ */ new Set())).add(e));
   }
   async _$EP() {
     this.isUpdatePending = !0;
     try {
       await this._$ES;
-    } catch (e) {
-      Promise.reject(e);
+    } catch (t) {
+      Promise.reject(t);
     }
-    const t = this.scheduleUpdate();
-    return t != null && await t, !this.isUpdatePending;
+    const e = this.scheduleUpdate();
+    return e != null && await e, !this.isUpdatePending;
   }
   scheduleUpdate() {
     return this.performUpdate();
@@ -237,26 +237,26 @@ let C = class extends HTMLElement {
         n !== !0 || this._$AL.has(o) || l === void 0 || this.C(o, void 0, s, l);
       }
     }
-    let t = !1;
-    const e = this._$AL;
+    let e = !1;
+    const t = this._$AL;
     try {
-      t = this.shouldUpdate(e), t ? (this.willUpdate(e), (r = this._$EO) == null || r.forEach((i) => {
+      e = this.shouldUpdate(t), e ? (this.willUpdate(t), (r = this._$EO) == null || r.forEach((i) => {
         var o;
         return (o = i.hostUpdate) == null ? void 0 : o.call(i);
-      }), this.update(e)) : this._$EM();
+      }), this.update(t)) : this._$EM();
     } catch (i) {
-      throw t = !1, this._$EM(), i;
+      throw e = !1, this._$EM(), i;
     }
-    t && this._$AE(e);
+    e && this._$AE(t);
   }
-  willUpdate(t) {
+  willUpdate(e) {
   }
-  _$AE(t) {
-    var e;
-    (e = this._$EO) == null || e.forEach((r) => {
+  _$AE(e) {
+    var t;
+    (t = this._$EO) == null || t.forEach((r) => {
       var i;
       return (i = r.hostUpdated) == null ? void 0 : i.call(r);
-    }), this.hasUpdated || (this.hasUpdated = !0, this.firstUpdated(t)), this.updated(t);
+    }), this.hasUpdated || (this.hasUpdated = !0, this.firstUpdated(e)), this.updated(e);
   }
   _$EM() {
     this._$AL = /* @__PURE__ */ new Map(), this.isUpdatePending = !1;
@@ -267,67 +267,67 @@ let C = class extends HTMLElement {
   getUpdateComplete() {
     return this._$ES;
   }
-  shouldUpdate(t) {
+  shouldUpdate(e) {
     return !0;
   }
-  update(t) {
-    this._$Eq && (this._$Eq = this._$Eq.forEach((e) => this._$ET(e, this[e]))), this._$EM();
+  update(e) {
+    this._$Eq && (this._$Eq = this._$Eq.forEach((t) => this._$ET(t, this[t]))), this._$EM();
   }
-  updated(t) {
+  updated(e) {
   }
-  firstUpdated(t) {
+  firstUpdated(e) {
   }
 };
-C.elementStyles = [], C.shadowRootOptions = { mode: "open" }, C[M("elementProperties")] = /* @__PURE__ */ new Map(), C[M("finalized")] = /* @__PURE__ */ new Map(), G == null || G({ ReactiveElement: C }), (y.reactiveElementVersions ?? (y.reactiveElementVersions = [])).push("2.1.2");
+C.elementStyles = [], C.shadowRootOptions = { mode: "open" }, C[M("elementProperties")] = /* @__PURE__ */ new Map(), C[M("finalized")] = /* @__PURE__ */ new Map(), Y == null || Y({ ReactiveElement: C }), (w.reactiveElementVersions ?? (w.reactiveElementVersions = [])).push("2.1.2");
 /**
  * @license
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const P = globalThis, pt = (a) => a, V = P.trustedTypes, ht = V ? V.createPolicy("lit-html", { createHTML: (a) => a }) : void 0, Rt = "$lit$", x = `lit$${Math.random().toFixed(9).slice(2)}$`, Tt = "?" + x, qt = `<${Tt}>`, S = document, N = () => S.createComment(""), H = (a) => a === null || typeof a != "object" && typeof a != "function", it = Array.isArray, Yt = (a) => it(a) || typeof (a == null ? void 0 : a[Symbol.iterator]) == "function", X = `[ 	
-\f\r]`, z = /<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g, mt = /-->/g, _t = />/g, $ = RegExp(`>|${X}(?:([^\\s"'>=/]+)(${X}*=${X}*(?:[^ 	
-\f\r"'\`<>=]|("|')|))|$)`, "g"), ft = /'/g, gt = /"/g, Ot = /^(?:script|style|textarea|title)$/i, Wt = (a) => (t, ...e) => ({ _$litType$: a, strings: t, values: e }), c = Wt(1), T = Symbol.for("lit-noChange"), _ = Symbol.for("lit-nothing"), vt = /* @__PURE__ */ new WeakMap(), A = S.createTreeWalker(S, 129);
-function zt(a, t) {
-  if (!it(a) || !a.hasOwnProperty("raw")) throw Error("invalid template strings array");
-  return ht !== void 0 ? ht.createHTML(t) : t;
+const P = globalThis, pe = (a) => a, j = P.trustedTypes, he = j ? j.createPolicy("lit-html", { createHTML: (a) => a }) : void 0, Te = "$lit$", x = `lit$${Math.random().toFixed(9).slice(2)}$`, Re = "?" + x, qe = `<${Re}>`, S = document, H = () => S.createComment(""), N = (a) => a === null || typeof a != "object" && typeof a != "function", ie = Array.isArray, We = (a) => ie(a) || typeof (a == null ? void 0 : a[Symbol.iterator]) == "function", G = `[ 	
+\f\r]`, z = /<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g, me = /-->/g, fe = />/g, $ = RegExp(`>|${G}(?:([^\\s"'>=/]+)(${G}*=${G}*(?:[^ 	
+\f\r"'\`<>=]|("|')|))|$)`, "g"), ge = /'/g, _e = /"/g, Oe = /^(?:script|style|textarea|title)$/i, Ye = (a) => (e, ...t) => ({ _$litType$: a, strings: e, values: t }), c = Ye(1), R = Symbol.for("lit-noChange"), _ = Symbol.for("lit-nothing"), ve = /* @__PURE__ */ new WeakMap(), A = S.createTreeWalker(S, 129);
+function ze(a, e) {
+  if (!ie(a) || !a.hasOwnProperty("raw")) throw Error("invalid template strings array");
+  return he !== void 0 ? he.createHTML(e) : e;
 }
-const Gt = (a, t) => {
-  const e = a.length - 1, r = [];
-  let i, o = t === 2 ? "<svg>" : t === 3 ? "<math>" : "", s = z;
-  for (let n = 0; n < e; n++) {
+const Ge = (a, e) => {
+  const t = a.length - 1, r = [];
+  let i, o = e === 2 ? "<svg>" : e === 3 ? "<math>" : "", s = z;
+  for (let n = 0; n < t; n++) {
     const l = a[n];
     let u, d, p = -1, h = 0;
-    for (; h < l.length && (s.lastIndex = h, d = s.exec(l), d !== null); ) h = s.lastIndex, s === z ? d[1] === "!--" ? s = mt : d[1] !== void 0 ? s = _t : d[2] !== void 0 ? (Ot.test(d[2]) && (i = RegExp("</" + d[2], "g")), s = $) : d[3] !== void 0 && (s = $) : s === $ ? d[0] === ">" ? (s = i ?? z, p = -1) : d[1] === void 0 ? p = -2 : (p = s.lastIndex - d[2].length, u = d[1], s = d[3] === void 0 ? $ : d[3] === '"' ? gt : ft) : s === gt || s === ft ? s = $ : s === mt || s === _t ? s = z : (s = $, i = void 0);
+    for (; h < l.length && (s.lastIndex = h, d = s.exec(l), d !== null); ) h = s.lastIndex, s === z ? d[1] === "!--" ? s = me : d[1] !== void 0 ? s = fe : d[2] !== void 0 ? (Oe.test(d[2]) && (i = RegExp("</" + d[2], "g")), s = $) : d[3] !== void 0 && (s = $) : s === $ ? d[0] === ">" ? (s = i ?? z, p = -1) : d[1] === void 0 ? p = -2 : (p = s.lastIndex - d[2].length, u = d[1], s = d[3] === void 0 ? $ : d[3] === '"' ? _e : ge) : s === _e || s === ge ? s = $ : s === me || s === fe ? s = z : (s = $, i = void 0);
     const m = s === $ && a[n + 1].startsWith("/>") ? " " : "";
-    o += s === z ? l + qt : p >= 0 ? (r.push(u), l.slice(0, p) + Rt + l.slice(p) + x + m) : l + x + (p === -2 ? n : m);
+    o += s === z ? l + qe : p >= 0 ? (r.push(u), l.slice(0, p) + Te + l.slice(p) + x + m) : l + x + (p === -2 ? n : m);
   }
-  return [zt(a, o + (a[e] || "<?>") + (t === 2 ? "</svg>" : t === 3 ? "</math>" : "")), r];
+  return [ze(a, o + (a[t] || "<?>") + (e === 2 ? "</svg>" : e === 3 ? "</math>" : "")), r];
 };
 class L {
-  constructor({ strings: t, _$litType$: e }, r) {
+  constructor({ strings: e, _$litType$: t }, r) {
     let i;
     this.parts = [];
     let o = 0, s = 0;
-    const n = t.length - 1, l = this.parts, [u, d] = Gt(t, e);
-    if (this.el = L.createElement(u, r), A.currentNode = this.el.content, e === 2 || e === 3) {
+    const n = e.length - 1, l = this.parts, [u, d] = Ge(e, t);
+    if (this.el = L.createElement(u, r), A.currentNode = this.el.content, t === 2 || t === 3) {
       const p = this.el.content.firstChild;
       p.replaceWith(...p.childNodes);
     }
     for (; (i = A.nextNode()) !== null && l.length < n; ) {
       if (i.nodeType === 1) {
-        if (i.hasAttributes()) for (const p of i.getAttributeNames()) if (p.endsWith(Rt)) {
-          const h = d[s++], m = i.getAttribute(p).split(x), g = /([.?@])?(.*)/.exec(h);
-          l.push({ type: 1, index: o, name: g[2], strings: m, ctor: g[1] === "." ? Qt : g[1] === "?" ? Zt : g[1] === "@" ? Jt : q }), i.removeAttribute(p);
+        if (i.hasAttributes()) for (const p of i.getAttributeNames()) if (p.endsWith(Te)) {
+          const h = d[s++], m = i.getAttribute(p).split(x), v = /([.?@])?(.*)/.exec(h);
+          l.push({ type: 1, index: o, name: v[2], strings: m, ctor: v[1] === "." ? Qe : v[1] === "?" ? Ze : v[1] === "@" ? Ke : F }), i.removeAttribute(p);
         } else p.startsWith(x) && (l.push({ type: 6, index: o }), i.removeAttribute(p));
-        if (Ot.test(i.tagName)) {
+        if (Oe.test(i.tagName)) {
           const p = i.textContent.split(x), h = p.length - 1;
           if (h > 0) {
-            i.textContent = V ? V.emptyScript : "";
-            for (let m = 0; m < h; m++) i.append(p[m], N()), A.nextNode(), l.push({ type: 2, index: ++o });
-            i.append(p[h], N());
+            i.textContent = j ? j.emptyScript : "";
+            for (let m = 0; m < h; m++) i.append(p[m], H()), A.nextNode(), l.push({ type: 2, index: ++o });
+            i.append(p[h], H());
           }
         }
-      } else if (i.nodeType === 8) if (i.data === Tt) l.push({ type: 2, index: o });
+      } else if (i.nodeType === 8) if (i.data === Re) l.push({ type: 2, index: o });
       else {
         let p = -1;
         for (; (p = i.data.indexOf(x, p + 1)) !== -1; ) l.push({ type: 7, index: o }), p += x.length - 1;
@@ -335,21 +335,21 @@ class L {
       o++;
     }
   }
-  static createElement(t, e) {
+  static createElement(e, t) {
     const r = S.createElement("template");
-    return r.innerHTML = t, r;
+    return r.innerHTML = e, r;
   }
 }
-function O(a, t, e = a, r) {
+function O(a, e, t = a, r) {
   var s, n;
-  if (t === T) return t;
-  let i = r !== void 0 ? (s = e._$Co) == null ? void 0 : s[r] : e._$Cl;
-  const o = H(t) ? void 0 : t._$litDirective$;
-  return (i == null ? void 0 : i.constructor) !== o && ((n = i == null ? void 0 : i._$AO) == null || n.call(i, !1), o === void 0 ? i = void 0 : (i = new o(a), i._$AT(a, e, r)), r !== void 0 ? (e._$Co ?? (e._$Co = []))[r] = i : e._$Cl = i), i !== void 0 && (t = O(a, i._$AS(a, t.values), i, r)), t;
+  if (e === R) return e;
+  let i = r !== void 0 ? (s = t._$Co) == null ? void 0 : s[r] : t._$Cl;
+  const o = N(e) ? void 0 : e._$litDirective$;
+  return (i == null ? void 0 : i.constructor) !== o && ((n = i == null ? void 0 : i._$AO) == null || n.call(i, !1), o === void 0 ? i = void 0 : (i = new o(a), i._$AT(a, t, r)), r !== void 0 ? (t._$Co ?? (t._$Co = []))[r] = i : t._$Cl = i), i !== void 0 && (e = O(a, i._$AS(a, e.values), i, r)), e;
 }
-class Xt {
-  constructor(t, e) {
-    this._$AV = [], this._$AN = void 0, this._$AD = t, this._$AM = e;
+class Xe {
+  constructor(e, t) {
+    this._$AV = [], this._$AN = void 0, this._$AD = e, this._$AM = t;
   }
   get parentNode() {
     return this._$AM.parentNode;
@@ -357,36 +357,36 @@ class Xt {
   get _$AU() {
     return this._$AM._$AU;
   }
-  u(t) {
-    const { el: { content: e }, parts: r } = this._$AD, i = ((t == null ? void 0 : t.creationScope) ?? S).importNode(e, !0);
+  u(e) {
+    const { el: { content: t }, parts: r } = this._$AD, i = ((e == null ? void 0 : e.creationScope) ?? S).importNode(t, !0);
     A.currentNode = i;
     let o = A.nextNode(), s = 0, n = 0, l = r[0];
     for (; l !== void 0; ) {
       if (s === l.index) {
         let u;
-        l.type === 2 ? u = new D(o, o.nextSibling, this, t) : l.type === 1 ? u = new l.ctor(o, l.name, l.strings, this, t) : l.type === 6 && (u = new Kt(o, this, t)), this._$AV.push(u), l = r[++n];
+        l.type === 2 ? u = new B(o, o.nextSibling, this, e) : l.type === 1 ? u = new l.ctor(o, l.name, l.strings, this, e) : l.type === 6 && (u = new Je(o, this, e)), this._$AV.push(u), l = r[++n];
       }
       s !== (l == null ? void 0 : l.index) && (o = A.nextNode(), s++);
     }
     return A.currentNode = S, i;
   }
-  p(t) {
-    let e = 0;
-    for (const r of this._$AV) r !== void 0 && (r.strings !== void 0 ? (r._$AI(t, r, e), e += r.strings.length - 2) : r._$AI(t[e])), e++;
+  p(e) {
+    let t = 0;
+    for (const r of this._$AV) r !== void 0 && (r.strings !== void 0 ? (r._$AI(e, r, t), t += r.strings.length - 2) : r._$AI(e[t])), t++;
   }
 }
-class D {
+class B {
   get _$AU() {
-    var t;
-    return ((t = this._$AM) == null ? void 0 : t._$AU) ?? this._$Cv;
+    var e;
+    return ((e = this._$AM) == null ? void 0 : e._$AU) ?? this._$Cv;
   }
-  constructor(t, e, r, i) {
-    this.type = 2, this._$AH = _, this._$AN = void 0, this._$AA = t, this._$AB = e, this._$AM = r, this.options = i, this._$Cv = (i == null ? void 0 : i.isConnected) ?? !0;
+  constructor(e, t, r, i) {
+    this.type = 2, this._$AH = _, this._$AN = void 0, this._$AA = e, this._$AB = t, this._$AM = r, this.options = i, this._$Cv = (i == null ? void 0 : i.isConnected) ?? !0;
   }
   get parentNode() {
-    let t = this._$AA.parentNode;
-    const e = this._$AM;
-    return e !== void 0 && (t == null ? void 0 : t.nodeType) === 11 && (t = e.parentNode), t;
+    let e = this._$AA.parentNode;
+    const t = this._$AM;
+    return t !== void 0 && (e == null ? void 0 : e.nodeType) === 11 && (e = t.parentNode), e;
   }
   get startNode() {
     return this._$AA;
@@ -394,124 +394,124 @@ class D {
   get endNode() {
     return this._$AB;
   }
-  _$AI(t, e = this) {
-    t = O(this, t, e), H(t) ? t === _ || t == null || t === "" ? (this._$AH !== _ && this._$AR(), this._$AH = _) : t !== this._$AH && t !== T && this._(t) : t._$litType$ !== void 0 ? this.$(t) : t.nodeType !== void 0 ? this.T(t) : Yt(t) ? this.k(t) : this._(t);
+  _$AI(e, t = this) {
+    e = O(this, e, t), N(e) ? e === _ || e == null || e === "" ? (this._$AH !== _ && this._$AR(), this._$AH = _) : e !== this._$AH && e !== R && this._(e) : e._$litType$ !== void 0 ? this.$(e) : e.nodeType !== void 0 ? this.T(e) : We(e) ? this.k(e) : this._(e);
   }
-  O(t) {
-    return this._$AA.parentNode.insertBefore(t, this._$AB);
+  O(e) {
+    return this._$AA.parentNode.insertBefore(e, this._$AB);
   }
-  T(t) {
-    this._$AH !== t && (this._$AR(), this._$AH = this.O(t));
+  T(e) {
+    this._$AH !== e && (this._$AR(), this._$AH = this.O(e));
   }
-  _(t) {
-    this._$AH !== _ && H(this._$AH) ? this._$AA.nextSibling.data = t : this.T(S.createTextNode(t)), this._$AH = t;
+  _(e) {
+    this._$AH !== _ && N(this._$AH) ? this._$AA.nextSibling.data = e : this.T(S.createTextNode(e)), this._$AH = e;
   }
-  $(t) {
+  $(e) {
     var o;
-    const { values: e, _$litType$: r } = t, i = typeof r == "number" ? this._$AC(t) : (r.el === void 0 && (r.el = L.createElement(zt(r.h, r.h[0]), this.options)), r);
-    if (((o = this._$AH) == null ? void 0 : o._$AD) === i) this._$AH.p(e);
+    const { values: t, _$litType$: r } = e, i = typeof r == "number" ? this._$AC(e) : (r.el === void 0 && (r.el = L.createElement(ze(r.h, r.h[0]), this.options)), r);
+    if (((o = this._$AH) == null ? void 0 : o._$AD) === i) this._$AH.p(t);
     else {
-      const s = new Xt(i, this), n = s.u(this.options);
-      s.p(e), this.T(n), this._$AH = s;
+      const s = new Xe(i, this), n = s.u(this.options);
+      s.p(t), this.T(n), this._$AH = s;
     }
   }
-  _$AC(t) {
-    let e = vt.get(t.strings);
-    return e === void 0 && vt.set(t.strings, e = new L(t)), e;
+  _$AC(e) {
+    let t = ve.get(e.strings);
+    return t === void 0 && ve.set(e.strings, t = new L(e)), t;
   }
-  k(t) {
-    it(this._$AH) || (this._$AH = [], this._$AR());
-    const e = this._$AH;
+  k(e) {
+    ie(this._$AH) || (this._$AH = [], this._$AR());
+    const t = this._$AH;
     let r, i = 0;
-    for (const o of t) i === e.length ? e.push(r = new D(this.O(N()), this.O(N()), this, this.options)) : r = e[i], r._$AI(o), i++;
-    i < e.length && (this._$AR(r && r._$AB.nextSibling, i), e.length = i);
+    for (const o of e) i === t.length ? t.push(r = new B(this.O(H()), this.O(H()), this, this.options)) : r = t[i], r._$AI(o), i++;
+    i < t.length && (this._$AR(r && r._$AB.nextSibling, i), t.length = i);
   }
-  _$AR(t = this._$AA.nextSibling, e) {
+  _$AR(e = this._$AA.nextSibling, t) {
     var r;
-    for ((r = this._$AP) == null ? void 0 : r.call(this, !1, !0, e); t !== this._$AB; ) {
-      const i = pt(t).nextSibling;
-      pt(t).remove(), t = i;
+    for ((r = this._$AP) == null ? void 0 : r.call(this, !1, !0, t); e !== this._$AB; ) {
+      const i = pe(e).nextSibling;
+      pe(e).remove(), e = i;
     }
   }
-  setConnected(t) {
-    var e;
-    this._$AM === void 0 && (this._$Cv = t, (e = this._$AP) == null || e.call(this, t));
+  setConnected(e) {
+    var t;
+    this._$AM === void 0 && (this._$Cv = e, (t = this._$AP) == null || t.call(this, e));
   }
 }
-class q {
+class F {
   get tagName() {
     return this.element.tagName;
   }
   get _$AU() {
     return this._$AM._$AU;
   }
-  constructor(t, e, r, i, o) {
-    this.type = 1, this._$AH = _, this._$AN = void 0, this.element = t, this.name = e, this._$AM = i, this.options = o, r.length > 2 || r[0] !== "" || r[1] !== "" ? (this._$AH = Array(r.length - 1).fill(new String()), this.strings = r) : this._$AH = _;
+  constructor(e, t, r, i, o) {
+    this.type = 1, this._$AH = _, this._$AN = void 0, this.element = e, this.name = t, this._$AM = i, this.options = o, r.length > 2 || r[0] !== "" || r[1] !== "" ? (this._$AH = Array(r.length - 1).fill(new String()), this.strings = r) : this._$AH = _;
   }
-  _$AI(t, e = this, r, i) {
+  _$AI(e, t = this, r, i) {
     const o = this.strings;
     let s = !1;
-    if (o === void 0) t = O(this, t, e, 0), s = !H(t) || t !== this._$AH && t !== T, s && (this._$AH = t);
+    if (o === void 0) e = O(this, e, t, 0), s = !N(e) || e !== this._$AH && e !== R, s && (this._$AH = e);
     else {
-      const n = t;
+      const n = e;
       let l, u;
-      for (t = o[0], l = 0; l < o.length - 1; l++) u = O(this, n[r + l], e, l), u === T && (u = this._$AH[l]), s || (s = !H(u) || u !== this._$AH[l]), u === _ ? t = _ : t !== _ && (t += (u ?? "") + o[l + 1]), this._$AH[l] = u;
+      for (e = o[0], l = 0; l < o.length - 1; l++) u = O(this, n[r + l], t, l), u === R && (u = this._$AH[l]), s || (s = !N(u) || u !== this._$AH[l]), u === _ ? e = _ : e !== _ && (e += (u ?? "") + o[l + 1]), this._$AH[l] = u;
     }
-    s && !i && this.j(t);
+    s && !i && this.j(e);
   }
-  j(t) {
-    t === _ ? this.element.removeAttribute(this.name) : this.element.setAttribute(this.name, t ?? "");
+  j(e) {
+    e === _ ? this.element.removeAttribute(this.name) : this.element.setAttribute(this.name, e ?? "");
   }
 }
-class Qt extends q {
+class Qe extends F {
   constructor() {
     super(...arguments), this.type = 3;
   }
-  j(t) {
-    this.element[this.name] = t === _ ? void 0 : t;
+  j(e) {
+    this.element[this.name] = e === _ ? void 0 : e;
   }
 }
-class Zt extends q {
+class Ze extends F {
   constructor() {
     super(...arguments), this.type = 4;
   }
-  j(t) {
-    this.element.toggleAttribute(this.name, !!t && t !== _);
+  j(e) {
+    this.element.toggleAttribute(this.name, !!e && e !== _);
   }
 }
-class Jt extends q {
-  constructor(t, e, r, i, o) {
-    super(t, e, r, i, o), this.type = 5;
+class Ke extends F {
+  constructor(e, t, r, i, o) {
+    super(e, t, r, i, o), this.type = 5;
   }
-  _$AI(t, e = this) {
-    if ((t = O(this, t, e, 0) ?? _) === T) return;
-    const r = this._$AH, i = t === _ && r !== _ || t.capture !== r.capture || t.once !== r.once || t.passive !== r.passive, o = t !== _ && (r === _ || i);
-    i && this.element.removeEventListener(this.name, this, r), o && this.element.addEventListener(this.name, this, t), this._$AH = t;
+  _$AI(e, t = this) {
+    if ((e = O(this, e, t, 0) ?? _) === R) return;
+    const r = this._$AH, i = e === _ && r !== _ || e.capture !== r.capture || e.once !== r.once || e.passive !== r.passive, o = e !== _ && (r === _ || i);
+    i && this.element.removeEventListener(this.name, this, r), o && this.element.addEventListener(this.name, this, e), this._$AH = e;
   }
-  handleEvent(t) {
-    var e;
-    typeof this._$AH == "function" ? this._$AH.call(((e = this.options) == null ? void 0 : e.host) ?? this.element, t) : this._$AH.handleEvent(t);
+  handleEvent(e) {
+    var t;
+    typeof this._$AH == "function" ? this._$AH.call(((t = this.options) == null ? void 0 : t.host) ?? this.element, e) : this._$AH.handleEvent(e);
   }
 }
-class Kt {
-  constructor(t, e, r) {
-    this.element = t, this.type = 6, this._$AN = void 0, this._$AM = e, this.options = r;
+class Je {
+  constructor(e, t, r) {
+    this.element = e, this.type = 6, this._$AN = void 0, this._$AM = t, this.options = r;
   }
   get _$AU() {
     return this._$AM._$AU;
   }
-  _$AI(t) {
-    O(this, t);
+  _$AI(e) {
+    O(this, e);
   }
 }
-const Q = P.litHtmlPolyfillSupport;
-Q == null || Q(L, D), (P.litHtmlVersions ?? (P.litHtmlVersions = [])).push("3.3.3");
-const te = (a, t, e) => {
-  const r = (e == null ? void 0 : e.renderBefore) ?? t;
+const X = P.litHtmlPolyfillSupport;
+X == null || X(L, B), (P.litHtmlVersions ?? (P.litHtmlVersions = [])).push("3.3.3");
+const et = (a, e, t) => {
+  const r = (t == null ? void 0 : t.renderBefore) ?? e;
   let i = r._$litPart$;
   if (i === void 0) {
-    const o = (e == null ? void 0 : e.renderBefore) ?? null;
-    r._$litPart$ = i = new D(t.insertBefore(N(), o), o, void 0, e ?? {});
+    const o = (t == null ? void 0 : t.renderBefore) ?? null;
+    r._$litPart$ = i = new B(e.insertBefore(H(), o), o, void 0, t ?? {});
   }
   return i._$AI(a), i;
 };
@@ -521,77 +521,77 @@ const te = (a, t, e) => {
  * SPDX-License-Identifier: BSD-3-Clause
  */
 const k = globalThis;
-class R extends C {
+class T extends C {
   constructor() {
     super(...arguments), this.renderOptions = { host: this }, this._$Do = void 0;
   }
   createRenderRoot() {
-    var e;
-    const t = super.createRenderRoot();
-    return (e = this.renderOptions).renderBefore ?? (e.renderBefore = t.firstChild), t;
+    var t;
+    const e = super.createRenderRoot();
+    return (t = this.renderOptions).renderBefore ?? (t.renderBefore = e.firstChild), e;
   }
-  update(t) {
-    const e = this.render();
-    this.hasUpdated || (this.renderOptions.isConnected = this.isConnected), super.update(t), this._$Do = te(e, this.renderRoot, this.renderOptions);
+  update(e) {
+    const t = this.render();
+    this.hasUpdated || (this.renderOptions.isConnected = this.isConnected), super.update(e), this._$Do = et(t, this.renderRoot, this.renderOptions);
   }
   connectedCallback() {
-    var t;
-    super.connectedCallback(), (t = this._$Do) == null || t.setConnected(!0);
+    var e;
+    super.connectedCallback(), (e = this._$Do) == null || e.setConnected(!0);
   }
   disconnectedCallback() {
-    var t;
-    super.disconnectedCallback(), (t = this._$Do) == null || t.setConnected(!1);
+    var e;
+    super.disconnectedCallback(), (e = this._$Do) == null || e.setConnected(!1);
   }
   render() {
-    return T;
+    return R;
   }
 }
-var St;
-R._$litElement$ = !0, R.finalized = !0, (St = k.litElementHydrateSupport) == null || St.call(k, { LitElement: R });
-const Z = k.litElementPolyfillSupport;
-Z == null || Z({ LitElement: R });
+var Se;
+T._$litElement$ = !0, T.finalized = !0, (Se = k.litElementHydrateSupport) == null || Se.call(k, { LitElement: T });
+const Q = k.litElementPolyfillSupport;
+Q == null || Q({ LitElement: T });
 (k.litElementVersions ?? (k.litElementVersions = [])).push("4.2.2");
 /**
  * @license
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const ee = { attribute: !0, type: String, converter: j, reflect: !1, hasChanged: rt }, re = (a = ee, t, e) => {
-  const { kind: r, metadata: i } = e;
+const tt = { attribute: !0, type: String, converter: I, reflect: !1, hasChanged: re }, rt = (a = tt, e, t) => {
+  const { kind: r, metadata: i } = t;
   let o = globalThis.litPropertyMetadata.get(i);
-  if (o === void 0 && globalThis.litPropertyMetadata.set(i, o = /* @__PURE__ */ new Map()), r === "setter" && ((a = Object.create(a)).wrapped = !0), o.set(e.name, a), r === "accessor") {
-    const { name: s } = e;
+  if (o === void 0 && globalThis.litPropertyMetadata.set(i, o = /* @__PURE__ */ new Map()), r === "setter" && ((a = Object.create(a)).wrapped = !0), o.set(t.name, a), r === "accessor") {
+    const { name: s } = t;
     return { set(n) {
-      const l = t.get.call(this);
-      t.set.call(this, n), this.requestUpdate(s, l, a, !0, n);
+      const l = e.get.call(this);
+      e.set.call(this, n), this.requestUpdate(s, l, a, !0, n);
     }, init(n) {
       return n !== void 0 && this.C(s, void 0, a, n), n;
     } };
   }
   if (r === "setter") {
-    const { name: s } = e;
+    const { name: s } = t;
     return function(n) {
       const l = this[s];
-      t.call(this, n), this.requestUpdate(s, l, a, !0, n);
+      e.call(this, n), this.requestUpdate(s, l, a, !0, n);
     };
   }
   throw Error("Unsupported decorator location: " + r);
 };
-function ot(a) {
-  return (t, e) => typeof e == "object" ? re(a, t, e) : ((r, i, o) => {
+function oe(a) {
+  return (e, t) => typeof t == "object" ? rt(a, e, t) : ((r, i, o) => {
     const s = i.hasOwnProperty(o);
     return i.constructor.createProperty(o, r), s ? Object.getOwnPropertyDescriptor(i, o) : void 0;
-  })(a, t, e);
+  })(a, e, t);
 }
 /**
  * @license
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-function Y(a) {
-  return ot({ ...a, state: !0, attribute: !1 });
+function q(a) {
+  return oe({ ...a, state: !0, attribute: !1 });
 }
-const ie = {
+const it = {
   id: "altair",
   name: "Altair 160",
   vendor: "Altair",
@@ -638,7 +638,7 @@ const ie = {
   // Confirmed product fact, not a "not configured yet" default: the Altair
   // 160 has no summer bypass. See docs/manufacturers/altair.md.
   unsupportedRoles: ["bypass_state"]
-}, oe = {
+}, ot = {
   id: "zehnder-comfoair-q",
   // Self-contained display name (shown alone in the card header, Phase 2) —
   // includes the brand so it reads correctly without needing `vendor`
@@ -659,7 +659,7 @@ const ie = {
     fault_active: {},
     frost_protection_active: {}
   }
-}, ae = {
+}, at = {
   id: "vent_axia_sentinel_econiq",
   name: "Aerofresh",
   vendor: "Aerofresh",
@@ -677,56 +677,56 @@ const ie = {
     fault_active: {},
     frost_protection_active: {}
   }
-}, se = {
+}, st = {
   id: "generic",
   name: "Generic MVHR",
   vendor: "Generic",
   supportedRoles: {}
-}, K = [
+}, J = [
   "altair",
   "zehnder-comfoair-q",
   "vent_axia_sentinel_econiq",
   "generic"
-], ne = {
-  altair: ie,
-  "zehnder-comfoair-q": oe,
-  vent_axia_sentinel_econiq: ae,
-  generic: se
+], nt = {
+  altair: it,
+  "zehnder-comfoair-q": ot,
+  vent_axia_sentinel_econiq: at,
+  generic: st
 };
-function Mt(a) {
-  return ne[a];
+function Me(a) {
+  return nt[a];
 }
-var le = Object.defineProperty, Pt = (a, t, e, r) => {
+var lt = Object.defineProperty, Pe = (a, e, t, r) => {
   for (var i = void 0, o = a.length - 1, s; o >= 0; o--)
-    (s = a[o]) && (i = s(t, e, i) || i);
-  return i && le(t, e, i), i;
+    (s = a[o]) && (i = s(e, t, i) || i);
+  return i && lt(e, t, i), i;
 };
-const bt = "hiper-mvhr-card-editor", st = class st extends R {
-  setConfig(t) {
-    this._config = { ...t };
+const be = "hiper-mvhr-card-editor", se = class se extends T {
+  setConfig(e) {
+    this._config = { ...e };
   }
   render() {
-    const t = this._config ?? {};
+    const e = this._config ?? {};
     return c`
       <div class="editor">
-        ${this._textField("Title", "title", t.title)}
-        ${this._textField("Subtitle", "subtitle", t.subtitle)}
+        ${this._textField("Title", "title", e.title)}
+        ${this._textField("Subtitle", "subtitle", e.subtitle)}
         <label>
           <span>Manufacturer</span>
           <select
-            .value=${t.manufacturer ?? "generic"}
-            @change=${(e) => this._set("manufacturer", e.currentTarget.value)}
+            .value=${e.manufacturer ?? "generic"}
+            @change=${(t) => this._set("manufacturer", t.currentTarget.value)}
           >
-            ${K.map(
-      (e) => c`<option .value=${e}>${e}</option>`
+            ${J.map(
+      (t) => c`<option .value=${t}>${t}</option>`
     )}
           </select>
         </label>
         <label>
           <span>Display mode</span>
           <select
-            .value=${t.display_mode ?? "homeowner"}
-            @change=${(e) => this._set("display_mode", e.currentTarget.value)}
+            .value=${e.display_mode ?? "homeowner"}
+            @change=${(t) => this._set("display_mode", t.currentTarget.value)}
           >
             <option value="homeowner">homeowner</option>
             <option value="detailed">detailed</option>
@@ -736,8 +736,8 @@ const bt = "hiper-mvhr-card-editor", st = class st extends R {
         <label>
           <span>Heat recovery</span>
           <select
-            .value=${t.heat_recovery_method ?? "automatic"}
-            @change=${(e) => this._set("heat_recovery_method", e.currentTarget.value)}
+            .value=${e.heat_recovery_method ?? "automatic"}
+            @change=${(t) => this._set("heat_recovery_method", t.currentTarget.value)}
           >
             <option value="automatic">automatic</option>
             <option value="supply_temperature">supply_temperature</option>
@@ -750,59 +750,59 @@ const bt = "hiper-mvhr-card-editor", st = class st extends R {
             type="number"
             min="1"
             step="1"
-            .value=${String(t.filter_max_days ?? 365)}
-            @change=${(e) => this._set("filter_max_days", Number(e.currentTarget.value))}
+            .value=${String(e.filter_max_days ?? 365)}
+            @change=${(t) => this._set("filter_max_days", Number(t.currentTarget.value))}
           />
         </label>
         <div class="toggles">
-          ${this._checkbox("Show controls", "show_controls", t.show_controls !== !1)}
-          ${this._checkbox("Show fan speeds", "show_fan_speeds", t.show_fan_speeds !== !1)}
-          ${this._checkbox("Show filter", "show_filter", t.show_filter !== !1)}
-          ${this._checkbox("Show calibration", "show_calibration", t.show_calibration !== !1)}
+          ${this._checkbox("Show controls", "show_controls", e.show_controls !== !1)}
+          ${this._checkbox("Show fan speeds", "show_fan_speeds", e.show_fan_speeds !== !1)}
+          ${this._checkbox("Show filter", "show_filter", e.show_filter !== !1)}
+          ${this._checkbox("Show calibration", "show_calibration", e.show_calibration !== !1)}
           ${this._checkbox(
       "Airflow on all paths",
       "show_airflow_on_all_paths",
-      t.show_airflow_on_all_paths === !0
+      e.show_airflow_on_all_paths === !0
     )}
           ${this._checkbox(
       "Show airflow animation (system mode)",
       "show_airflow_animation",
-      t.show_airflow_animation !== !1
+      e.show_airflow_animation !== !1
     )}
           ${this._checkbox(
       "Show advanced controls (system mode)",
       "show_advanced_controls",
-      t.show_advanced_controls !== !1
+      e.show_advanced_controls !== !1
     )}
         </div>
       </div>
     `;
   }
-  _textField(t, e, r) {
+  _textField(e, t, r) {
     return c`
       <label>
-        <span>${t}</span>
+        <span>${e}</span>
         <input
           .value=${r ?? ""}
-          @input=${(i) => this._set(e, i.currentTarget.value)}
+          @input=${(i) => this._set(t, i.currentTarget.value)}
         />
       </label>
     `;
   }
-  _checkbox(t, e, r) {
+  _checkbox(e, t, r) {
     return c`
       <label class="check">
         <input
           type="checkbox"
           .checked=${r}
-          @change=${(i) => this._set(e, i.currentTarget.checked)}
+          @change=${(i) => this._set(t, i.currentTarget.checked)}
         />
-        <span>${t}</span>
+        <span>${e}</span>
       </label>
     `;
   }
-  _set(t, e) {
-    const r = { ...this._config ?? {}, [t]: e };
+  _set(e, t) {
+    const r = { ...this._config ?? {}, [e]: t };
     this._config = r, this.dispatchEvent(
       new CustomEvent("config-changed", {
         detail: { config: r },
@@ -812,7 +812,7 @@ const bt = "hiper-mvhr-card-editor", st = class st extends R {
     );
   }
 };
-st.styles = Ct`
+se.styles = Ce`
     .editor {
       display: grid;
       gap: 12px;
@@ -847,15 +847,15 @@ st.styles = Ct`
       width: auto;
     }
   `;
-let U = st;
-Pt([
-  ot({ attribute: !1 })
+let U = se;
+Pe([
+  oe({ attribute: !1 })
 ], U.prototype, "hass");
-Pt([
-  Y()
+Pe([
+  q()
 ], U.prototype, "_config");
-customElements.get(bt) || customElements.define(bt, U);
-const at = [
+customElements.get(be) || customElements.define(be, U);
+const ae = [
   "mode",
   "effective_mode",
   "outdoor_air_temp",
@@ -915,16 +915,16 @@ const at = [
   "shower_trigger_temperature",
   "shower_pipe_temperature"
 ];
-class v extends Error {
-  constructor(t) {
-    super(t), this.name = "ConfigValidationError";
+class b extends Error {
+  constructor(e) {
+    super(e), this.name = "ConfigValidationError";
   }
 }
-const ce = "homeowner", xt = ["homeowner", "detailed", "system"], yt = ["automatic", "supply_temperature", "disabled"];
-function wt(a) {
-  return at.includes(a);
+const ct = "homeowner", xe = ["homeowner", "detailed", "system"], we = ["automatic", "supply_temperature", "disabled"];
+function ye(a) {
+  return ae.includes(a);
 }
-const de = {
+const dt = {
   supply_temperature: "supply_air_temp",
   extract_temperature: "extract_air_temp",
   outdoor_temperature: "outdoor_air_temp",
@@ -935,113 +935,113 @@ const de = {
   extract_fan: "extract_fan_speed",
   last_airflow_calibration: "last_calibration"
 };
-function ue(a) {
+function ut(a) {
   if (!a || typeof a != "object" || Array.isArray(a))
-    throw new v("hiper-mvhr-card: configuration must be an object");
-  const t = a;
-  if (typeof t.manufacturer != "string" || t.manufacturer.length === 0)
-    throw new v('hiper-mvhr-card: "manufacturer" is required');
-  if (!K.includes(t.manufacturer))
-    throw new v(
-      `hiper-mvhr-card: unknown manufacturer "${t.manufacturer}". Supported: ${K.join(", ")}`
+    throw new b("hiper-mvhr-card: configuration must be an object");
+  const e = a;
+  if (typeof e.manufacturer != "string" || e.manufacturer.length === 0)
+    throw new b('hiper-mvhr-card: "manufacturer" is required');
+  if (!J.includes(e.manufacturer))
+    throw new b(
+      `hiper-mvhr-card: unknown manufacturer "${e.manufacturer}". Supported: ${J.join(", ")}`
     );
-  const e = t.manufacturer, r = t.display_mode ?? ce;
-  if (!xt.includes(r))
-    throw new v(
-      `hiper-mvhr-card: invalid "display_mode" value "${String(t.display_mode)}". Expected one of: ${xt.join(", ")}`
+  const t = e.manufacturer, r = e.display_mode ?? ct;
+  if (!xe.includes(r))
+    throw new b(
+      `hiper-mvhr-card: invalid "display_mode" value "${String(e.display_mode)}". Expected one of: ${xe.join(", ")}`
     );
-  if (t.name !== void 0 && typeof t.name != "string")
-    throw new v('hiper-mvhr-card: "name" must be a string if provided');
-  if (t.title !== void 0 && typeof t.title != "string")
-    throw new v('hiper-mvhr-card: "title" must be a string if provided');
-  if (t.subtitle !== void 0 && typeof t.subtitle != "string")
-    throw new v('hiper-mvhr-card: "subtitle" must be a string if provided');
-  const i = t.heat_recovery_method ?? "automatic";
-  if (!yt.includes(i))
-    throw new v(
-      `hiper-mvhr-card: invalid "heat_recovery_method" value "${String(t.heat_recovery_method)}". Expected one of: ${yt.join(", ")}`
+  if (e.name !== void 0 && typeof e.name != "string")
+    throw new b('hiper-mvhr-card: "name" must be a string if provided');
+  if (e.title !== void 0 && typeof e.title != "string")
+    throw new b('hiper-mvhr-card: "title" must be a string if provided');
+  if (e.subtitle !== void 0 && typeof e.subtitle != "string")
+    throw new b('hiper-mvhr-card: "subtitle" must be a string if provided');
+  const i = e.heat_recovery_method ?? "automatic";
+  if (!we.includes(i))
+    throw new b(
+      `hiper-mvhr-card: invalid "heat_recovery_method" value "${String(e.heat_recovery_method)}". Expected one of: ${we.join(", ")}`
     );
-  const o = t.filter_max_days ?? 365;
+  const o = e.filter_max_days ?? 365;
   if (typeof o != "number" || !Number.isFinite(o) || o <= 0)
-    throw new v('hiper-mvhr-card: "filter_max_days" must be a positive number');
-  const s = t.entities ?? {};
+    throw new b('hiper-mvhr-card: "filter_max_days" must be a positive number');
+  const s = e.entities ?? {};
   if (typeof s != "object" || Array.isArray(s) || s === null)
-    throw new v(
+    throw new b(
       'hiper-mvhr-card: "entities" must be a mapping of role to entity id'
     );
   const n = {};
   for (const [d, p] of Object.entries(s)) {
-    const h = de[d] ?? d;
-    if (!wt(h)) {
+    const h = dt[d] ?? d;
+    if (!ye(h)) {
       console.warn(`hiper-mvhr-card: ignoring unknown entity role "${d}" in config`);
       continue;
     }
     if (typeof p != "string" || p.length === 0)
-      throw new v(
+      throw new b(
         `hiper-mvhr-card: entity id for role "${d}" must be a non-empty string`
       );
     n[h] = p;
   }
-  const l = t.feature_flags ?? {};
+  const l = e.feature_flags ?? {};
   if (typeof l != "object" || Array.isArray(l) || l === null)
-    throw new v(
+    throw new b(
       'hiper-mvhr-card: "feature_flags" must be a mapping of role to boolean'
     );
   const u = {};
   for (const [d, p] of Object.entries(l)) {
-    if (!wt(d)) {
+    if (!ye(d)) {
       console.warn(`hiper-mvhr-card: ignoring unknown feature flag role "${d}" in config`);
       continue;
     }
     if (typeof p != "boolean")
-      throw new v(
+      throw new b(
         `hiper-mvhr-card: feature flag "${d}" must be true or false, got ${JSON.stringify(p)}`
       );
     u[d] = p;
   }
   return {
     type: "custom:hiper-mvhr-card",
-    name: t.name,
-    title: t.title,
-    subtitle: t.subtitle,
-    manufacturer: e,
+    name: e.name,
+    title: e.title,
+    subtitle: e.subtitle,
+    manufacturer: t,
     display_mode: r,
     entities: n,
     feature_flags: u,
-    show_airflow_on_all_paths: t.show_airflow_on_all_paths === !0,
-    show_controls: t.show_controls !== !1,
-    show_fan_speeds: t.show_fan_speeds !== !1,
-    show_filter: t.show_filter !== !1,
-    show_calibration: t.show_calibration !== !1,
+    show_airflow_on_all_paths: e.show_airflow_on_all_paths === !0,
+    show_controls: e.show_controls !== !1,
+    show_fan_speeds: e.show_fan_speeds !== !1,
+    show_filter: e.show_filter !== !1,
+    show_calibration: e.show_calibration !== !1,
     filter_max_days: o,
     heat_recovery_method: i,
-    show_airflow_animation: t.show_airflow_animation !== !1,
-    show_advanced_controls: t.show_advanced_controls !== !1
+    show_airflow_animation: e.show_airflow_animation !== !1,
+    show_advanced_controls: e.show_advanced_controls !== !1
   };
 }
-function pe(a, t) {
-  const e = Mt(a);
-  if (!t || Object.keys(t).length === 0)
-    return e;
-  const r = new Set(e.unsupportedRoles ?? []), i = { ...e.supportedRoles };
-  for (const o of Object.keys(t))
-    r.has(o) || (t[o] ? i[o] = i[o] ?? {} : delete i[o]);
-  return { ...e, supportedRoles: i };
+function pt(a, e) {
+  const t = Me(a);
+  if (!e || Object.keys(e).length === 0)
+    return t;
+  const r = new Set(t.unsupportedRoles ?? []), i = { ...t.supportedRoles };
+  for (const o of Object.keys(e))
+    r.has(o) || (e[o] ? i[o] = i[o] ?? {} : delete i[o]);
+  return { ...t, supportedRoles: i };
 }
-const he = /* @__PURE__ */ new Set(["unavailable", "unknown"]), me = /* @__PURE__ */ new Set(["button", "input_button"]);
-function _e(a) {
-  const [t] = a.split(".");
-  return t ?? "";
+const ht = /* @__PURE__ */ new Set(["unavailable", "unknown"]), mt = /* @__PURE__ */ new Set(["button", "input_button"]);
+function ft(a) {
+  const [e] = a.split(".");
+  return e ?? "";
 }
-function fe(a, t, e) {
+function gt(a, e, t) {
   var i;
   const r = {};
-  for (const o of at) {
-    if (!t.supportedRoles[o]) {
+  for (const o of ae) {
+    if (!e.supportedRoles[o]) {
       r[o] = { status: "unsupported" };
       continue;
     }
-    const s = e[o];
+    const s = t[o];
     if (!s) {
       r[o] = { status: "not_configured" };
       continue;
@@ -1051,8 +1051,8 @@ function fe(a, t, e) {
       r[o] = { status: "entity_missing", entityId: s };
       continue;
     }
-    const l = n.state === "unknown" && me.has(_e(s));
-    if (he.has(n.state) && !l) {
+    const l = n.state === "unknown" && mt.has(ft(s));
+    if (ht.has(n.state) && !l) {
       r[o] = { status: "unavailable" };
       continue;
     }
@@ -1067,10 +1067,10 @@ function fe(a, t, e) {
   }
   return r;
 }
-function ge(a, t, e = {}) {
-  const r = new Set(e.ignoreRoles ?? []);
+function _t(a, e, t = {}) {
+  const r = new Set(t.ignoreRoles ?? []);
   let i = 0, o = 0, s = 0;
-  for (const n of Object.keys(t.supportedRoles)) {
+  for (const n of Object.keys(e.supportedRoles)) {
     if (r.has(n))
       continue;
     const l = a[n];
@@ -1084,28 +1084,28 @@ function ge(a, t, e = {}) {
     label: o === 1 ? "1 sensor unavailable" : `${o} sensors unavailable`
   } : i > 0 ? { tone: "success", label: "All sensors reporting" } : { tone: "muted", label: "Not configured" };
 }
-const ve = 1e4, be = "press";
-function xe(a) {
-  const [t] = a.split(".");
-  return t ?? "";
+const vt = 1e4, bt = "press";
+function xt(a) {
+  const [e] = a.split(".");
+  return e ?? "";
 }
-class ye {
-  constructor(t = {}) {
-    this._state = { status: "idle" }, this._listeners = /* @__PURE__ */ new Set(), this._timeoutMs = t.timeoutMs ?? ve;
+class wt {
+  constructor(e = {}) {
+    this._state = { status: "idle" }, this._listeners = /* @__PURE__ */ new Set(), this._timeoutMs = e.timeoutMs ?? vt;
   }
   get state() {
     return this._state;
   }
   /** Subscribes to state changes; returns an unsubscribe function. */
-  onChange(t) {
-    return this._listeners.add(t), () => {
-      this._listeners.delete(t);
+  onChange(e) {
+    return this._listeners.add(e), () => {
+      this._listeners.delete(e);
     };
   }
-  _setState(t) {
-    this._state = t;
-    for (const e of this._listeners)
-      e();
+  _setState(e) {
+    this._state = e;
+    for (const t of this._listeners)
+      t();
   }
   /**
    * Fires a "press" action for the given entity id. Safe to call even when
@@ -1114,18 +1114,18 @@ class ye {
    * the same "degrade, never fail" principle the rest of the card follows
    * (SPECIFICATION.md §6).
    */
-  async dispatchAction(t, e) {
-    if (!(t != null && t.callService) || this._state.status === "pending")
+  async dispatchAction(e, t) {
+    if (!(e != null && e.callService) || this._state.status === "pending")
       return;
     this._setState({ status: "pending" });
-    const r = xe(e);
+    const r = xt(t);
     let i;
     const o = new Promise((s) => {
       i = setTimeout(() => s("timeout"), this._timeoutMs);
     });
     try {
       if (await Promise.race([
-        t.callService(r, be, { entity_id: e }).then(() => "done"),
+        e.callService(r, bt, { entity_id: t }).then(() => "done"),
         o
       ]) === "timeout") {
         this._setState({ status: "error", message: "Timed out waiting for a response." });
@@ -1142,7 +1142,7 @@ class ye {
     }
   }
 }
-const we = {
+const yt = {
   unsupported: "",
   not_configured: "Not configured",
   // Homeowner-safe generic text — deliberately identical to `unavailable`.
@@ -1152,19 +1152,19 @@ const we = {
   entity_missing: "Unavailable",
   unavailable: "Unavailable"
 };
-function $e(a) {
-  return a.status === "ok" ? a.unit ? `${a.value} ${a.unit}` : a.value : we[a.status] ?? "";
+function $t(a) {
+  return a.status === "ok" ? a.unit ? `${a.value} ${a.unit}` : a.value : yt[a.status] ?? "";
 }
-function Ae(a) {
+function At(a) {
   return a.length > 0 ? a.charAt(0).toUpperCase() + a.slice(1) : a;
 }
-function ke(a) {
+function kt(a) {
   if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(a))
     return a;
-  const t = new Date(a);
-  return Number.isNaN(t.getTime()) ? a : t.toLocaleString(void 0, { dateStyle: "medium", timeStyle: "short" });
+  const e = new Date(a);
+  return Number.isNaN(e.getTime()) ? a : e.toLocaleString(void 0, { dateStyle: "medium", timeStyle: "short" });
 }
-const Se = {
+const St = {
   mode: "mdi:fan",
   outdoor_air_temp: "mdi:thermometer",
   supply_air_temp: "mdi:thermometer",
@@ -1181,53 +1181,53 @@ const Se = {
   shower_trigger_temperature: "mdi:thermometer-water",
   shower_pipe_temperature: "mdi:thermometer-water"
 };
-function J(a) {
-  return Se[a];
+function Z(a) {
+  return St[a];
 }
-function Ee(a) {
+function Et(a) {
   if (a.method === "disabled")
     return { label: "Disabled", status: "not_applicable" };
   if (a.outdoor === void 0 || a.extract === void 0 || a.supply === void 0)
     return { label: "Unavailable", status: "unavailable" };
-  const t = a.extract - a.outdoor;
-  if (Math.abs(t) < 1)
+  const e = a.extract - a.outdoor;
+  if (Math.abs(e) < 1)
     return { label: "Calculating", status: "calculating" };
-  if (t <= 0 || a.supply < a.outdoor || a.supply > a.extract + 5)
+  if (e <= 0 || a.supply < a.outdoor || a.supply > a.extract + 5)
     return { label: "Not applicable", status: "not_applicable" };
-  const e = (a.supply - a.outdoor) / t * 100;
-  return !Number.isFinite(e) || e < 0 || e > 130 ? { label: "Not applicable", status: "not_applicable", raw: e } : {
-    label: `${Math.round(Math.max(0, Math.min(100, e)))}%`,
+  const t = (a.supply - a.outdoor) / e * 100;
+  return !Number.isFinite(t) || t < 0 || t > 130 ? { label: "Not applicable", status: "not_applicable", raw: t } : {
+    label: `${Math.round(Math.max(0, Math.min(100, t)))}%`,
     status: "ok",
-    raw: e
+    raw: t
   };
 }
-var Ce = Object.defineProperty, W = (a, t, e, r) => {
+var Ct = Object.defineProperty, W = (a, e, t, r) => {
   for (var i = void 0, o = a.length - 1, s; o >= 0; o--)
-    (s = a[o]) && (i = s(t, e, i) || i);
-  return i && Ce(t, e, i), i;
+    (s = a[o]) && (i = s(e, t, i) || i);
+  return i && Ct(e, t, i), i;
 };
-const F = "hiper-mvhr-card", Re = [
+const V = "hiper-mvhr-card", Tt = [
   ["outdoor_air_temp", "Outdoor air"],
   ["supply_air_temp", "Supply air"],
   ["extract_air_temp", "Extract air"],
   ["exhaust_air_temp", "Exhaust air"]
-], Te = [
+], Rt = [
   ["supply_airflow", "Supply airflow"],
   ["extract_airflow", "Extract airflow"]
-], $t = [
+], $e = [
   ["supply_fan_speed", "Supply fan"],
   ["extract_fan_speed", "Extract fan"]
-], Oe = [
+], Ot = [
   ["bypass_state", "Summer bypass"],
   ["filter_remaining", "Filter"],
   ["calibration_result", "Calibration"],
   ["fault_active", "Fault"],
   ["frost_protection_active", "Frost protection"]
-], At = [["filter_reset_control", "Filter reset"]], I = {
+], Ae = [["filter_reset_control", "Filter reset"]], K = {
   success: "mdi:check-circle",
   warning: "mdi:alert",
   muted: "mdi:information-outline"
-}, Nt = [
+}, He = [
   "effective_mode",
   "fault_active",
   "frost_protection_active",
@@ -1247,25 +1247,25 @@ const F = "hiper-mvhr-card", Re = [
   "shower_detected",
   "shower_trigger_temperature",
   "shower_pipe_temperature"
-], ze = new Set(Nt), kt = 10, Me = [
+], zt = new Set(He), ke = 10, Mt = [
   ["supply_air_temp", "Supply air"],
   ["extract_air_temp", "Extract air"],
   ["outdoor_air_temp", "Outdoor air"],
   ["exhaust_air_temp", "Exhaust air"]
-], Pe = /* @__PURE__ */ new Set([
+], Pt = /* @__PURE__ */ new Set([
   "calibrated",
   "complete",
   "completed",
   "idle",
   "none",
   "unknown"
-]), Ne = /* @__PURE__ */ new Set(["on", "true", "problem", "active", "detected"]), nt = class nt extends R {
+]), Ht = /* @__PURE__ */ new Set(["on", "true", "problem", "active", "detected"]), ne = class ne extends T {
   constructor() {
     super(...arguments), this._advancedOpen = !1, this._dispatchers = /* @__PURE__ */ new Map();
   }
-  _getDispatcher(t) {
-    let e = this._dispatchers.get(t);
-    return e || (e = new ye(), e.onChange(() => this.requestUpdate()), this._dispatchers.set(t, e)), e;
+  _getDispatcher(e) {
+    let t = this._dispatchers.get(e);
+    return t || (t = new wt(), t.onChange(() => this.requestUpdate()), this._dispatchers.set(e, t)), t;
   }
   static getStubConfig() {
     return {
@@ -1277,11 +1277,11 @@ const F = "hiper-mvhr-card", Re = [
   static getConfigElement() {
     return document.createElement("hiper-mvhr-card-editor");
   }
-  setConfig(t) {
+  setConfig(e) {
     try {
-      this._config = ue(t), this._configError = void 0;
-    } catch (e) {
-      this._config = void 0, this._configError = e instanceof Error ? e.message : String(e);
+      this._config = ut(e), this._configError = void 0;
+    } catch (t) {
+      this._config = void 0, this._configError = t instanceof Error ? t.message : String(t);
     }
   }
   getCardSize() {
@@ -1292,15 +1292,15 @@ const F = "hiper-mvhr-card", Re = [
       return c`<ha-card><div class="error" role="alert">${this._configError}</div></ha-card>`;
     if (!this._config || !this.hass)
       return c``;
-    const t = this._config, e = this.hass, r = t.display_mode === "detailed", i = t.display_mode === "system", o = pe(t.manufacturer, t.feature_flags), s = Mt(t.manufacturer), n = fe(e, o, t.entities), l = ge(n, o, {
-      ignoreRoles: Nt
-    }), u = r || l.label !== "Not configured", d = n.mode ? this._present(n.mode, r) : null, p = t.title ?? t.name ?? s.name, h = t.subtitle ?? "Heat Recovery Ventilation System", m = l.tone !== "warning" && l.label !== "Not configured", g = this._heatRecovery(n, t.heat_recovery_method), b = this._modeLabel(
+    const e = this._config, t = this.hass, r = e.display_mode === "detailed", i = e.display_mode === "system", o = pt(e.manufacturer, e.feature_flags), s = Me(e.manufacturer), n = gt(t, o, e.entities), l = _t(n, o, {
+      ignoreRoles: He
+    }), u = r || l.label !== "Not configured", d = n.mode ? this._present(n.mode, r) : null, p = e.title ?? e.name ?? s.name, h = e.subtitle ?? "Heat Recovery Ventilation System", m = l.tone !== "warning" && l.label !== "Not configured", v = this._heatRecovery(n, e.heat_recovery_method), g = this._modeLabel(
       (d == null ? void 0 : d.text) ?? this._text(n.effective_mode)
-    ), f = t.title ?? s.name;
+    ), f = e.title ?? s.name;
     return c`
       <ha-card class=${i ? "card-system" : ""}>
-        ${i ? this._systemHeader(p, h, b, n, t, e) : this._header(p, h, b, l, u)}
-        ${i ? this._systemDashboard(n, t, e, g, b, f, m) : r ? this._dashboard(n, t, e, g, b, f, m) : this._legacyContent(n, t, e, r)}
+        ${i ? this._systemHeader(p, h, g, n, e, t) : this._header(p, h, g, l, u)}
+        ${i ? this._systemDashboard(n, e, t, v, g, f, m) : r ? this._dashboard(n, e, t, v, g, f, m) : this._legacyContent(n, e, t, r)}
       </ha-card>
     `;
   }
@@ -1311,23 +1311,23 @@ const F = "hiper-mvhr-card", Re = [
    * `OPTIONAL_AVAILABILITY_ROLES` above), never an unconfigured optional
    * sensor like fault/frost.
    */
-  _header(t, e, r, i, o) {
+  _header(e, t, r, i, o) {
     return c`
       <div class="header mvhr-header">
         <div class="header-row">
           <div class="header-title-group">
-            <h2 class="title">${t}</h2>
+            <h2 class="title">${e}</h2>
             <span class="status-dot dot-${i.tone}" aria-hidden="true"></span>
             ${r ? c`<span class="mode-pill">${r}</span>` : ""}
           </div>
           ${o ? c`
                   <div class="availability tone-${i.tone}" role="status">
-                    <ha-icon icon=${I[i.tone]} aria-hidden="true"></ha-icon>
+                    <ha-icon icon=${K[i.tone]} aria-hidden="true"></ha-icon>
                     <span>${i.label}</span>
                   </div>
                 ` : ""}
         </div>
-        <div class="subheader">${e}</div>
+        <div class="subheader">${t}</div>
       </div>
     `;
   }
@@ -1339,12 +1339,12 @@ const F = "hiper-mvhr-card", Re = [
    * `_dashboard` below, which is its full replacement (ROADMAP.md "Rebuild
    * detailed MVHR dashboard layout").
    */
-  _legacyContent(t, e, r, i) {
+  _legacyContent(e, t, r, i) {
     return c`
       <div class="content">
-        ${this._metricSection("Temperatures", Re, t, i)}
-        ${this._metricSection("Airflow", Te, t, i)}
-        ${this._statusSection("System status", Oe, t, i, e, r)}
+        ${this._metricSection("Temperatures", Tt, e, i)}
+        ${this._metricSection("Airflow", Rt, e, i)}
+        ${this._statusSection("System status", Ot, e, i, t, r)}
       </div>
     `;
   }
@@ -1355,23 +1355,23 @@ const F = "hiper-mvhr-card", Re = [
    * bottom. Nothing from the legacy homeowner content (`_legacyContent`)
    * renders alongside it.
    */
-  _dashboard(t, e, r, i, o, s, n) {
-    const l = e.show_controls && this._hasControls(t, e);
+  _dashboard(e, t, r, i, o, s, n) {
+    const l = t.show_controls && this._hasControls(e, t);
     return c`
       <div class="mvhr-dashboard ${l ? "" : "no-controls"}">
         <section class="visual-panel" aria-label="MVHR airflow diagram">
-          ${this._heroVisual(t, e, n, s, i)}
+          ${this._heroVisual(e, t, n, s, i)}
         </section>
-        ${l ? this._controlsPanel(t, e, r) : ""}
+        ${l ? this._controlsPanel(e, t, r) : ""}
         <section class="metrics-grid" aria-label="MVHR metrics">
           ${this._infoTile("Mode", o || "—", "mdi:fan-auto")}
           ${this._infoTile(
       "Measured airflow",
-      this._value(t.airflow, !0) ?? this._value(t.supply_airflow, !0) ?? "—",
+      this._value(e.airflow, !0) ?? this._value(e.supply_airflow, !0) ?? "—",
       "mdi:weather-windy"
     )}
-          ${this._infoTile("Target airflow", this._value(t.target_airflow, !0) ?? "—", "mdi:target")}
-          ${this._infoTile("Mapped level", this._value(t.mapped_level, !0) ?? "—", "mdi:tune-variant")}
+          ${this._infoTile("Target airflow", this._value(e.target_airflow, !0) ?? "—", "mdi:target")}
+          ${this._infoTile("Mapped level", this._value(e.mapped_level, !0) ?? "—", "mdi:tune-variant")}
           ${this._infoTile(
       "Heat recovery",
       i.label,
@@ -1379,11 +1379,11 @@ const F = "hiper-mvhr-card", Re = [
       i.status,
       "Apparent temperature recovery"
     )}
-          ${e.show_fan_speeds ? this._infoTile("Fan speeds", this._pair($t, t, !0), "mdi:fan") : ""}
-          ${this._infoTile("Humidity", this._value(t.indoor_humidity, !0) ?? "—", "mdi:water-percent")}
-          ${e.show_filter ? this._filterTile(t, e) : ""}
+          ${t.show_fan_speeds ? this._infoTile("Fan speeds", this._pair($e, e, !0), "mdi:fan") : ""}
+          ${this._infoTile("Humidity", this._value(e.indoor_humidity, !0) ?? "—", "mdi:water-percent")}
+          ${t.show_filter ? this._filterTile(e, t) : ""}
         </section>
-        ${this._statusStrip(t, e)} ${this._extraControls(t, e, r)}
+        ${this._statusStrip(e, t)} ${this._extraControls(e, t, r)}
       </div>
     `;
   }
@@ -1396,17 +1396,17 @@ const F = "hiper-mvhr-card", Re = [
    * exactly the same content the dashboard rebuild already produced, so
    * this was extracted rather than re-implemented.
    */
-  _statusStrip(t, e) {
+  _statusStrip(e, t) {
     var o;
-    const r = this._dashboardStatus(t), i = ((o = t.last_calibration) == null ? void 0 : o.status) === "ok" ? ke(t.last_calibration.value) : null;
+    const r = this._dashboardStatus(e), i = ((o = e.last_calibration) == null ? void 0 : o.status) === "ok" ? kt(e.last_calibration.value) : null;
     return c`
       <section class="status-strip tone-${r.tone}" aria-label="MVHR status">
         <span class="status-chip">
-          <ha-icon icon=${I[r.tone]} aria-hidden="true"></ha-icon>
+          <ha-icon icon=${K[r.tone]} aria-hidden="true"></ha-icon>
           <span>${r.label}</span>
         </span>
-        ${e.show_calibration ? c`
-                <span>Calibration: ${this._value(t.calibration_result, !0) ?? "—"}</span>
+        ${t.show_calibration ? c`
+                <span>Calibration: ${this._value(e.calibration_result, !0) ?? "—"}</span>
                 ${i ? c`<span>Last calibration: ${i}</span>` : ""}
               ` : ""}
       </section>
@@ -1417,43 +1417,43 @@ const F = "hiper-mvhr-card", Re = [
    * role: what should actually appear, and how prominent should it look.
    * Returns null when nothing should render for this role at all.
    */
-  _present(t, e) {
-    return t.status === "unsupported" ? null : t.status === "not_configured" ? e ? { tone: "muted", text: "Not configured" } : null : t.status === "entity_missing" ? e ? { tone: "warning", text: `Entity not found: ${t.entityId}` } : { tone: "muted", text: "Unavailable" } : t.status === "unavailable" ? { tone: "muted", text: "Unavailable" } : { tone: "normal", text: $e(t) };
+  _present(e, t) {
+    return e.status === "unsupported" ? null : e.status === "not_configured" ? t ? { tone: "muted", text: "Not configured" } : null : e.status === "entity_missing" ? t ? { tone: "warning", text: `Entity not found: ${e.entityId}` } : { tone: "muted", text: "Unavailable" } : e.status === "unavailable" ? { tone: "muted", text: "Unavailable" } : { tone: "normal", text: $t(e) };
   }
-  _metricSection(t, e, r, i) {
-    const o = e.map(([s, n]) => {
+  _metricSection(e, t, r, i) {
+    const o = t.map(([s, n]) => {
       const l = r[s], u = l ? this._present(l, i) : null;
       return u ? this._metricCell(s, n, u) : null;
     }).filter((s) => s !== null);
     return o.length === 0 ? c`` : c`
-      <section class="metric-section" aria-label=${t}>
-        <h3>${t}</h3>
+      <section class="metric-section" aria-label=${e}>
+        <h3>${e}</h3>
         <div class="metric-grid">${o}</div>
       </section>
     `;
   }
-  _metricCell(t, e, r) {
-    const i = J(t);
+  _metricCell(e, t, r) {
+    const i = Z(e);
     return c`
       <div class="metric tone-${r.tone}">
         ${i ? c`<ha-icon icon=${i} aria-hidden="true"></ha-icon>` : ""}
         <div class="metric-text">
-          <span class="metric-label">${e}</span>
+          <span class="metric-label">${t}</span>
           <span class="metric-value">${r.text}</span>
         </div>
       </div>
     `;
   }
-  _statusSection(t, e, r, i, o, s) {
-    const n = e.map(([d, p]) => {
+  _statusSection(e, t, r, i, o, s) {
+    const n = t.map(([d, p]) => {
       const h = r[d], m = h ? this._present(h, i) : null;
       return m ? this._statusRow(d, p, m) : null;
-    }).filter((d) => d !== null), l = At.map(
+    }).filter((d) => d !== null), l = Ae.map(
       ([d, p]) => this._controlRow(d, p, r[d], i, o, s)
     ).filter((d) => d !== null), u = [...n, ...l];
     return u.length === 0 ? c`` : c`
-      <section class="status-section" aria-label=${t}>
-        <h3>${t}</h3>
+      <section class="status-section" aria-label=${e}>
+        <h3>${e}</h3>
         <div class="status-list">${u}</div>
       </section>
     `;
@@ -1467,9 +1467,9 @@ const F = "hiper-mvhr-card", Re = [
    * like the legacy content's status rows did. Renders nothing for
    * Altair/Zehnder/Aerofresh, which don't declare this role supported.
    */
-  _extraControls(t, e, r) {
-    const i = At.map(
-      ([o, s]) => this._controlRow(o, s, t[o], !0, e, r)
+  _extraControls(e, t, r) {
+    const i = Ae.map(
+      ([o, s]) => this._controlRow(o, s, e[o], !0, t, r)
     ).filter((o) => o !== null);
     return i.length === 0 ? c`` : c`
       <section class="status-section extra-controls" aria-label="Additional controls">
@@ -1477,12 +1477,12 @@ const F = "hiper-mvhr-card", Re = [
       </section>
     `;
   }
-  _statusRow(t, e, r) {
-    const i = J(t);
+  _statusRow(e, t, r) {
+    const i = Z(e);
     return c`
       <div class="status-row tone-${r.tone}">
         ${i ? c`<ha-icon icon=${i} aria-hidden="true"></ha-icon>` : ""}
-        <span class="status-label">${e}</span>
+        <span class="status-label">${t}</span>
         <span class="status-value">${r.text}</span>
       </div>
     `;
@@ -1495,26 +1495,26 @@ const F = "hiper-mvhr-card", Re = [
    * interactive button instead of formatted text, since a button entity's
    * raw state (a last-pressed timestamp) isn't meaningful to show.
    */
-  _controlRow(t, e, r, i, o, s) {
+  _controlRow(e, t, r, i, o, s) {
     if (!r)
       return null;
     if (r.status !== "ok") {
       const p = this._present(r, i);
-      return p ? this._statusRow(t, e, p) : null;
+      return p ? this._statusRow(e, t, p) : null;
     }
-    const n = o.entities[t];
+    const n = o.entities[e];
     if (!n)
       return null;
-    const l = this._getDispatcher(t), u = l.state, d = J(t);
+    const l = this._getDispatcher(e), u = l.state, d = Z(e);
     return c`
       <div class="status-row">
         ${d ? c`<ha-icon icon=${d} aria-hidden="true"></ha-icon>` : ""}
-        <span class="status-label">${e}</span>
+        <span class="status-label">${t}</span>
         ${u.status === "error" ? c`<span class="status-value tone-warning">Couldn't reset</span>` : ""}
         <button
           type="button"
           class="control-button"
-          aria-label=${e}
+          aria-label=${t}
           ?disabled=${u.status === "pending"}
           @click=${() => l.dispatchAction(s, n)}
         >
@@ -1530,13 +1530,13 @@ const F = "hiper-mvhr-card", Re = [
    * manufacturer profile, which is exactly why Altair, which has none,
    * never gets one) and the heat-recovery badge inside the unit itself.
    */
-  _heroVisual(t, e, r, i, o) {
-    const s = this._value(t.airflow, !0) ?? this._value(t.supply_airflow, !0), n = e.show_airflow_on_all_paths, l = (u, d, p, h) => {
+  _heroVisual(e, t, r, i, o) {
+    const s = this._value(e.airflow, !0) ?? this._value(e.supply_airflow, !0), n = t.show_airflow_on_all_paths, l = (u, d, p, h) => {
       const m = n || h ? s : null;
       return c`
         <div class="air-path ${u} ${r ? "active" : ""}">
           <span class="path-label">${d}</span>
-          <span class="path-temp">${this._value(t[p], !0) ?? "—"}</span>
+          <span class="path-temp">${this._value(e[p], !0) ?? "—"}</span>
           ${m ? c`<span class="path-airflow">${m}</span>` : ""}
         </div>
       `;
@@ -1572,9 +1572,9 @@ const F = "hiper-mvhr-card", Re = [
    * pre-rebuild dashboard — only markup/CSS and the active-mode highlight
    * are new.
    */
-  _controlsPanel(t, e, r) {
-    var m, g, b;
-    const i = e.entities.mode, o = e.entities.boost_duration, s = e.entities.override_duration, n = this._modeOptions(t.mode), l = this._selectOptions(t.override_duration), u = (m = this._state(t.mode)) == null ? void 0 : m.toLowerCase(), d = this._state(t.boost_active) === "on", p = ((g = t.boost_remaining) == null ? void 0 : g.status) === "ok" ? this._value(t.boost_remaining) : null, h = ((b = t.override_remaining) == null ? void 0 : b.status) === "ok" ? this._value(t.override_remaining) : null;
+  _controlsPanel(e, t, r) {
+    var m, v, g;
+    const i = t.entities.mode, o = t.entities.boost_duration, s = t.entities.override_duration, n = this._modeOptions(e.mode), l = this._selectOptions(e.override_duration), u = (m = this._state(e.mode)) == null ? void 0 : m.toLowerCase(), d = this._state(e.boost_active) === "on", p = ((v = e.boost_remaining) == null ? void 0 : v.status) === "ok" ? this._value(e.boost_remaining) : null, h = ((g = e.override_remaining) == null ? void 0 : g.status) === "ok" ? this._value(e.override_remaining) : null;
     return c`
       <aside class="controls-panel" aria-label="MVHR controls">
         <div class="panel-heading">Controls</div>
@@ -1583,13 +1583,13 @@ const F = "hiper-mvhr-card", Re = [
           <span class="control-group-label">Mode</span>
           <div class="mode-buttons" role="group" aria-label="Operating mode">
             ${n.map((f) => {
-      const w = u !== void 0 && f.toLowerCase() === u;
+      const y = u !== void 0 && f.toLowerCase() === u;
       return c`
                 <button
                   type="button"
-                  class="chip ${w ? "active" : ""}"
+                  class="chip ${y ? "active" : ""}"
                   ?disabled=${!i}
-                  aria-pressed=${w}
+                  aria-pressed=${y}
                   aria-label=${`Set mode ${this._modeLabel(f)}`}
                   @click=${() => i && this._call(r, "select", "select_option", { entity_id: i, option: f })}
                 >
@@ -1614,14 +1614,14 @@ const F = "hiper-mvhr-card", Re = [
               type="number"
               min="1"
               step="1"
-              .value=${this._state(t.boost_duration) ?? ""}
+              .value=${this._state(e.boost_duration) ?? ""}
               ?disabled=${!o}
               aria-label="Boost duration"
               @change=${(f) => {
-      const w = Number(f.currentTarget.value);
-      o && Number.isFinite(w) && this._call(r, "number", "set_value", {
+      const y = Number(f.currentTarget.value);
+      o && Number.isFinite(y) && this._call(r, "number", "set_value", {
         entity_id: o,
-        value: w
+        value: y
       });
     }}
             />
@@ -1631,8 +1631,8 @@ const F = "hiper-mvhr-card", Re = [
               type="button"
               class="cta"
               aria-label="Start Boost"
-              ?disabled=${d || !e.entities.start_boost}
-              @click=${() => this._press(r, e.entities.start_boost)}
+              ?disabled=${d || !t.entities.start_boost}
+              @click=${() => this._press(r, t.entities.start_boost)}
             >
               Start Boost
             </button>
@@ -1640,8 +1640,8 @@ const F = "hiper-mvhr-card", Re = [
               type="button"
               class="cta ghost"
               aria-label="Cancel Boost"
-              ?disabled=${!d || !e.entities.cancel_boost}
-              @click=${() => this._press(r, e.entities.cancel_boost)}
+              ?disabled=${!d || !t.entities.cancel_boost}
+              @click=${() => this._press(r, t.entities.cancel_boost)}
             >
               Cancel Boost
             </button>
@@ -1652,7 +1652,7 @@ const F = "hiper-mvhr-card", Re = [
           <div class="control-block-head">
             <span>Override</span>
             <strong
-              >${this._value(t.override_duration) ?? "Until next schedule change"}</strong
+              >${this._value(e.override_duration) ?? "Until next schedule change"}</strong
             >
           </div>
           ${h ? c`<small>${h} remaining</small>` : ""}
@@ -1662,10 +1662,10 @@ const F = "hiper-mvhr-card", Re = [
               ?disabled=${!s}
               aria-label="Override duration"
               @change=${(f) => {
-      const w = f.currentTarget.value;
+      const y = f.currentTarget.value;
       s && this._call(r, "select", "select_option", {
         entity_id: s,
-        option: w
+        option: y
       });
     }}
             >
@@ -1673,7 +1673,7 @@ const F = "hiper-mvhr-card", Re = [
       (f) => c`
                   <option
                     .value=${f}
-                    ?selected=${this._state(t.override_duration) === f}
+                    ?selected=${this._state(e.override_duration) === f}
                   >
                     ${this._modeLabel(f)}
                   </option>
@@ -1685,8 +1685,8 @@ const F = "hiper-mvhr-card", Re = [
             type="button"
             class="cta ghost full"
             aria-label="Clear override"
-            ?disabled=${!e.entities.clear_override}
-            @click=${() => this._press(r, e.entities.clear_override)}
+            ?disabled=${!t.entities.clear_override}
+            @click=${() => this._press(r, t.entities.clear_override)}
           >
             Clear override
           </button>
@@ -1711,22 +1711,22 @@ const F = "hiper-mvhr-card", Re = [
    * A separate method from `_header` on purpose — `display_mode: detailed`
    * is not touched by the system-mode build.
    */
-  _systemHeader(t, e, r, i, o, s) {
+  _systemHeader(e, t, r, i, o, s) {
     const n = this._dashboardStatus(i);
     return c`
       <div class="header mvhr-header">
         <div class="header-row">
           <div class="header-title-group">
-            <h2 class="title">${t}</h2>
+            <h2 class="title">${e}</h2>
             <span class="status-dot dot-${n.tone}" aria-hidden="true"></span>
             <span class="availability tone-${n.tone}" role="status">
-              <ha-icon icon=${I[n.tone]} aria-hidden="true"></ha-icon>
+              <ha-icon icon=${K[n.tone]} aria-hidden="true"></ha-icon>
               <span>${n.label}</span>
             </span>
           </div>
           ${this._systemHeaderControls(i, o, s, r)}
         </div>
-        <div class="subheader">${e}</div>
+        <div class="subheader">${t}</div>
       </div>
     `;
   }
@@ -1746,11 +1746,11 @@ const F = "hiper-mvhr-card", Re = [
    * appears when `show_controls` is on and a boost role is actually mapped,
    * matching how boost has always been gated everywhere else in this file.
    */
-  _systemHeaderControls(t, e, r, i) {
-    var p, h;
-    const o = e.entities.mode, s = this._modeOptions(t.mode), n = (p = this._state(t.mode)) == null ? void 0 : p.toLowerCase(), l = e.show_controls && !!o && ((h = t.mode) == null ? void 0 : h.status) === "ok", u = e.show_controls && [t.boost_duration, t.start_boost, t.cancel_boost].some(
-      (m) => (m == null ? void 0 : m.status) === "ok"
-    ), d = this._state(t.boost_active) === "on";
+  _systemHeaderControls(e, t, r, i) {
+    var h, m, v;
+    const o = t.entities.mode, s = this._modeOptions(e.mode), n = (h = this._state(e.mode)) == null ? void 0 : h.toLowerCase(), l = t.show_controls && !!o && ((m = e.mode) == null ? void 0 : m.status) === "ok", u = t.show_controls && [e.boost_duration, e.start_boost, e.cancel_boost].some(
+      (g) => (g == null ? void 0 : g.status) === "ok"
+    ), d = this._state(e.boost_active) === "on", p = d && ((v = e.boost_remaining) == null ? void 0 : v.status) === "ok" ? this._value(e.boost_remaining) : null;
     return !l && !i && !u ? c`` : c`
       <div class="system-controls header-controls" role="group" aria-label="MVHR quick controls">
         ${l ? c`
@@ -1759,21 +1759,21 @@ const F = "hiper-mvhr-card", Re = [
                   <select
                     class="mode-select-pill"
                     aria-label="Operating mode"
-                    @change=${(m) => {
-      const g = m.currentTarget.value;
+                    @change=${(g) => {
+      const f = g.currentTarget.value;
       o && this._call(r, "select", "select_option", {
         entity_id: o,
-        option: g
+        option: f
       });
     }}
                   >
                     ${s.map(
-      (m) => c`
+      (g) => c`
                         <option
-                          .value=${m}
-                          ?selected=${n !== void 0 && m.toLowerCase() === n}
+                          .value=${g}
+                          ?selected=${n !== void 0 && g.toLowerCase() === n}
                         >
-                          ${this._modeLabel(m)}
+                          ${this._modeLabel(g)}
                         </option>
                       `
     )}
@@ -1787,11 +1787,12 @@ const F = "hiper-mvhr-card", Re = [
                     type="button"
                     class="boost-pill-button ${d ? "is-active" : ""}"
                     aria-label=${d ? "Cancel Boost" : "Start Boost"}
-                    ?disabled=${d ? !e.entities.cancel_boost : !e.entities.start_boost}
-                    @click=${() => d ? this._press(r, e.entities.cancel_boost) : this._press(r, e.entities.start_boost)}
+                    ?disabled=${d ? !t.entities.cancel_boost : !t.entities.start_boost}
+                    @click=${() => d ? this._press(r, t.entities.cancel_boost) : this._press(r, t.entities.start_boost)}
                   >
                     <ha-icon icon="mdi:rocket-launch" aria-hidden="true"></ha-icon>
                     ${d ? "Active" : "Ready"}
+                    ${p ? c`<small>${p} left</small>` : ""}
                   </button>
                 </div>
               ` : ""}
@@ -1810,31 +1811,28 @@ const F = "hiper-mvhr-card", Re = [
    * `display_mode: detailed`/`homeowner` are unaffected by this method
    * existing.
    */
-  _systemDashboard(t, e, r, i, o, s, n) {
-    const l = this._number(t.airflow) ?? this._number(t.supply_airflow), u = e.show_airflow_animation && n && (l ?? 0) > 0, d = this._shower(t);
+  _systemDashboard(e, t, r, i, o, s, n) {
+    const l = this._number(e.airflow) ?? this._number(e.supply_airflow), u = t.show_airflow_animation && n && (l ?? 0) > 0, d = this._shower(e);
     return c`
       <div class="mvhr-system">
         <section class="system-main ${d.render ? "" : "no-shower"}">
           <section class="visual-panel system-visual-panel system-overview" aria-label="System overview">
             <div class="panel-heading-row">
               <h3>System Overview</h3>
-              ${i.status === "ok" ? c`<span class="recovery-pill" title="Apparent temperature recovery"
-                      >Heat Recovery: ${i.label}</span
-                    >` : ""}
             </div>
-            ${this._systemHeroVisual(t, e, u, s)}
+            ${this._systemHeroVisual(e, t, u, s, i)}
           </section>
           ${d.render ? this._systemShowerPanel(d) : ""}
         </section>
 
         <section class="system-lower-grid" aria-label="MVHR details">
-          ${this._systemAirflowCard(t, e)}
-          ${this._systemTemperaturesCard(t, i)}
-          ${this._systemStatusCard(t, e)}
+          ${this._systemAirflowCard(e, t)}
+          ${this._systemTemperaturesCard(e, i)}
+          ${this._systemStatusCard(e, t)}
         </section>
 
-        ${e.show_advanced_controls ? this._systemAdvancedToggle() : ""}
-        ${e.show_advanced_controls ? this._advancedDrawer(t, e, r) : ""}
+        ${t.show_advanced_controls ? this._systemAdvancedToggle() : ""}
+        ${t.show_advanced_controls ? this._advancedDrawer(e, t, r) : ""}
       </div>
     `;
   }
@@ -1880,21 +1878,21 @@ const F = "hiper-mvhr-card", Re = [
    *    shown only when its own entity actually has a value (never a fake
    *    reading for an unavailable sensor).
    */
-  _shower(t) {
+  _shower(e) {
     var l, u;
-    const e = t.shower_detected, r = !!e && (e == null ? void 0 : e.status) !== "unsupported" && (e == null ? void 0 : e.status) !== "not_configured", i = (e == null ? void 0 : e.status) === "ok" && e.value.toLowerCase() === "on", o = t.shower_trigger_temperature, s = this._number(o), n = s === void 0 ? null : `${(s - kt).toFixed(1)}${(o == null ? void 0 : o.status) === "ok" && o.unit ? ` ${o.unit}` : ""}`;
+    const t = e.shower_detected, r = !!t && (t == null ? void 0 : t.status) !== "unsupported" && (t == null ? void 0 : t.status) !== "not_configured", i = (t == null ? void 0 : t.status) === "ok" && t.value.toLowerCase() === "on", o = e.shower_trigger_temperature, s = this._number(o), n = s === void 0 ? null : `${(s - ke).toFixed(1)}${(o == null ? void 0 : o.status) === "ok" && o.unit ? ` ${o.unit}` : ""}`;
     return {
       render: r,
       active: i,
-      boostActive: this._state(t.boost_active) === "on",
+      boostActive: this._state(e.boost_active) === "on",
       // Each fact is shown only when its own entity is genuinely 'ok' — an
       // unavailable/missing sensor omits its row entirely rather than
       // showing a hollow "Pipe temperature: Unavailable" line, per the
       // redesign's "never a fake reading" rule.
-      pipeTemperature: ((l = t.shower_pipe_temperature) == null ? void 0 : l.status) === "ok" ? this._value(t.shower_pipe_temperature, !0) : null,
+      pipeTemperature: ((l = e.shower_pipe_temperature) == null ? void 0 : l.status) === "ok" ? this._value(e.shower_pipe_temperature, !0) : null,
       triggerTemperature: (o == null ? void 0 : o.status) === "ok" ? this._value(o, !0) : null,
       rearmTemperature: i ? n : null,
-      boostRemaining: ((u = t.boost_remaining) == null ? void 0 : u.status) === "ok" ? this._value(t.boost_remaining) : null
+      boostRemaining: ((u = e.boost_remaining) == null ? void 0 : u.status) === "ok" ? this._value(e.boost_remaining) : null
     };
   }
   /**
@@ -1906,36 +1904,36 @@ const F = "hiper-mvhr-card", Re = [
    * lightweight CSS effect — but `prefers-reduced-motion` always does (see
    * the reduced-motion media query in `static styles`).
    */
-  _systemShowerPanel(t) {
-    return t.active ? c`
+  _systemShowerPanel(e) {
+    return e.active ? c`
       <section class="shower-panel shower-active" aria-label="Shower detection" role="status">
         <h3 class="shower-heading">Shower Detection</h3>
         <div class="shower-illustration" aria-hidden="true">${this._showerIllustration()}</div>
         <strong class="shower-title">Shower detected</strong>
-        <span class="shower-subtitle">${t.boostActive ? "Boost active" : "Boost not active"}</span>
+        <span class="shower-subtitle">${e.boostActive ? "Boost active" : "Boost not active"}</span>
         <dl class="shower-facts">
-          ${t.pipeTemperature ? c`
+          ${e.pipeTemperature ? c`
                   <div class="shower-fact">
                     <dt>Pipe temperature</dt>
-                    <dd>${t.pipeTemperature}</dd>
+                    <dd>${e.pipeTemperature}</dd>
                   </div>
                 ` : ""}
-          ${t.triggerTemperature ? c`
+          ${e.triggerTemperature ? c`
                   <div class="shower-fact">
                     <dt>Trigger temperature</dt>
-                    <dd>${t.triggerTemperature}</dd>
+                    <dd>${e.triggerTemperature}</dd>
                   </div>
                 ` : ""}
-          ${t.rearmTemperature ? c`
+          ${e.rearmTemperature ? c`
                   <div class="shower-fact">
                     <dt>Re-arm at</dt>
-                    <dd>${t.rearmTemperature}<small>(${kt}°C below trigger)</small></dd>
+                    <dd>${e.rearmTemperature}<small>(${ke}°C below trigger)</small></dd>
                   </div>
                 ` : ""}
-          ${t.boostRemaining ? c`
+          ${e.boostRemaining ? c`
                   <div class="shower-fact">
                     <dt>Boost remaining</dt>
-                    <dd>${t.boostRemaining}</dd>
+                    <dd>${e.boostRemaining}</dd>
                   </div>
                 ` : ""}
         </dl>
@@ -1986,12 +1984,12 @@ const F = "hiper-mvhr-card", Re = [
    * `FAN_ROLES` rather than inventing one), and mapped level. Rows only
    * render when their role is actually supported/configured.
    */
-  _systemAirflowCard(t, e) {
-    const r = t.airflow ?? t.supply_airflow, i = this._value(t.airflow, !0) ?? this._value(t.supply_airflow, !0), o = this._number(t.airflow) ?? this._number(t.supply_airflow), s = this._number(t.target_airflow), n = o !== void 0 && s ? Math.max(0, Math.min(1, o / s)) : 0, l = [];
-    return e.show_fan_speeds && t.supply_fan_speed && t.extract_fan_speed && l.push(this._diagnosticRow("mdi:fan", "Fan speed", this._pair($t, t, !0))), t.mapped_level && l.push(
-      this._diagnosticRow("mdi:tune-variant", "Mapped level", this._value(t.mapped_level, !0))
-    ), t.target_airflow && l.push(
-      this._diagnosticRow("mdi:target", "Target airflow", this._value(t.target_airflow, !0))
+  _systemAirflowCard(e, t) {
+    const r = e.airflow ?? e.supply_airflow, i = this._value(e.airflow, !0) ?? this._value(e.supply_airflow, !0), o = this._number(e.airflow) ?? this._number(e.supply_airflow), s = this._number(e.target_airflow), n = o !== void 0 && s ? Math.max(0, Math.min(1, o / s)) : 0, l = [];
+    return t.show_fan_speeds && e.supply_fan_speed && e.extract_fan_speed && l.push(this._diagnosticRow("mdi:fan", "Fan speed", this._pair($e, e, !0))), e.mapped_level && l.push(
+      this._diagnosticRow("mdi:tune-variant", "Current profile", this._value(e.mapped_level, !0))
+    ), e.target_airflow && l.push(
+      this._diagnosticRow("mdi:target", "Target airflow", this._value(e.target_airflow, !0))
     ), c`
       <section class="lower-card airflow-card" aria-label="Airflow">
         <h3>Airflow</h3>
@@ -2008,10 +2006,10 @@ const F = "hiper-mvhr-card", Re = [
    * much of the arc is filled; the big central number is the actual
    * formatted role value (or "—"), never a synthesized figure.
    */
-  _airflowGauge(t, e) {
-    const i = Math.PI * 40, o = i * (1 - t);
+  _airflowGauge(e, t) {
+    const i = Math.PI * 40, o = i * (1 - e);
     return c`
-      <div class="gauge" role="img" aria-label=${`Current airflow ${e ?? "unavailable"}`}>
+      <div class="gauge" role="img" aria-label=${`Current airflow ${t ?? "unavailable"}`}>
         <svg viewBox="0 0 100 56" class="gauge-svg">
           <path d="M10 50 A40 40 0 0 1 90 50" class="gauge-track" />
           <path
@@ -2021,7 +2019,7 @@ const F = "hiper-mvhr-card", Re = [
           />
         </svg>
         <div class="gauge-value">
-          <strong>${e ?? "—"}</strong>
+          <strong>${t ?? "—"}</strong>
           <span>Current Airflow</span>
         </div>
       </div>
@@ -2032,9 +2030,9 @@ const F = "hiper-mvhr-card", Re = [
    * hero visual shows, in a clean aligned list (icons + values, per the
    * brief), plus the heat-recovery percentage.
    */
-  _systemTemperaturesCard(t, e) {
-    const r = Me.map(([i, o]) => {
-      const s = t[i];
+  _systemTemperaturesCard(e, t) {
+    const r = Mt.map(([i, o]) => {
+      const s = e[i];
       return s ? this._diagnosticRow("mdi:thermometer", o, this._value(s, !0)) : null;
     }).filter((i) => i !== null);
     return c`
@@ -2042,7 +2040,7 @@ const F = "hiper-mvhr-card", Re = [
         <h3>Temperatures</h3>
         <div class="status-list">
           ${r}
-          ${this._diagnosticRow("mdi:heat-wave", "Heat recovery", e.label)}
+          ${this._diagnosticRow("mdi:heat-wave", "Heat recovery", t.label)}
         </div>
       </section>
     `;
@@ -2054,18 +2052,46 @@ const F = "hiper-mvhr-card", Re = [
    * status the header shows. Read-only by design — the interactive
    * override/calibration controls live in `_advancedDrawer`, not here.
    */
-  _systemStatusCard(t, e) {
-    var u, d;
-    const r = this._dashboardStatus(t), i = this._state(t.boost_active) === "on", o = [t.boost_active, t.boost_duration, t.start_boost].some(
-      (p) => (p == null ? void 0 : p.status) === "ok"
-    ), s = ((u = t.override_duration) == null ? void 0 : u.status) === "ok" ? this._modeLabel(t.override_duration.value) : null, n = ((d = t.boost_remaining) == null ? void 0 : d.status) === "ok" ? this._value(t.boost_remaining) : null, l = [];
-    return o && l.push(this._diagnosticRow("mdi:rocket-launch", "Boost", i ? "Active" : "Ready")), s && l.push(this._diagnosticRow("mdi:calendar-clock", "Override", s)), n && l.push(this._diagnosticRow("mdi:timer-sand", "Boost remaining", n)), e.show_filter && t.filter_remaining && l.push(
-      this._diagnosticRow("mdi:air-filter", "Filters", this._value(t.filter_remaining, !0))
-    ), l.push(this._diagnosticRow(I[r.tone], "System", r.label)), c`
+  _systemStatusCard(e, t) {
+    var p, h;
+    const r = this._dashboardStatus(e), i = this._state(e.boost_active) === "on", o = [e.boost_active, e.boost_duration, e.start_boost].some(
+      (m) => (m == null ? void 0 : m.status) === "ok"
+    ), s = ((p = e.override_duration) == null ? void 0 : p.status) === "ok" ? this._modeLabel(e.override_duration.value) : null, n = ((h = e.boost_remaining) == null ? void 0 : h.status) === "ok" ? this._value(e.boost_remaining) : null, l = this._number(e.filter_remaining), u = l === void 0 ? "muted" : l / t.filter_max_days <= 0.15 ? "warning" : "success", d = [];
+    return o && d.push(this._statusBadge(i ? "Boost Active" : "Boost Ready", i ? "success" : "muted")), s && d.push(this._statusBadge(`Override: ${s}`, "muted")), t.show_filter && e.filter_remaining && d.push(
+      this._statusBadge(`Filter ${this._value(e.filter_remaining, !0)}`, u)
+    ), d.push(this._statusBadge(r.label, r.tone)), c`
       <section class="lower-card system-status-card" aria-label="System status">
         <h3>System Status</h3>
-        <div class="status-list">${l}</div>
+        ${// "Make the boost remaining time more prominent" — a big countdown
+    // callout above the badge row, rather than one more small row
+    // buried among everything else, and only when there's an active
+    // boost with a real remaining-time reading to show.
+    n ? c`
+                <div class="boost-remaining-highlight" role="status">
+                  <ha-icon icon="mdi:timer-sand" aria-hidden="true"></ha-icon>
+                  <div>
+                    <strong>${n}</strong>
+                    <span>Boost remaining</span>
+                  </div>
+                </div>
+              ` : ""}
+        <div class="status-badge-row">${d}</div>
       </section>
+    `;
+  }
+  /**
+   * A small coloured-dot status badge ("🟢 Boost Active", "🟡 Filter 12
+   * days") in place of a label/value row — visual-polish follow-up. The dot
+   * is decorative (`aria-hidden`) reinforcement only; the tone is never the
+   * sole indicator since the text itself always states the state in words
+   * (e.g. "Boost Active", not just a coloured dot).
+   */
+  _statusBadge(e, t) {
+    return c`
+      <span class="status-badge tone-${t}">
+        <span class="status-badge-dot" aria-hidden="true"></span>
+        ${e}
+      </span>
     `;
   }
   /**
@@ -2076,13 +2102,13 @@ const F = "hiper-mvhr-card", Re = [
    * dashboard. Collapsed by default (`_advancedOpen` starts `false`);
    * renders nothing until opened.
    */
-  _advancedDrawer(t, e, r) {
+  _advancedDrawer(e, t, r) {
     var p;
     if (!this._advancedOpen)
       return c``;
-    const i = e.entities.override_duration, o = this._selectOptions(t.override_duration), s = ((p = t.override_remaining) == null ? void 0 : p.status) === "ok" ? this._value(t.override_remaining) : null, n = [t.override_duration, t.clear_override].some(
+    const i = t.entities.override_duration, o = this._selectOptions(e.override_duration), s = ((p = e.override_remaining) == null ? void 0 : p.status) === "ok" ? this._value(e.override_remaining) : null, n = [e.override_duration, e.clear_override].some(
       (h) => (h == null ? void 0 : h.status) === "ok"
-    ), l = e.entities.boost_duration, u = this._state(t.boost_active) === "on", d = [t.boost_duration, t.start_boost, t.cancel_boost].some(
+    ), l = t.entities.boost_duration, u = this._state(e.boost_active) === "on", d = [e.boost_duration, e.start_boost, e.cancel_boost].some(
       (h) => (h == null ? void 0 : h.status) === "ok"
     );
     return c`
@@ -2098,7 +2124,7 @@ const F = "hiper-mvhr-card", Re = [
                       type="number"
                       min="1"
                       step="1"
-                      .value=${this._state(t.boost_duration) ?? ""}
+                      .value=${this._state(e.boost_duration) ?? ""}
                       ?disabled=${!l}
                       aria-label="Boost duration"
                       @change=${(h) => {
@@ -2115,8 +2141,8 @@ const F = "hiper-mvhr-card", Re = [
                       type="button"
                       class="cta"
                       aria-label="Start Boost"
-                      ?disabled=${u || !e.entities.start_boost}
-                      @click=${() => this._press(r, e.entities.start_boost)}
+                      ?disabled=${u || !t.entities.start_boost}
+                      @click=${() => this._press(r, t.entities.start_boost)}
                     >
                       Start Boost
                     </button>
@@ -2124,8 +2150,8 @@ const F = "hiper-mvhr-card", Re = [
                       type="button"
                       class="cta ghost"
                       aria-label="Cancel Boost"
-                      ?disabled=${!u || !e.entities.cancel_boost}
-                      @click=${() => this._press(r, e.entities.cancel_boost)}
+                      ?disabled=${!u || !t.entities.cancel_boost}
+                      @click=${() => this._press(r, t.entities.cancel_boost)}
                     >
                       Cancel Boost
                     </button>
@@ -2137,7 +2163,7 @@ const F = "hiper-mvhr-card", Re = [
                   <div class="control-block-head">
                     <span>Override</span>
                     <strong
-                      >${this._value(t.override_duration) ?? "Until next schedule change"}</strong
+                      >${this._value(e.override_duration) ?? "Until next schedule change"}</strong
                     >
                   </div>
                   ${s ? c`<small>${s} remaining</small>` : ""}
@@ -2158,7 +2184,7 @@ const F = "hiper-mvhr-card", Re = [
       (h) => c`
                           <option
                             .value=${h}
-                            ?selected=${this._state(t.override_duration) === h}
+                            ?selected=${this._state(e.override_duration) === h}
                           >
                             ${this._modeLabel(h)}
                           </option>
@@ -2170,15 +2196,15 @@ const F = "hiper-mvhr-card", Re = [
                     type="button"
                     class="cta ghost full"
                     aria-label="Clear override"
-                    ?disabled=${!e.entities.clear_override}
-                    @click=${() => this._press(r, e.entities.clear_override)}
+                    ?disabled=${!t.entities.clear_override}
+                    @click=${() => this._press(r, t.entities.clear_override)}
                   >
                     Clear override
                   </button>
                 </div>
               ` : ""}
-        <div class="status-list">
-          ${// Summer bypass is not part of the primary hero visual, lower
+        ${this._advancedCompactStats(e, t)}
+        ${// Summer bypass is not part of the primary hero visual, lower
     // cards, or compact header controls in system mode for any
     // manufacturer (deliberately bypass-free, generically — not an
     // Altair-specific carve-out). It only ever appears here, and
@@ -2187,41 +2213,44 @@ const F = "hiper-mvhr-card", Re = [
     // `_value` returns null and this omits the row entirely, exactly
     // like every other unsupported role (SPECIFICATION.md §6), with
     // no manufacturer conditional written here to make that happen.
-    t.bypass_state && t.bypass_state.status !== "unsupported" ? this._diagnosticRow(
+    e.bypass_state && e.bypass_state.status !== "unsupported" ? c`
+                <div class="status-list">
+                  ${this._diagnosticRow(
       "mdi:valve",
       "Summer bypass",
-      this._value(t.bypass_state, !0)
-    ) : ""}
-          ${e.show_calibration ? this._diagnosticRow(
-      "mdi:progress-check",
-      "Calibration status",
-      this._value(t.calibration_status, !0)
-    ) : ""}
-          ${e.show_calibration ? this._diagnosticRow(
-      "mdi:progress-clock",
-      "Calibration progress",
-      this._value(t.calibration_progress, !0)
-    ) : ""}
-          ${e.show_fan_speeds ? this._diagnosticRow(
-      "mdi:fan",
-      "Supply fan",
-      this._value(t.supply_fan_speed, !0)
-    ) : ""}
-          ${e.show_fan_speeds ? this._diagnosticRow(
-      "mdi:fan",
-      "Extract fan",
-      this._value(t.extract_fan_speed, !0)
-    ) : ""}
-        </div>
-        ${this._extraControls(t, e, r)}
+      this._value(e.bypass_state, !0)
+    )}
+                </div>
+              ` : ""}
+        ${this._extraControls(e, t, r)}
       </section>
     `;
   }
-  _diagnosticRow(t, e, r) {
+  /**
+   * Calibration status/progress and individual fan RPM, as a small grid of
+   * compact label/value tiles rather than a full-width row each — "I don't
+   * think these need an entire row... could all fit inside a small
+   * expandable card" (visual-polish follow-up). Still just as gated on
+   * `show_calibration`/`show_fan_speeds` and role availability as before;
+   * only the presentation changed.
+   */
+  _advancedCompactStats(e, t) {
+    const r = [];
+    return t.show_calibration && (r.push(this._compactStat("Calibration", this._value(e.calibration_status, !0))), r.push(this._compactStat("Progress", this._value(e.calibration_progress, !0)))), t.show_fan_speeds && (r.push(this._compactStat("Supply fan", this._value(e.supply_fan_speed, !0))), r.push(this._compactStat("Extract fan", this._value(e.extract_fan_speed, !0)))), r.length === 0 ? c`` : c`<div class="compact-stats-card">${r}</div>`;
+  }
+  _compactStat(e, t) {
+    return c`
+      <div class="compact-stat">
+        <span>${e}</span>
+        <strong>${t ?? "—"}</strong>
+      </div>
+    `;
+  }
+  _diagnosticRow(e, t, r) {
     return c`
       <div class="status-row">
-        <ha-icon icon=${t} aria-hidden="true"></ha-icon>
-        <span class="status-label">${e}</span>
+        <ha-icon icon=${e} aria-hidden="true"></ha-icon>
+        <span class="status-label">${t}</span>
         <span class="status-value">${r ?? "—"}</span>
       </div>
     `;
@@ -2239,31 +2268,34 @@ const F = "hiper-mvhr-card", Re = [
    * "directional arrows", without relying on colour alone) and a colour
    * family scoped to `.system-visual-panel` only — supply/outdoor cool
    * blue, extract warm orange, exhaust neutral grey — that never touches
-   * `_heroVisual`'s own `.supply`/`.extract`/etc. base colours. The heat
-   * recovery badge now lives in the panel heading (`_systemDashboard`)
-   * rather than inside the unit, so this method no longer takes a
-   * `recovery` argument.
+   * `_heroVisual`'s own `.supply`/`.extract`/etc. base colours. Per the
+   * visual-polish follow-up, the heat-recovery figure now lives inside the
+   * unit itself (a large circular badge centred over the exchanger graphic,
+   * `.recovery-badge-circular`) rather than as a small pill in the panel
+   * heading — "make the heat exchanger the hero" / "move the heat recovery
+   * number into the centre of the HRV" — so this method takes a `recovery`
+   * argument again.
    */
-  _systemHeroVisual(t, e, r, i) {
-    const o = this._value(t.airflow, !0) ?? this._value(t.supply_airflow, !0), s = e.show_airflow_on_all_paths, n = (l, u, d, p, h, m, g) => {
-      const b = s || p ? o : null;
+  _systemHeroVisual(e, t, r, i, o) {
+    const s = this._value(e.airflow, !0) ?? this._value(e.supply_airflow, !0), n = t.show_airflow_on_all_paths, l = (u, d, p, h, m, v, g) => {
+      const f = n || h ? s : null;
       return c`
-        <div class="air-path ${l} ${r ? "active" : ""}">
+        <div class="air-path ${u} ${r ? "active" : ""}">
           <span class="path-label">
-            <ha-icon icon=${h} aria-hidden="true"></ha-icon>
-            ${u}
-            <ha-icon class="path-arrow" icon=${m} aria-label=${g}></ha-icon>
+            <ha-icon icon=${m} aria-hidden="true"></ha-icon>
+            ${d}
+            <ha-icon class="path-arrow" icon=${v} aria-label=${g}></ha-icon>
           </span>
-          <span class="path-temp">${this._value(t[d], !0) ?? "—"}</span>
-          ${b ? c`<span class="path-airflow"
-                  ><ha-icon icon="mdi:weather-windy" aria-hidden="true"></ha-icon>${b}</span
+          <span class="path-temp">${this._value(e[p], !0) ?? "—"}</span>
+          ${f ? c`<span class="path-airflow"
+                  ><ha-icon icon="mdi:weather-windy" aria-hidden="true"></ha-icon>${f}</span
                 >` : ""}
         </div>
       `;
     };
     return c`
       <div class="visual-wrap system-visual-wrap">
-        ${n(
+        ${l(
       "exhaust",
       "Exhaust air",
       "exhaust_air_temp",
@@ -2272,7 +2304,7 @@ const F = "hiper-mvhr-card", Re = [
       "mdi:arrow-top-left-thin",
       "Flowing outdoors"
     )}
-        ${n(
+        ${l(
       "supply",
       "Supply air",
       "supply_air_temp",
@@ -2292,8 +2324,16 @@ const F = "hiper-mvhr-card", Re = [
           <div class="exchanger" aria-hidden="true"></div>
           <ha-icon class="fan fan-a" icon="mdi:fan" aria-hidden="true"></ha-icon>
           <ha-icon class="fan fan-b" icon="mdi:fan" aria-hidden="true"></ha-icon>
+          ${o.status === "ok" ? c`
+                  <div class="recovery-badge-circular" title="Apparent temperature recovery" role="img"
+                    aria-label=${`Heat recovery ${o.label}`}
+                  >
+                    <strong>${o.label}</strong>
+                    <span>Heat Recovery</span>
+                  </div>
+                ` : ""}
         </div>
-        ${n(
+        ${l(
       "extract",
       "Extract air",
       "extract_air_temp",
@@ -2302,7 +2342,7 @@ const F = "hiper-mvhr-card", Re = [
       "mdi:arrow-bottom-left-thin",
       "Drawn from the home"
     )}
-        ${n(
+        ${l(
       "outdoor",
       "Outdoor air",
       "outdoor_air_temp",
@@ -2314,17 +2354,17 @@ const F = "hiper-mvhr-card", Re = [
       </div>
     `;
   }
-  _infoTile(t, e, r, i = "ok", o) {
+  _infoTile(e, t, r, i = "ok", o) {
     return c`
       <div class="info-tile tone-${i}" title=${o ?? _}>
         <ha-icon icon=${r} aria-hidden="true"></ha-icon>
-        <span>${t}</span>
-        <strong>${e}</strong>
+        <span>${e}</span>
+        <strong>${t}</strong>
       </div>
     `;
   }
-  _filterTile(t, e) {
-    const r = this._number(t.filter_remaining), i = r === void 0 ? 0 : Math.max(0, Math.min(100, r / e.filter_max_days * 100)), o = r === void 0 ? "—" : `${Math.round(r)} days`;
+  _filterTile(e, t) {
+    const r = this._number(e.filter_remaining), i = r === void 0 ? 0 : Math.max(0, Math.min(100, r / t.filter_max_days * 100)), o = r === void 0 ? "—" : `${Math.round(r)} days`;
     return c`
       <div class="info-tile">
         <ha-icon icon="mdi:air-filter" aria-hidden="true"></ha-icon>
@@ -2334,53 +2374,53 @@ const F = "hiper-mvhr-card", Re = [
       </div>
     `;
   }
-  _heatRecovery(t, e) {
-    return Ee({
-      outdoor: this._number(t.outdoor_air_temp),
-      extract: this._number(t.extract_air_temp),
-      supply: this._number(t.supply_air_temp),
-      method: e
+  _heatRecovery(e, t) {
+    return Et({
+      outdoor: this._number(e.outdoor_air_temp),
+      extract: this._number(e.extract_air_temp),
+      supply: this._number(e.supply_air_temp),
+      method: t
     });
   }
-  _pair(t, e, r = !1) {
-    return t.map(
-      ([i, o]) => `${o.replace(" fan", "")}: ${this._value(e[i], r) ?? "—"}`
+  _pair(e, t, r = !1) {
+    return e.map(
+      ([i, o]) => `${o.replace(" fan", "")}: ${this._value(t[i], r) ?? "—"}`
     ).join(" · ");
   }
-  _value(t, e = !1) {
-    if (!t)
+  _value(e, t = !1) {
+    if (!e)
       return null;
-    const r = this._present(t, e);
+    const r = this._present(e, t);
     return (r == null ? void 0 : r.text) ?? null;
   }
-  _text(t) {
-    return this._value(t) ?? "";
+  _text(e) {
+    return this._value(e) ?? "";
   }
-  _state(t) {
-    return (t == null ? void 0 : t.status) === "ok" ? t.value : void 0;
+  _state(e) {
+    return (e == null ? void 0 : e.status) === "ok" ? e.value : void 0;
   }
-  _number(t) {
-    return (t == null ? void 0 : t.status) === "ok" ? t.numericValue : void 0;
+  _number(e) {
+    return (e == null ? void 0 : e.status) === "ok" ? e.numericValue : void 0;
   }
-  _modeLabel(t) {
-    const e = t.toLowerCase();
-    return e === "medium" || e === "normal" ? "Home" : e === "boost" ? "Boost" : t ? Ae(t) : "";
+  _modeLabel(e) {
+    const t = e.toLowerCase();
+    return t === "medium" || t === "normal" ? "Home" : t === "boost" ? "Boost" : e ? At(e) : "";
   }
-  _modeOptions(t) {
-    return ((t == null ? void 0 : t.status) === "ok" && Array.isArray(t.attributes.options) ? t.attributes.options.filter((r) => typeof r == "string") : ["Away", "Low", "Home", "High"]).filter((r) => r.toLowerCase() !== "boost");
+  _modeOptions(e) {
+    return ((e == null ? void 0 : e.status) === "ok" && Array.isArray(e.attributes.options) ? e.attributes.options.filter((r) => typeof r == "string") : ["Away", "Low", "Home", "High"]).filter((r) => r.toLowerCase() !== "boost");
   }
-  _selectOptions(t) {
-    return (t == null ? void 0 : t.status) === "ok" && Array.isArray(t.attributes.options) ? t.attributes.options.filter((e) => typeof e == "string") : [];
+  _selectOptions(e) {
+    return (e == null ? void 0 : e.status) === "ok" && Array.isArray(e.attributes.options) ? e.attributes.options.filter((t) => typeof t == "string") : [];
   }
-  _hasControls(t, e) {
+  _hasControls(e, t) {
     return [
-      t.mode,
-      t.boost_duration,
-      t.start_boost,
-      t.cancel_boost,
-      t.override_duration,
-      t.clear_override
-    ].some((r) => (r == null ? void 0 : r.status) === "ok" && !!e.entities);
+      e.mode,
+      e.boost_duration,
+      e.start_boost,
+      e.cancel_boost,
+      e.override_duration,
+      e.clear_override
+    ].some((r) => (r == null ? void 0 : r.status) === "ok" && !!t.entities);
   }
   /**
    * Phase 10's bottom status strip signal. "Communication issue" takes
@@ -2390,30 +2430,30 @@ const F = "hiper-mvhr-card", Re = [
    * state, falling back to "System OK". Optional roles that simply aren't
    * configured never factor in here — same rule as the header (Phase 4/10).
    */
-  _dashboardStatus(t) {
+  _dashboardStatus(e) {
     var i, o;
-    for (const s of at) {
-      if (ze.has(s))
+    for (const s of ae) {
+      if (zt.has(s))
         continue;
-      const n = t[s];
+      const n = e[s];
       if ((n == null ? void 0 : n.status) === "entity_missing" || (n == null ? void 0 : n.status) === "unavailable")
         return { tone: "warning", label: "Communication issue" };
     }
-    const e = t.fault_active;
-    if ((e == null ? void 0 : e.status) === "ok" && Ne.has(e.value.toLowerCase()))
+    const t = e.fault_active;
+    if ((t == null ? void 0 : t.status) === "ok" && Ht.has(t.value.toLowerCase()))
       return { tone: "warning", label: "Fault detected" };
-    const r = ((i = t.calibration_status) == null ? void 0 : i.status) === "ok" ? t.calibration_status.value.toLowerCase() : "";
-    return r && !Pe.has(r) ? { tone: "muted", label: "Calibrating…" } : ((o = t.calibration_result) == null ? void 0 : o.status) === "ok" && t.calibration_result.value === "not_calibrated" ? { tone: "warning", label: "Calibration required" } : { tone: "success", label: "System OK" };
+    const r = ((i = e.calibration_status) == null ? void 0 : i.status) === "ok" ? e.calibration_status.value.toLowerCase() : "";
+    return r && !Pt.has(r) ? { tone: "muted", label: "Calibrating…" } : ((o = e.calibration_result) == null ? void 0 : o.status) === "ok" && e.calibration_result.value === "not_calibrated" ? { tone: "warning", label: "Calibration required" } : { tone: "success", label: "System OK" };
   }
-  _press(t, e) {
-    e && this._call(t, "button", "press", { entity_id: e });
+  _press(e, t) {
+    t && this._call(e, "button", "press", { entity_id: t });
   }
-  async _call(t, e, r, i) {
+  async _call(e, t, r, i) {
     var o;
-    await ((o = t.callService) == null ? void 0 : o.call(t, e, r, i));
+    await ((o = e.callService) == null ? void 0 : o.call(e, t, r, i));
   }
 };
-nt.styles = Ct`
+ne.styles = Ce`
     :host {
       display: block;
       width: 100%;
@@ -3066,6 +3106,83 @@ nt.styles = Ct`
       font-size: 0.85em;
     }
 
+    /* System Status card badges (visual-polish follow-up): "🟢 Boost
+       Active / 🟢 System OK / 🟡 Filter 352 days" instead of label/value
+       rows. Colour is always paired with the state spelled out in words, so
+       the dot is decorative reinforcement, never the only signal. */
+    .status-badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.85em;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--divider-color);
+      color: var(--primary-text-color);
+      background: var(--ha-card-background, var(--card-background-color));
+    }
+    .status-badge-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--secondary-text-color);
+      flex-shrink: 0;
+    }
+    .status-badge.tone-success {
+      border-color: color-mix(in srgb, var(--success-color), transparent 55%);
+      background: color-mix(in srgb, var(--success-color), transparent 88%);
+    }
+    .status-badge.tone-success .status-badge-dot {
+      background: var(--success-color);
+    }
+    .status-badge.tone-warning {
+      border-color: color-mix(in srgb, var(--warning-color), transparent 55%);
+      background: color-mix(in srgb, var(--warning-color), transparent 88%);
+    }
+    .status-badge.tone-warning .status-badge-dot {
+      background: var(--warning-color);
+    }
+    .status-badge.tone-muted .status-badge-dot {
+      background: var(--secondary-text-color);
+    }
+
+    /* The boost-remaining countdown gets its own prominent callout above
+       the badge row instead of being one more small line — "make the boost
+       remaining time more prominent" — since it's a live, time-sensitive
+       value someone glancing at the card is likely looking for. */
+    .boost-remaining-highlight {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      margin-bottom: 12px;
+      border-radius: 12px;
+      border: 1px solid color-mix(in srgb, var(--success-color), transparent 55%);
+      background: color-mix(in srgb, var(--success-color), transparent 90%);
+    }
+    .boost-remaining-highlight ha-icon {
+      --mdc-icon-size: 26px;
+      color: var(--success-color);
+      flex-shrink: 0;
+    }
+    .boost-remaining-highlight strong {
+      display: block;
+      font-size: 1.5em;
+      font-weight: 800;
+      color: var(--success-color);
+      line-height: 1.1;
+    }
+    .boost-remaining-highlight span {
+      font-size: 0.78em;
+      color: var(--secondary-text-color);
+    }
+
     .control-button {
       font: inherit;
       font-size: 0.85em;
@@ -3110,15 +3227,68 @@ nt.styles = Ct`
          fixed brand accent, chosen so it never gets confused with the
          success/warning/primary tones the rest of the card already uses. */
       --shower-color: #a855f7;
+      /* Lets the @container rules below react to the card's own rendered
+         width instead of the browser viewport — see the comment above
+         those rules for why that distinction matters on a real Home
+         Assistant dashboard. */
+      container-type: inline-size;
     }
     .system-main {
       display: grid;
-      grid-template-columns: minmax(0, 3fr) minmax(260px, 2fr);
+      grid-template-columns: minmax(0, 3fr) minmax(220px, 2fr);
       gap: 16px;
       align-items: stretch;
     }
     .system-main.no-shower {
       grid-template-columns: minmax(0, 1fr);
+    }
+    /* A Home Assistant dashboard routinely gives a card far less width than
+       the browser viewport (masonry/sidebar columns, grid sections, etc.),
+       so a plain @media breakpoint can stay stuck on the wide desktop
+       layout — overview and shower column both hit their minmax() floors at
+       once — even though the card itself is genuinely narrow, which is what
+       "the whole dashboard is pushed to the right" turned out to be. These
+       @container rules duplicate (never replace) the equivalent @media
+       rules further down using the card's own width instead, so the layout
+       reflows correctly regardless of where Lovelace decides to place it.
+       Where a browser doesn't support container queries yet, the @media
+       rules remain as the fallback. */
+    @container (max-width: 640px) {
+      .system-main,
+      .system-main.no-shower {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      .system-lower-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+    @container (max-width: 420px) {
+      .system-lower-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      .header-controls {
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+      }
+      .header-control {
+        width: 100%;
+      }
+      .mode-select-pill,
+      .boost-pill-button {
+        width: 100%;
+        justify-content: center;
+      }
+      .airflow-card-body {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .gauge {
+        width: 100%;
+        max-width: 260px;
+        margin: 0 auto;
+      }
     }
     .panel-heading-row {
       display: flex;
@@ -3147,19 +3317,74 @@ nt.styles = Ct`
       min-width: 0;
     }
     .system-visual-wrap {
-      min-height: 420px;
-      grid-template-columns: minmax(190px, 1fr) minmax(320px, 400px) minmax(190px, 1fr);
+      min-height: 460px;
+      grid-template-columns: minmax(160px, 1fr) minmax(280px, 420px) minmax(160px, 1fr);
     }
     .system-visual-panel .unit {
-      min-height: 360px;
+      min-height: 400px;
       border-radius: 28px;
     }
     .system-visual-panel .fan {
-      --mdc-icon-size: 34px;
+      --mdc-icon-size: 42px;
     }
     .system-visual-panel .exchanger {
-      width: 104px;
-      height: 104px;
+      width: 128px;
+      height: 128px;
+    }
+    /* Colour the duct stubs on the unit itself so the exchanger graphic
+       reads as "the hero" even before the surrounding air-path panels are
+       scanned — outgoing (top/right, toward supply/exhaust) picks up the
+       same cool-blue family as the supply path; incoming (bottom/left,
+       toward extract/outdoor) picks up the warm-orange extract family.
+       Never the only indicator of direction — the arrow icons and labels
+       on each .air-path already carry that meaning; this is reinforcement
+       on the unit graphic itself. */
+    .system-visual-panel .duct-top,
+    .system-visual-panel .duct-right {
+      background: color-mix(in srgb, #3b82f6, transparent 35%);
+    }
+    .system-visual-panel .duct-bottom,
+    .system-visual-panel .duct-left {
+      background: color-mix(in srgb, #f59e0b, transparent 35%);
+    }
+    /* The heat-recovery figure, centred over the exchanger graphic — "make
+       the heat exchanger the hero" / "move the heat recovery number into
+       the centre of the HRV" (visual-polish follow-up). A plain circle so
+       it reads instantly at a glance, success-toned since it only renders
+       when the calculation is actually valid (recovery.status === 'ok';
+       see _heatRecovery/calculateHeatRecovery). */
+    .recovery-badge-circular {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 3;
+      width: 108px;
+      height: 108px;
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      text-align: center;
+      background: color-mix(in srgb, var(--ha-card-background, var(--card-background-color)), transparent 4%);
+      border: 3px solid color-mix(in srgb, var(--success-color), transparent 25%);
+      box-shadow: 0 0 0 6px color-mix(in srgb, var(--success-color), transparent 90%);
+      cursor: default;
+    }
+    .recovery-badge-circular strong {
+      font-size: 1.6em;
+      font-weight: 800;
+      color: var(--success-color);
+      line-height: 1.1;
+    }
+    .recovery-badge-circular span {
+      font-size: 0.62em;
+      font-weight: 700;
+      color: var(--secondary-text-color);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
     }
     .system-visual-panel .path-label {
       display: flex;
@@ -3373,7 +3598,9 @@ nt.styles = Ct`
       min-width: 0;
     }
     .gauge {
-      width: 140px;
+      /* "Airflow is probably the single most important metric" — almost
+         doubled from the original 140px per the visual-polish follow-up. */
+      width: 260px;
       flex-shrink: 0;
       display: flex;
       flex-direction: column;
@@ -3404,11 +3631,11 @@ nt.styles = Ct`
       margin-top: -18px;
     }
     .gauge-value strong {
-      font-size: 1.5em;
+      font-size: 2.4em;
       color: var(--primary-text-color);
     }
     .gauge-value span {
-      font-size: 0.72em;
+      font-size: 0.8em;
       color: var(--secondary-text-color);
       text-transform: uppercase;
       letter-spacing: 0.04em;
@@ -3453,10 +3680,22 @@ nt.styles = Ct`
     .boost-pill-button {
       display: flex;
       align-items: center;
-      gap: 6px;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 4px 6px;
     }
     .boost-pill-button ha-icon {
       --mdc-icon-size: 16px;
+    }
+    /* The remaining-time readout wraps onto its own line under Active/Ready
+       rather than squeezing onto the same line (visual-polish follow-up:
+       "make the boost remaining time more prominent"). */
+    .boost-pill-button small {
+      flex-basis: 100%;
+      text-align: center;
+      font-size: 0.75em;
+      font-weight: 600;
+      opacity: 0.85;
     }
     .boost-pill-button.is-active {
       background: color-mix(in srgb, var(--success-color), transparent 82%);
@@ -3501,6 +3740,32 @@ nt.styles = Ct`
       display: flex;
       flex-direction: column;
       gap: 14px;
+    }
+    /* Calibration + fan-speed diagnostics as compact tiles rather than
+       full-width rows (visual-polish follow-up). */
+    .compact-stats-card {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px 20px;
+      border: 1px solid var(--divider-color);
+      border-radius: 12px;
+      padding: 12px 16px;
+      background: var(--ha-card-background, var(--card-background-color));
+    }
+    .compact-stat {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+    .compact-stat span {
+      font-size: 0.75em;
+      color: var(--secondary-text-color);
+    }
+    .compact-stat strong {
+      font-size: 1em;
+      color: var(--primary-text-color);
+      overflow-wrap: break-word;
     }
 
     @keyframes flow-left {
@@ -3664,7 +3929,7 @@ nt.styles = Ct`
       }
       .gauge {
         width: 100%;
-        max-width: 220px;
+        max-width: 300px;
         margin: 0 auto;
       }
       .disclosure-toggle {
@@ -3672,23 +3937,23 @@ nt.styles = Ct`
       }
     }
   `;
-let E = nt;
+let E = ne;
 W([
-  ot({ attribute: !1 })
+  oe({ attribute: !1 })
 ], E.prototype, "hass");
 W([
-  Y()
+  q()
 ], E.prototype, "_config");
 W([
-  Y()
+  q()
 ], E.prototype, "_configError");
 W([
-  Y()
+  q()
 ], E.prototype, "_advancedOpen");
-customElements.get(F) || customElements.define(F, E);
+customElements.get(V) || customElements.define(V, E);
 window.customCards = window.customCards ?? [];
-window.customCards.some((a) => a.type === F) || window.customCards.push({
-  type: F,
+window.customCards.some((a) => a.type === V) || window.customCards.push({
+  type: V,
   name: "HiPer MVHR Card",
   description: "Universal MVHR dashboard card for Home Assistant"
 });

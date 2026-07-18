@@ -37,6 +37,7 @@ Any UI code touching a role must handle all four non-value states from `SPECIFIC
 - No new manufacturer conditional anywhere under `src/components/` or `src/editor/`.
 - `CHANGELOG.md` updated under `Unreleased`.
 - If a capability assumption from `SPECIFICATION.md` §3 was resolved or changed, both the table and the profile file were updated together.
+- **`dist/hiper-mvhr-card.js` was rebuilt and committed alongside any change under `src/`.** It's `.gitignore`'d but committed anyway, on purpose — HACS fetches raw files from the repo and never runs `npm run build` itself, so this file is the only thing an installed card actually runs. A source-only commit ships silently stale (CI's "Verify committed dist/ matches a fresh build" step will catch it, but don't rely on that — run `npm run build` and `git add -f dist/hiper-mvhr-card.js` as part of the same commit).
 
 ## Current phase
 

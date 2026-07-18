@@ -19,3 +19,17 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
+      # dist/hiper-mvhr-card.js is .gitignore'd but committed anyway so HACS
+      # (which fetches raw files from the repo, no build step of its own)
+      # can serve it directly. That means it's only ever as fresh as the
+      # last person who remembered to run `npm run build` and commit the
+      # result — a source change that lands without a matching dist rebuild
+      # ships silently stale. This fails the build the moment source and
+      # committed dist diverge, instead of leaving it to be noticed only
+      # when a real HACS install doesn't show the new markup.
+      - name: Verify committed dist/ matches a fresh build
+        run: |
+          git diff --exit-code -- dist/hiper-mvhr-card.js || {
+            echo "::error::dist/hiper-mvhr-card.js is out of date — run 'npm run build' and commit the result.";
+            exit 1;
+          }
