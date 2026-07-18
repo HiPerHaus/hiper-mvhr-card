@@ -1265,6 +1265,16 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
    * "percentage fan speed" role backed by any real entity, so this reuses
    * `FAN_ROLES` rather than inventing one), and mapped level. Rows only
    * render when their role is actually supported/configured.
+   *
+   * The gauge's arc fill is the configured *operating level*, not "current
+   * airflow ÷ target airflow" — target airflow is just a separate detail
+   * row here, never the gauge's maximum. `mapped_level` is the preferred
+   * source (Altair's 0-10 speed scale, read as 0-100%); `selected_speed`
+   * (same 0-10 concept, a different entity) is the fallback when
+   * `mapped_level` isn't available. The large central number stays the
+   * actual measured airflow in m³/h regardless of which of those two the
+   * arc is reading — two different facts sharing one gauge, not one
+   * derived from the other.
    */
   private _systemAirflowCard(
     snapshot: Partial<Record<EntityRoleId, RoleValue>>,
@@ -1279,11 +1289,10 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     const airflowNumberText = airflowRole ? airflowRole.value : null;
     const airflowUnitText = airflowRole?.unit ?? null;
     const airflowNumber = this._number(snapshot.airflow) ?? this._number(snapshot.supply_airflow);
-    const targetNumber = this._number(snapshot.target_airflow);
-    const fraction =
-      airflowNumber !== undefined && targetNumber
-        ? Math.max(0, Math.min(1, airflowNumber / targetNumber))
-        : 0;
+    // Altair's mapped/selected speed is a 0-10 scale — read directly as
+    // 0-100% (level 4 -> 40% of the arc, level 10 -> completely full).
+    const levelNumber = this._number(snapshot.mapped_level) ?? this._number(snapshot.selected_speed);
+    const fraction = levelNumber !== undefined ? Math.max(0, Math.min(1, levelNumber / 10)) : 0;
     // "Airflow cards brighten when airflow increases" — a one-shot
     // brightening, only when the reading genuinely went up from the
     // previous render (never on first load, and never on a decrease —

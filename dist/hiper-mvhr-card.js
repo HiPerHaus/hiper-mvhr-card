@@ -867,6 +867,12 @@ const oe = [
   "airflow",
   "target_airflow",
   "mapped_level",
+  // Added for the system-mode Airflow gauge (fraction-source follow-up): a
+  // fallback for `mapped_level` when that role isn't available — same 0-10
+  // speed-level concept, just read from a different entity in case a
+  // profile/installation doesn't expose `mapped_level` directly. Generic,
+  // not Altair-specific — any profile can map it.
+  "selected_speed",
   "supply_fan_speed",
   "extract_fan_speed",
   "indoor_humidity",
@@ -1186,6 +1192,7 @@ const Et = {
   fault_active: "mdi:alert-circle",
   frost_protection_active: "mdi:snowflake-alert",
   filter_reset_control: "mdi:restart",
+  selected_speed: "mdi:tune-variant",
   calibration_start_control: "mdi:progress-wrench",
   shower_detected: "mdi:shower-head",
   shower_trigger_temperature: "mdi:thermometer-water",
@@ -2021,9 +2028,19 @@ const V = "hiper-mvhr-card", Tt = [
    * "percentage fan speed" role backed by any real entity, so this reuses
    * `FAN_ROLES` rather than inventing one), and mapped level. Rows only
    * render when their role is actually supported/configured.
+   *
+   * The gauge's arc fill is the configured *operating level*, not "current
+   * airflow ÷ target airflow" — target airflow is just a separate detail
+   * row here, never the gauge's maximum. `mapped_level` is the preferred
+   * source (Altair's 0-10 speed scale, read as 0-100%); `selected_speed`
+   * (same 0-10 concept, a different entity) is the fallback when
+   * `mapped_level` isn't available. The large central number stays the
+   * actual measured airflow in m³/h regardless of which of those two the
+   * arc is reading — two different facts sharing one gauge, not one
+   * derived from the other.
    */
   _systemAirflowCard(e, t) {
-    const r = e.airflow ?? e.supply_airflow, i = (r == null ? void 0 : r.status) === "ok" ? r : void 0, a = i ? i.value : null, o = (i == null ? void 0 : i.unit) ?? null, n = this._number(e.airflow) ?? this._number(e.supply_airflow), l = this._number(e.target_airflow), p = n !== void 0 && l ? Math.max(0, Math.min(1, n / l)) : 0, d = n !== void 0 && this._prevAirflowNumber !== void 0 && n > this._prevAirflowNumber;
+    const r = e.airflow ?? e.supply_airflow, i = (r == null ? void 0 : r.status) === "ok" ? r : void 0, a = i ? i.value : null, o = (i == null ? void 0 : i.unit) ?? null, n = this._number(e.airflow) ?? this._number(e.supply_airflow), l = this._number(e.mapped_level) ?? this._number(e.selected_speed), p = l !== void 0 ? Math.max(0, Math.min(1, l / 10)) : 0, d = n !== void 0 && this._prevAirflowNumber !== void 0 && n > this._prevAirflowNumber;
     this._prevAirflowNumber = n ?? this._prevAirflowNumber;
     const u = [];
     return t.show_fan_speeds && e.supply_fan_speed && e.extract_fan_speed && u.push(this._diagnosticRow("mdi:fan", "Fan speed", this._pair(ke, e, !0))), e.mapped_level && u.push(

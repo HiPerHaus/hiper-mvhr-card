@@ -16,6 +16,12 @@ export const ENTITY_ROLES = [
   'airflow',
   'target_airflow',
   'mapped_level',
+  // Added for the system-mode Airflow gauge (fraction-source follow-up): a
+  // fallback for `mapped_level` when that role isn't available — same 0-10
+  // speed-level concept, just read from a different entity in case a
+  // profile/installation doesn't expose `mapped_level` directly. Generic,
+  // not Altair-specific — any profile can map it.
+  'selected_speed',
   'supply_fan_speed',
   'extract_fan_speed',
   'indoor_humidity',

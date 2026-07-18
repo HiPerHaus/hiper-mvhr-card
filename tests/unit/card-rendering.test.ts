@@ -1279,6 +1279,125 @@ describe('hiper-mvhr-card', () => {
       });
     });
 
+    /**
+     * The gauge's arc fill is the configured operating level (mapped_level,
+     * falling back to selected_speed), not "current airflow ÷ target
+     * airflow" — target airflow is only ever a separate detail row here,
+     * never the gauge's maximum. Altair's level scale is 0-10, read
+     * directly as 0-100%.
+     */
+    describe('gauge fraction source (mapped_level / selected_speed)', () => {
+      const RADIUS = 40;
+      const CIRCUMFERENCE = Math.PI * RADIUS;
+
+      function gaugeFraction(el: HiperMvhrCard): number {
+        const fill = el.shadowRoot?.querySelector('.gauge-fill');
+        const style = fill?.getAttribute('style') ?? '';
+        const match = style.match(/stroke-dashoffset:([\d.]+)/);
+        const offset = match?.[1] ? parseFloat(match[1]) : NaN;
+        return 1 - offset / CIRCUMFERENCE;
+      }
+
+      function mountWithLevel(level: string): HiperMvhrCard {
+        return mountSystem({
+          ...altairHass,
+          states: {
+            ...altairHass.states,
+            ...systemStates,
+            'sensor.altair_mvhr_mapped_airflow_level': {
+              entity_id: 'sensor.altair_mvhr_mapped_airflow_level',
+              state: level,
+              attributes: {},
+            },
+          },
+        });
+      }
+
+      it.each([
+        ['0', 0],
+        ['4', 0.4],
+        ['6', 0.6],
+        ['10', 1],
+      ])('reads mapped_level %s as %s of the arc', async (level, expected) => {
+        const el = mountWithLevel(level);
+        await el.updateComplete;
+
+        expect(gaugeFraction(el)).toBeCloseTo(expected, 5);
+      });
+
+      it('ignores current airflow and target airflow entirely for the arc fraction', async () => {
+        // Default fixture airflow=70, target_airflow=95 (~0.74 under the old
+        // "airflow / target" math) but mapped_level is 4 -> the arc must
+        // read 0.4, not ~0.74, and the big number must still be the real
+        // measured airflow.
+        const el = mountSystem();
+        await el.updateComplete;
+
+        expect(gaugeFraction(el)).toBeCloseTo(0.4, 5);
+        const gaugeValue = el.shadowRoot?.querySelector('.gauge .gauge-value strong');
+        expect(gaugeValue?.textContent?.trim()).toBe('70');
+      });
+
+      it('falls back to selected_speed when mapped_level is unavailable', async () => {
+        // `selected_speed` isn't a verified Altair capability (only
+        // `mapped_level` is, per docs/manufacturers/altair.md) — it's a
+        // generic, feature-flaggable fallback role, so this exercises it the
+        // same way the calibration_start_control tests exercise generic
+        // opt-in roles: manufacturer 'generic' + feature_flags.
+        const el = mount();
+        set(el, {
+          type: 'custom:hiper-mvhr-card',
+          manufacturer: 'generic',
+          display_mode: 'system',
+          feature_flags: { mapped_level: true, selected_speed: true },
+          entities: {
+            mapped_level: 'sensor.altair_mvhr_mapped_airflow_level',
+            selected_speed: 'sensor.altair_mvhr_selected_speed',
+          },
+        });
+        el.hass = {
+          ...altairHass,
+          states: {
+            ...altairHass.states,
+            'sensor.altair_mvhr_mapped_airflow_level': {
+              entity_id: 'sensor.altair_mvhr_mapped_airflow_level',
+              state: 'unavailable',
+              attributes: {},
+            },
+            'sensor.altair_mvhr_selected_speed': {
+              entity_id: 'sensor.altair_mvhr_selected_speed',
+              state: '6',
+              attributes: {},
+            },
+          },
+        };
+        await el.updateComplete;
+
+        expect(gaugeFraction(el)).toBeCloseTo(0.6, 5);
+      });
+
+      it('reads an empty arc (fraction 0) when neither mapped_level nor selected_speed is available', async () => {
+        const el = mountSystem({
+          ...altairHass,
+          states: {
+            ...altairHass.states,
+            ...systemStates,
+            'sensor.altair_mvhr_mapped_airflow_level': {
+              entity_id: 'sensor.altair_mvhr_mapped_airflow_level',
+              state: 'unavailable',
+              attributes: {},
+            },
+          },
+        });
+        await el.updateComplete;
+
+        expect(gaugeFraction(el)).toBeCloseTo(0, 5);
+        // Still shows the real measured airflow, never a synthesized one.
+        const gaugeValue = el.shadowRoot?.querySelector('.gauge .gauge-value strong');
+        expect(gaugeValue?.textContent?.trim()).toBe('70');
+      });
+    });
+
     describe('controls', () => {
       it('sends the internal medium option when Home is chosen from the compact header mode select', async () => {
         const callService = vi.fn().mockResolvedValue(undefined);
