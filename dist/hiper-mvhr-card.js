@@ -22,18 +22,18 @@ let Ce = class {
     return this.cssText;
   }
 };
-const He = (s) => new Ce(typeof s == "string" ? s : s + "", void 0, te), Re = (s, ...e) => {
-  const t = s.length === 1 ? s[0] : e.reduce((r, i, a) => r + ((o) => {
+const He = (s) => new Ce(typeof s == "string" ? s : s + "", void 0, te), Te = (s, ...e) => {
+  const t = s.length === 1 ? s[0] : e.reduce((r, a, i) => r + ((o) => {
     if (o._$cssResult$ === !0) return o.cssText;
     if (typeof o == "number") return o;
     throw Error("Value passed to 'css' function must be a 'css' function result: " + o + ". Use 'unsafeCSS' to pass non-literal values, but take care to ensure page security.");
-  })(i) + s[a + 1], s[0]);
+  })(a) + s[i + 1], s[0]);
   return new Ce(t, s, te);
 }, Ue = (s, e) => {
   if (ee) s.adoptedStyleSheets = e.map((t) => t instanceof CSSStyleSheet ? t : t.styleSheet);
   else for (const t of e) {
-    const r = document.createElement("style"), i = D.litNonce;
-    i !== void 0 && r.setAttribute("nonce", i), r.textContent = t.cssText, s.appendChild(r);
+    const r = document.createElement("style"), a = D.litNonce;
+    a !== void 0 && r.setAttribute("nonce", a), r.textContent = t.cssText, s.appendChild(r);
   }
 }, de = ee ? (s) => s : (s) => s instanceof CSSStyleSheet ? ((e) => {
   let t = "";
@@ -45,7 +45,7 @@ const He = (s) => new Ce(typeof s == "string" ? s : s + "", void 0, te), Re = (s
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const { is: Be, defineProperty: De, getOwnPropertyDescriptor: Ie, getOwnPropertyNames: je, getOwnPropertySymbols: Ve, getPrototypeOf: Fe } = Object, y = globalThis, ue = y.trustedTypes, qe = ue ? ue.emptyScript : "", Y = y.reactiveElementPolyfillSupport, M = (s, e) => s, I = { toAttribute(s, e) {
+const { is: Be, defineProperty: De, getOwnPropertyDescriptor: Ie, getOwnPropertyNames: je, getOwnPropertySymbols: Ve, getPrototypeOf: Fe } = Object, y = globalThis, pe = y.trustedTypes, qe = pe ? pe.emptyScript : "", Y = y.reactiveElementPolyfillSupport, M = (s, e) => s, I = { toAttribute(s, e) {
   switch (e) {
     case Boolean:
       s = s ? qe : null;
@@ -73,7 +73,7 @@ const { is: Be, defineProperty: De, getOwnPropertyDescriptor: Ie, getOwnProperty
       }
   }
   return t;
-} }, re = (s, e) => !Be(s, e), pe = { attribute: !0, type: String, converter: I, reflect: !1, useDefault: !1, hasChanged: re };
+} }, re = (s, e) => !Be(s, e), ue = { attribute: !0, type: String, converter: I, reflect: !1, useDefault: !1, hasChanged: re };
 Symbol.metadata ?? (Symbol.metadata = Symbol("metadata")), y.litPropertyMetadata ?? (y.litPropertyMetadata = /* @__PURE__ */ new WeakMap());
 let C = class extends HTMLElement {
   static addInitializer(e) {
@@ -82,25 +82,25 @@ let C = class extends HTMLElement {
   static get observedAttributes() {
     return this.finalize(), this._$Eh && [...this._$Eh.keys()];
   }
-  static createProperty(e, t = pe) {
+  static createProperty(e, t = ue) {
     if (t.state && (t.attribute = !1), this._$Ei(), this.prototype.hasOwnProperty(e) && ((t = Object.create(t)).wrapped = !0), this.elementProperties.set(e, t), !t.noAccessor) {
-      const r = Symbol(), i = this.getPropertyDescriptor(e, r, t);
-      i !== void 0 && De(this.prototype, e, i);
+      const r = Symbol(), a = this.getPropertyDescriptor(e, r, t);
+      a !== void 0 && De(this.prototype, e, a);
     }
   }
   static getPropertyDescriptor(e, t, r) {
-    const { get: i, set: a } = Ie(this.prototype, e) ?? { get() {
+    const { get: a, set: i } = Ie(this.prototype, e) ?? { get() {
       return this[t];
     }, set(o) {
       this[t] = o;
     } };
-    return { get: i, set(o) {
-      const n = i == null ? void 0 : i.call(this);
-      a == null || a.call(this, o), this.requestUpdate(e, n, r);
+    return { get: a, set(o) {
+      const n = a == null ? void 0 : a.call(this);
+      i == null || i.call(this, o), this.requestUpdate(e, n, r);
     }, configurable: !0, enumerable: !0 };
   }
   static getPropertyOptions(e) {
-    return this.elementProperties.get(e) ?? pe;
+    return this.elementProperties.get(e) ?? ue;
   }
   static _$Ei() {
     if (this.hasOwnProperty(M("elementProperties"))) return;
@@ -111,17 +111,17 @@ let C = class extends HTMLElement {
     if (this.hasOwnProperty(M("finalized"))) return;
     if (this.finalized = !0, this._$Ei(), this.hasOwnProperty(M("properties"))) {
       const t = this.properties, r = [...je(t), ...Ve(t)];
-      for (const i of r) this.createProperty(i, t[i]);
+      for (const a of r) this.createProperty(a, t[a]);
     }
     const e = this[Symbol.metadata];
     if (e !== null) {
       const t = litPropertyMetadata.get(e);
-      if (t !== void 0) for (const [r, i] of t) this.elementProperties.set(r, i);
+      if (t !== void 0) for (const [r, a] of t) this.elementProperties.set(r, a);
     }
     this._$Eh = /* @__PURE__ */ new Map();
     for (const [t, r] of this.elementProperties) {
-      const i = this._$Eu(t, r);
-      i !== void 0 && this._$Eh.set(i, t);
+      const a = this._$Eu(t, r);
+      a !== void 0 && this._$Eh.set(a, t);
     }
     this.elementStyles = this.finalizeStyles(this.styles);
   }
@@ -129,7 +129,7 @@ let C = class extends HTMLElement {
     const t = [];
     if (Array.isArray(e)) {
       const r = new Set(e.flat(1 / 0).reverse());
-      for (const i of r) t.unshift(de(i));
+      for (const a of r) t.unshift(de(a));
     } else e !== void 0 && t.push(de(e));
     return t;
   }
@@ -181,34 +181,34 @@ let C = class extends HTMLElement {
     this._$AK(e, r);
   }
   _$ET(e, t) {
-    var a;
-    const r = this.constructor.elementProperties.get(e), i = this.constructor._$Eu(e, r);
-    if (i !== void 0 && r.reflect === !0) {
-      const o = (((a = r.converter) == null ? void 0 : a.toAttribute) !== void 0 ? r.converter : I).toAttribute(t, r.type);
-      this._$Em = e, o == null ? this.removeAttribute(i) : this.setAttribute(i, o), this._$Em = null;
+    var i;
+    const r = this.constructor.elementProperties.get(e), a = this.constructor._$Eu(e, r);
+    if (a !== void 0 && r.reflect === !0) {
+      const o = (((i = r.converter) == null ? void 0 : i.toAttribute) !== void 0 ? r.converter : I).toAttribute(t, r.type);
+      this._$Em = e, o == null ? this.removeAttribute(a) : this.setAttribute(a, o), this._$Em = null;
     }
   }
   _$AK(e, t) {
-    var a, o;
-    const r = this.constructor, i = r._$Eh.get(e);
-    if (i !== void 0 && this._$Em !== i) {
-      const n = r.getPropertyOptions(i), l = typeof n.converter == "function" ? { fromAttribute: n.converter } : ((a = n.converter) == null ? void 0 : a.fromAttribute) !== void 0 ? n.converter : I;
-      this._$Em = i;
-      const p = l.fromAttribute(t, n.type);
-      this[i] = p ?? ((o = this._$Ej) == null ? void 0 : o.get(i)) ?? p, this._$Em = null;
+    var i, o;
+    const r = this.constructor, a = r._$Eh.get(e);
+    if (a !== void 0 && this._$Em !== a) {
+      const n = r.getPropertyOptions(a), l = typeof n.converter == "function" ? { fromAttribute: n.converter } : ((i = n.converter) == null ? void 0 : i.fromAttribute) !== void 0 ? n.converter : I;
+      this._$Em = a;
+      const u = l.fromAttribute(t, n.type);
+      this[a] = u ?? ((o = this._$Ej) == null ? void 0 : o.get(a)) ?? u, this._$Em = null;
     }
   }
-  requestUpdate(e, t, r, i = !1, a) {
+  requestUpdate(e, t, r, a = !1, i) {
     var o;
     if (e !== void 0) {
       const n = this.constructor;
-      if (i === !1 && (a = this[e]), r ?? (r = n.getPropertyOptions(e)), !((r.hasChanged ?? re)(a, t) || r.useDefault && r.reflect && a === ((o = this._$Ej) == null ? void 0 : o.get(e)) && !this.hasAttribute(n._$Eu(e, r)))) return;
+      if (a === !1 && (i = this[e]), r ?? (r = n.getPropertyOptions(e)), !((r.hasChanged ?? re)(i, t) || r.useDefault && r.reflect && i === ((o = this._$Ej) == null ? void 0 : o.get(e)) && !this.hasAttribute(n._$Eu(e, r)))) return;
       this.C(e, t, r);
     }
     this.isUpdatePending === !1 && (this._$ES = this._$EP());
   }
-  C(e, t, { useDefault: r, reflect: i, wrapped: a }, o) {
-    r && !(this._$Ej ?? (this._$Ej = /* @__PURE__ */ new Map())).has(e) && (this._$Ej.set(e, o ?? t ?? this[e]), a !== !0 || o !== void 0) || (this._$AL.has(e) || (this.hasUpdated || r || (t = void 0), this._$AL.set(e, t)), i === !0 && this._$Em !== e && (this._$Eq ?? (this._$Eq = /* @__PURE__ */ new Set())).add(e));
+  C(e, t, { useDefault: r, reflect: a, wrapped: i }, o) {
+    r && !(this._$Ej ?? (this._$Ej = /* @__PURE__ */ new Map())).has(e) && (this._$Ej.set(e, o ?? t ?? this[e]), i !== !0 || o !== void 0) || (this._$AL.has(e) || (this.hasUpdated || r || (t = void 0), this._$AL.set(e, t)), a === !0 && this._$Em !== e && (this._$Eq ?? (this._$Eq = /* @__PURE__ */ new Set())).add(e));
   }
   async _$EP() {
     this.isUpdatePending = !0;
@@ -228,24 +228,24 @@ let C = class extends HTMLElement {
     if (!this.isUpdatePending) return;
     if (!this.hasUpdated) {
       if (this.renderRoot ?? (this.renderRoot = this.createRenderRoot()), this._$Ep) {
-        for (const [a, o] of this._$Ep) this[a] = o;
+        for (const [i, o] of this._$Ep) this[i] = o;
         this._$Ep = void 0;
       }
-      const i = this.constructor.elementProperties;
-      if (i.size > 0) for (const [a, o] of i) {
-        const { wrapped: n } = o, l = this[a];
-        n !== !0 || this._$AL.has(a) || l === void 0 || this.C(a, void 0, o, l);
+      const a = this.constructor.elementProperties;
+      if (a.size > 0) for (const [i, o] of a) {
+        const { wrapped: n } = o, l = this[i];
+        n !== !0 || this._$AL.has(i) || l === void 0 || this.C(i, void 0, o, l);
       }
     }
     let e = !1;
     const t = this._$AL;
     try {
-      e = this.shouldUpdate(t), e ? (this.willUpdate(t), (r = this._$EO) == null || r.forEach((i) => {
-        var a;
-        return (a = i.hostUpdate) == null ? void 0 : a.call(i);
+      e = this.shouldUpdate(t), e ? (this.willUpdate(t), (r = this._$EO) == null || r.forEach((a) => {
+        var i;
+        return (i = a.hostUpdate) == null ? void 0 : i.call(a);
       }), this.update(t)) : this._$EM();
-    } catch (i) {
-      throw e = !1, this._$EM(), i;
+    } catch (a) {
+      throw e = !1, this._$EM(), a;
     }
     e && this._$AE(t);
   }
@@ -254,8 +254,8 @@ let C = class extends HTMLElement {
   _$AE(e) {
     var t;
     (t = this._$EO) == null || t.forEach((r) => {
-      var i;
-      return (i = r.hostUpdated) == null ? void 0 : i.call(r);
+      var a;
+      return (a = r.hostUpdated) == null ? void 0 : a.call(r);
     }), this.hasUpdated || (this.hasUpdated = !0, this.firstUpdated(e)), this.updated(e);
   }
   _$EM() {
@@ -284,55 +284,55 @@ C.elementStyles = [], C.shadowRootOptions = { mode: "open" }, C[M("elementProper
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const P = globalThis, he = (s) => s, j = P.trustedTypes, me = j ? j.createPolicy("lit-html", { createHTML: (s) => s }) : void 0, Te = "$lit$", w = `lit$${Math.random().toFixed(9).slice(2)}$`, Oe = "?" + w, We = `<${Oe}>`, S = document, N = () => S.createComment(""), L = (s) => s === null || typeof s != "object" && typeof s != "function", ie = Array.isArray, Ye = (s) => ie(s) || typeof (s == null ? void 0 : s[Symbol.iterator]) == "function", G = `[ 	
-\f\r]`, z = /<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g, fe = /-->/g, ge = />/g, $ = RegExp(`>|${G}(?:([^\\s"'>=/]+)(${G}*=${G}*(?:[^ 	
-\f\r"'\`<>=]|("|')|))|$)`, "g"), ve = /'/g, be = /"/g, ze = /^(?:script|style|textarea|title)$/i, Ge = (s) => (e, ...t) => ({ _$litType$: s, strings: e, values: t }), c = Ge(1), T = Symbol.for("lit-noChange"), g = Symbol.for("lit-nothing"), _e = /* @__PURE__ */ new WeakMap(), k = S.createTreeWalker(S, 129);
+const L = globalThis, he = (s) => s, j = L.trustedTypes, me = j ? j.createPolicy("lit-html", { createHTML: (s) => s }) : void 0, Re = "$lit$", x = `lit$${Math.random().toFixed(9).slice(2)}$`, Oe = "?" + x, We = `<${Oe}>`, S = document, P = () => S.createComment(""), N = (s) => s === null || typeof s != "object" && typeof s != "function", ae = Array.isArray, Ye = (s) => ae(s) || typeof (s == null ? void 0 : s[Symbol.iterator]) == "function", Z = `[ 	
+\f\r]`, z = /<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g, fe = /-->/g, ge = />/g, $ = RegExp(`>|${Z}(?:([^\\s"'>=/]+)(${Z}*=${Z}*(?:[^ 	
+\f\r"'\`<>=]|("|')|))|$)`, "g"), ve = /'/g, be = /"/g, ze = /^(?:script|style|textarea|title)$/i, Ze = (s) => (e, ...t) => ({ _$litType$: s, strings: e, values: t }), c = Ze(1), R = Symbol.for("lit-noChange"), g = Symbol.for("lit-nothing"), _e = /* @__PURE__ */ new WeakMap(), k = S.createTreeWalker(S, 129);
 function Me(s, e) {
-  if (!ie(s) || !s.hasOwnProperty("raw")) throw Error("invalid template strings array");
+  if (!ae(s) || !s.hasOwnProperty("raw")) throw Error("invalid template strings array");
   return me !== void 0 ? me.createHTML(e) : e;
 }
-const Xe = (s, e) => {
+const Ge = (s, e) => {
   const t = s.length - 1, r = [];
-  let i, a = e === 2 ? "<svg>" : e === 3 ? "<math>" : "", o = z;
+  let a, i = e === 2 ? "<svg>" : e === 3 ? "<math>" : "", o = z;
   for (let n = 0; n < t; n++) {
     const l = s[n];
-    let p, d, u = -1, h = 0;
-    for (; h < l.length && (o.lastIndex = h, d = o.exec(l), d !== null); ) h = o.lastIndex, o === z ? d[1] === "!--" ? o = fe : d[1] !== void 0 ? o = ge : d[2] !== void 0 ? (ze.test(d[2]) && (i = RegExp("</" + d[2], "g")), o = $) : d[3] !== void 0 && (o = $) : o === $ ? d[0] === ">" ? (o = i ?? z, u = -1) : d[1] === void 0 ? u = -2 : (u = o.lastIndex - d[2].length, p = d[1], o = d[3] === void 0 ? $ : d[3] === '"' ? be : ve) : o === be || o === ve ? o = $ : o === fe || o === ge ? o = z : (o = $, i = void 0);
+    let u, d, p = -1, h = 0;
+    for (; h < l.length && (o.lastIndex = h, d = o.exec(l), d !== null); ) h = o.lastIndex, o === z ? d[1] === "!--" ? o = fe : d[1] !== void 0 ? o = ge : d[2] !== void 0 ? (ze.test(d[2]) && (a = RegExp("</" + d[2], "g")), o = $) : d[3] !== void 0 && (o = $) : o === $ ? d[0] === ">" ? (o = a ?? z, p = -1) : d[1] === void 0 ? p = -2 : (p = o.lastIndex - d[2].length, u = d[1], o = d[3] === void 0 ? $ : d[3] === '"' ? be : ve) : o === be || o === ve ? o = $ : o === fe || o === ge ? o = z : (o = $, a = void 0);
     const m = o === $ && s[n + 1].startsWith("/>") ? " " : "";
-    a += o === z ? l + We : u >= 0 ? (r.push(p), l.slice(0, u) + Te + l.slice(u) + w + m) : l + w + (u === -2 ? n : m);
+    i += o === z ? l + We : p >= 0 ? (r.push(u), l.slice(0, p) + Re + l.slice(p) + x + m) : l + x + (p === -2 ? n : m);
   }
-  return [Me(s, a + (s[t] || "<?>") + (e === 2 ? "</svg>" : e === 3 ? "</math>" : "")), r];
+  return [Me(s, i + (s[t] || "<?>") + (e === 2 ? "</svg>" : e === 3 ? "</math>" : "")), r];
 };
 class H {
   constructor({ strings: e, _$litType$: t }, r) {
-    let i;
+    let a;
     this.parts = [];
-    let a = 0, o = 0;
-    const n = e.length - 1, l = this.parts, [p, d] = Xe(e, t);
-    if (this.el = H.createElement(p, r), k.currentNode = this.el.content, t === 2 || t === 3) {
-      const u = this.el.content.firstChild;
-      u.replaceWith(...u.childNodes);
+    let i = 0, o = 0;
+    const n = e.length - 1, l = this.parts, [u, d] = Ge(e, t);
+    if (this.el = H.createElement(u, r), k.currentNode = this.el.content, t === 2 || t === 3) {
+      const p = this.el.content.firstChild;
+      p.replaceWith(...p.childNodes);
     }
-    for (; (i = k.nextNode()) !== null && l.length < n; ) {
-      if (i.nodeType === 1) {
-        if (i.hasAttributes()) for (const u of i.getAttributeNames()) if (u.endsWith(Te)) {
-          const h = d[o++], m = i.getAttribute(u).split(w), v = /([.?@])?(.*)/.exec(h);
-          l.push({ type: 1, index: a, name: v[2], strings: m, ctor: v[1] === "." ? Ze : v[1] === "?" ? Ke : v[1] === "@" ? Je : F }), i.removeAttribute(u);
-        } else u.startsWith(w) && (l.push({ type: 6, index: a }), i.removeAttribute(u));
-        if (ze.test(i.tagName)) {
-          const u = i.textContent.split(w), h = u.length - 1;
+    for (; (a = k.nextNode()) !== null && l.length < n; ) {
+      if (a.nodeType === 1) {
+        if (a.hasAttributes()) for (const p of a.getAttributeNames()) if (p.endsWith(Re)) {
+          const h = d[o++], m = a.getAttribute(p).split(x), v = /([.?@])?(.*)/.exec(h);
+          l.push({ type: 1, index: i, name: v[2], strings: m, ctor: v[1] === "." ? Qe : v[1] === "?" ? Ke : v[1] === "@" ? Je : F }), a.removeAttribute(p);
+        } else p.startsWith(x) && (l.push({ type: 6, index: i }), a.removeAttribute(p));
+        if (ze.test(a.tagName)) {
+          const p = a.textContent.split(x), h = p.length - 1;
           if (h > 0) {
-            i.textContent = j ? j.emptyScript : "";
-            for (let m = 0; m < h; m++) i.append(u[m], N()), k.nextNode(), l.push({ type: 2, index: ++a });
-            i.append(u[h], N());
+            a.textContent = j ? j.emptyScript : "";
+            for (let m = 0; m < h; m++) a.append(p[m], P()), k.nextNode(), l.push({ type: 2, index: ++i });
+            a.append(p[h], P());
           }
         }
-      } else if (i.nodeType === 8) if (i.data === Oe) l.push({ type: 2, index: a });
+      } else if (a.nodeType === 8) if (a.data === Oe) l.push({ type: 2, index: i });
       else {
-        let u = -1;
-        for (; (u = i.data.indexOf(w, u + 1)) !== -1; ) l.push({ type: 7, index: a }), u += w.length - 1;
+        let p = -1;
+        for (; (p = a.data.indexOf(x, p + 1)) !== -1; ) l.push({ type: 7, index: i }), p += x.length - 1;
       }
-      a++;
+      i++;
     }
   }
   static createElement(e, t) {
@@ -342,12 +342,12 @@ class H {
 }
 function O(s, e, t = s, r) {
   var o, n;
-  if (e === T) return e;
-  let i = r !== void 0 ? (o = t._$Co) == null ? void 0 : o[r] : t._$Cl;
-  const a = L(e) ? void 0 : e._$litDirective$;
-  return (i == null ? void 0 : i.constructor) !== a && ((n = i == null ? void 0 : i._$AO) == null || n.call(i, !1), a === void 0 ? i = void 0 : (i = new a(s), i._$AT(s, t, r)), r !== void 0 ? (t._$Co ?? (t._$Co = []))[r] = i : t._$Cl = i), i !== void 0 && (e = O(s, i._$AS(s, e.values), i, r)), e;
+  if (e === R) return e;
+  let a = r !== void 0 ? (o = t._$Co) == null ? void 0 : o[r] : t._$Cl;
+  const i = N(e) ? void 0 : e._$litDirective$;
+  return (a == null ? void 0 : a.constructor) !== i && ((n = a == null ? void 0 : a._$AO) == null || n.call(a, !1), i === void 0 ? a = void 0 : (a = new i(s), a._$AT(s, t, r)), r !== void 0 ? (t._$Co ?? (t._$Co = []))[r] = a : t._$Cl = a), a !== void 0 && (e = O(s, a._$AS(s, e.values), a, r)), e;
 }
-class Qe {
+class Xe {
   constructor(e, t) {
     this._$AV = [], this._$AN = void 0, this._$AD = e, this._$AM = t;
   }
@@ -358,17 +358,17 @@ class Qe {
     return this._$AM._$AU;
   }
   u(e) {
-    const { el: { content: t }, parts: r } = this._$AD, i = ((e == null ? void 0 : e.creationScope) ?? S).importNode(t, !0);
-    k.currentNode = i;
-    let a = k.nextNode(), o = 0, n = 0, l = r[0];
+    const { el: { content: t }, parts: r } = this._$AD, a = ((e == null ? void 0 : e.creationScope) ?? S).importNode(t, !0);
+    k.currentNode = a;
+    let i = k.nextNode(), o = 0, n = 0, l = r[0];
     for (; l !== void 0; ) {
       if (o === l.index) {
-        let p;
-        l.type === 2 ? p = new B(a, a.nextSibling, this, e) : l.type === 1 ? p = new l.ctor(a, l.name, l.strings, this, e) : l.type === 6 && (p = new et(a, this, e)), this._$AV.push(p), l = r[++n];
+        let u;
+        l.type === 2 ? u = new B(i, i.nextSibling, this, e) : l.type === 1 ? u = new l.ctor(i, l.name, l.strings, this, e) : l.type === 6 && (u = new et(i, this, e)), this._$AV.push(u), l = r[++n];
       }
-      o !== (l == null ? void 0 : l.index) && (a = k.nextNode(), o++);
+      o !== (l == null ? void 0 : l.index) && (i = k.nextNode(), o++);
     }
-    return k.currentNode = S, i;
+    return k.currentNode = S, a;
   }
   p(e) {
     let t = 0;
@@ -380,8 +380,8 @@ class B {
     var e;
     return ((e = this._$AM) == null ? void 0 : e._$AU) ?? this._$Cv;
   }
-  constructor(e, t, r, i) {
-    this.type = 2, this._$AH = g, this._$AN = void 0, this._$AA = e, this._$AB = t, this._$AM = r, this.options = i, this._$Cv = (i == null ? void 0 : i.isConnected) ?? !0;
+  constructor(e, t, r, a) {
+    this.type = 2, this._$AH = g, this._$AN = void 0, this._$AA = e, this._$AB = t, this._$AM = r, this.options = a, this._$Cv = (a == null ? void 0 : a.isConnected) ?? !0;
   }
   get parentNode() {
     let e = this._$AA.parentNode;
@@ -395,7 +395,7 @@ class B {
     return this._$AB;
   }
   _$AI(e, t = this) {
-    e = O(this, e, t), L(e) ? e === g || e == null || e === "" ? (this._$AH !== g && this._$AR(), this._$AH = g) : e !== this._$AH && e !== T && this._(e) : e._$litType$ !== void 0 ? this.$(e) : e.nodeType !== void 0 ? this.T(e) : Ye(e) ? this.k(e) : this._(e);
+    e = O(this, e, t), N(e) ? e === g || e == null || e === "" ? (this._$AH !== g && this._$AR(), this._$AH = g) : e !== this._$AH && e !== R && this._(e) : e._$litType$ !== void 0 ? this.$(e) : e.nodeType !== void 0 ? this.T(e) : Ye(e) ? this.k(e) : this._(e);
   }
   O(e) {
     return this._$AA.parentNode.insertBefore(e, this._$AB);
@@ -404,14 +404,14 @@ class B {
     this._$AH !== e && (this._$AR(), this._$AH = this.O(e));
   }
   _(e) {
-    this._$AH !== g && L(this._$AH) ? this._$AA.nextSibling.data = e : this.T(S.createTextNode(e)), this._$AH = e;
+    this._$AH !== g && N(this._$AH) ? this._$AA.nextSibling.data = e : this.T(S.createTextNode(e)), this._$AH = e;
   }
   $(e) {
-    var a;
-    const { values: t, _$litType$: r } = e, i = typeof r == "number" ? this._$AC(e) : (r.el === void 0 && (r.el = H.createElement(Me(r.h, r.h[0]), this.options)), r);
-    if (((a = this._$AH) == null ? void 0 : a._$AD) === i) this._$AH.p(t);
+    var i;
+    const { values: t, _$litType$: r } = e, a = typeof r == "number" ? this._$AC(e) : (r.el === void 0 && (r.el = H.createElement(Me(r.h, r.h[0]), this.options)), r);
+    if (((i = this._$AH) == null ? void 0 : i._$AD) === a) this._$AH.p(t);
     else {
-      const o = new Qe(i, this), n = o.u(this.options);
+      const o = new Xe(a, this), n = o.u(this.options);
       o.p(t), this.T(n), this._$AH = o;
     }
   }
@@ -420,17 +420,17 @@ class B {
     return t === void 0 && _e.set(e.strings, t = new H(e)), t;
   }
   k(e) {
-    ie(this._$AH) || (this._$AH = [], this._$AR());
+    ae(this._$AH) || (this._$AH = [], this._$AR());
     const t = this._$AH;
-    let r, i = 0;
-    for (const a of e) i === t.length ? t.push(r = new B(this.O(N()), this.O(N()), this, this.options)) : r = t[i], r._$AI(a), i++;
-    i < t.length && (this._$AR(r && r._$AB.nextSibling, i), t.length = i);
+    let r, a = 0;
+    for (const i of e) a === t.length ? t.push(r = new B(this.O(P()), this.O(P()), this, this.options)) : r = t[a], r._$AI(i), a++;
+    a < t.length && (this._$AR(r && r._$AB.nextSibling, a), t.length = a);
   }
   _$AR(e = this._$AA.nextSibling, t) {
     var r;
     for ((r = this._$AP) == null ? void 0 : r.call(this, !1, !0, t); e !== this._$AB; ) {
-      const i = he(e).nextSibling;
-      he(e).remove(), e = i;
+      const a = he(e).nextSibling;
+      he(e).remove(), e = a;
     }
   }
   setConnected(e) {
@@ -445,25 +445,25 @@ class F {
   get _$AU() {
     return this._$AM._$AU;
   }
-  constructor(e, t, r, i, a) {
-    this.type = 1, this._$AH = g, this._$AN = void 0, this.element = e, this.name = t, this._$AM = i, this.options = a, r.length > 2 || r[0] !== "" || r[1] !== "" ? (this._$AH = Array(r.length - 1).fill(new String()), this.strings = r) : this._$AH = g;
+  constructor(e, t, r, a, i) {
+    this.type = 1, this._$AH = g, this._$AN = void 0, this.element = e, this.name = t, this._$AM = a, this.options = i, r.length > 2 || r[0] !== "" || r[1] !== "" ? (this._$AH = Array(r.length - 1).fill(new String()), this.strings = r) : this._$AH = g;
   }
-  _$AI(e, t = this, r, i) {
-    const a = this.strings;
+  _$AI(e, t = this, r, a) {
+    const i = this.strings;
     let o = !1;
-    if (a === void 0) e = O(this, e, t, 0), o = !L(e) || e !== this._$AH && e !== T, o && (this._$AH = e);
+    if (i === void 0) e = O(this, e, t, 0), o = !N(e) || e !== this._$AH && e !== R, o && (this._$AH = e);
     else {
       const n = e;
-      let l, p;
-      for (e = a[0], l = 0; l < a.length - 1; l++) p = O(this, n[r + l], t, l), p === T && (p = this._$AH[l]), o || (o = !L(p) || p !== this._$AH[l]), p === g ? e = g : e !== g && (e += (p ?? "") + a[l + 1]), this._$AH[l] = p;
+      let l, u;
+      for (e = i[0], l = 0; l < i.length - 1; l++) u = O(this, n[r + l], t, l), u === R && (u = this._$AH[l]), o || (o = !N(u) || u !== this._$AH[l]), u === g ? e = g : e !== g && (e += (u ?? "") + i[l + 1]), this._$AH[l] = u;
     }
-    o && !i && this.j(e);
+    o && !a && this.j(e);
   }
   j(e) {
     e === g ? this.element.removeAttribute(this.name) : this.element.setAttribute(this.name, e ?? "");
   }
 }
-class Ze extends F {
+class Qe extends F {
   constructor() {
     super(...arguments), this.type = 3;
   }
@@ -480,13 +480,13 @@ class Ke extends F {
   }
 }
 class Je extends F {
-  constructor(e, t, r, i, a) {
-    super(e, t, r, i, a), this.type = 5;
+  constructor(e, t, r, a, i) {
+    super(e, t, r, a, i), this.type = 5;
   }
   _$AI(e, t = this) {
-    if ((e = O(this, e, t, 0) ?? g) === T) return;
-    const r = this._$AH, i = e === g && r !== g || e.capture !== r.capture || e.once !== r.once || e.passive !== r.passive, a = e !== g && (r === g || i);
-    i && this.element.removeEventListener(this.name, this, r), a && this.element.addEventListener(this.name, this, e), this._$AH = e;
+    if ((e = O(this, e, t, 0) ?? g) === R) return;
+    const r = this._$AH, a = e === g && r !== g || e.capture !== r.capture || e.once !== r.once || e.passive !== r.passive, i = e !== g && (r === g || a);
+    a && this.element.removeEventListener(this.name, this, r), i && this.element.addEventListener(this.name, this, e), this._$AH = e;
   }
   handleEvent(e) {
     var t;
@@ -504,16 +504,16 @@ class et {
     O(this, e);
   }
 }
-const X = P.litHtmlPolyfillSupport;
-X == null || X(H, B), (P.litHtmlVersions ?? (P.litHtmlVersions = [])).push("3.3.3");
+const G = L.litHtmlPolyfillSupport;
+G == null || G(H, B), (L.litHtmlVersions ?? (L.litHtmlVersions = [])).push("3.3.3");
 const tt = (s, e, t) => {
   const r = (t == null ? void 0 : t.renderBefore) ?? e;
-  let i = r._$litPart$;
-  if (i === void 0) {
-    const a = (t == null ? void 0 : t.renderBefore) ?? null;
-    r._$litPart$ = i = new B(e.insertBefore(N(), a), a, void 0, t ?? {});
+  let a = r._$litPart$;
+  if (a === void 0) {
+    const i = (t == null ? void 0 : t.renderBefore) ?? null;
+    r._$litPart$ = a = new B(e.insertBefore(P(), i), i, void 0, t ?? {});
   }
-  return i._$AI(s), i;
+  return a._$AI(s), a;
 };
 /**
  * @license
@@ -521,7 +521,7 @@ const tt = (s, e, t) => {
  * SPDX-License-Identifier: BSD-3-Clause
  */
 const A = globalThis;
-class R extends C {
+class T extends C {
   constructor() {
     super(...arguments), this.renderOptions = { host: this }, this._$Do = void 0;
   }
@@ -543,23 +543,23 @@ class R extends C {
     super.disconnectedCallback(), (e = this._$Do) == null || e.setConnected(!1);
   }
   render() {
-    return T;
+    return R;
   }
 }
 var Ee;
-R._$litElement$ = !0, R.finalized = !0, (Ee = A.litElementHydrateSupport) == null || Ee.call(A, { LitElement: R });
-const Q = A.litElementPolyfillSupport;
-Q == null || Q({ LitElement: R });
+T._$litElement$ = !0, T.finalized = !0, (Ee = A.litElementHydrateSupport) == null || Ee.call(A, { LitElement: T });
+const X = A.litElementPolyfillSupport;
+X == null || X({ LitElement: T });
 (A.litElementVersions ?? (A.litElementVersions = [])).push("4.2.2");
 /**
  * @license
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const rt = { attribute: !0, type: String, converter: I, reflect: !1, hasChanged: re }, it = (s = rt, e, t) => {
-  const { kind: r, metadata: i } = t;
-  let a = globalThis.litPropertyMetadata.get(i);
-  if (a === void 0 && globalThis.litPropertyMetadata.set(i, a = /* @__PURE__ */ new Map()), r === "setter" && ((s = Object.create(s)).wrapped = !0), a.set(t.name, s), r === "accessor") {
+const rt = { attribute: !0, type: String, converter: I, reflect: !1, hasChanged: re }, at = (s = rt, e, t) => {
+  const { kind: r, metadata: a } = t;
+  let i = globalThis.litPropertyMetadata.get(a);
+  if (i === void 0 && globalThis.litPropertyMetadata.set(a, i = /* @__PURE__ */ new Map()), r === "setter" && ((s = Object.create(s)).wrapped = !0), i.set(t.name, s), r === "accessor") {
     const { name: o } = t;
     return { set(n) {
       const l = e.get.call(this);
@@ -577,10 +577,10 @@ const rt = { attribute: !0, type: String, converter: I, reflect: !1, hasChanged:
   }
   throw Error("Unsupported decorator location: " + r);
 };
-function ae(s) {
-  return (e, t) => typeof t == "object" ? it(s, e, t) : ((r, i, a) => {
-    const o = i.hasOwnProperty(a);
-    return i.constructor.createProperty(a, r), o ? Object.getOwnPropertyDescriptor(i, a) : void 0;
+function ie(s) {
+  return (e, t) => typeof t == "object" ? at(s, e, t) : ((r, a, i) => {
+    const o = a.hasOwnProperty(i);
+    return a.constructor.createProperty(i, r), o ? Object.getOwnPropertyDescriptor(a, i) : void 0;
   })(s, e, t);
 }
 /**
@@ -589,9 +589,9 @@ function ae(s) {
  * SPDX-License-Identifier: BSD-3-Clause
  */
 function q(s) {
-  return ae({ ...s, state: !0, attribute: !1 });
+  return ie({ ...s, state: !0, attribute: !1 });
 }
-const at = {
+const it = {
   id: "altair",
   name: "Altair 160",
   vendor: "Altair",
@@ -688,20 +688,20 @@ const at = {
   "vent_axia_sentinel_econiq",
   "generic"
 ], lt = {
-  altair: at,
+  altair: it,
   "zehnder-comfoair-q": ot,
   vent_axia_sentinel_econiq: st,
   generic: nt
 };
-function Pe(s) {
+function Le(s) {
   return lt[s];
 }
-var ct = Object.defineProperty, Ne = (s, e, t, r) => {
-  for (var i = void 0, a = s.length - 1, o; a >= 0; a--)
-    (o = s[a]) && (i = o(e, t, i) || i);
-  return i && ct(e, t, i), i;
+var ct = Object.defineProperty, Pe = (s, e, t, r) => {
+  for (var a = void 0, i = s.length - 1, o; i >= 0; i--)
+    (o = s[i]) && (a = o(e, t, a) || a);
+  return a && ct(e, t, a), a;
 };
-const xe = "hiper-mvhr-card-editor", se = class se extends R {
+const we = "hiper-mvhr-card-editor", se = class se extends T {
   setConfig(e) {
     this._config = { ...e };
   }
@@ -784,7 +784,7 @@ const xe = "hiper-mvhr-card-editor", se = class se extends R {
         <span>${e}</span>
         <input
           .value=${r ?? ""}
-          @input=${(i) => this._set(t, i.currentTarget.value)}
+          @input=${(a) => this._set(t, a.currentTarget.value)}
         />
       </label>
     `;
@@ -795,7 +795,7 @@ const xe = "hiper-mvhr-card-editor", se = class se extends R {
         <input
           type="checkbox"
           .checked=${r}
-          @change=${(i) => this._set(t, i.currentTarget.checked)}
+          @change=${(a) => this._set(t, a.currentTarget.checked)}
         />
         <span>${e}</span>
       </label>
@@ -812,7 +812,7 @@ const xe = "hiper-mvhr-card-editor", se = class se extends R {
     );
   }
 };
-se.styles = Re`
+se.styles = Te`
     .editor {
       display: grid;
       gap: 12px;
@@ -848,13 +848,13 @@ se.styles = Re`
     }
   `;
 let U = se;
-Ne([
-  ae({ attribute: !1 })
+Pe([
+  ie({ attribute: !1 })
 ], U.prototype, "hass");
-Ne([
+Pe([
   q()
 ], U.prototype, "_config");
-customElements.get(xe) || customElements.define(xe, U);
+customElements.get(we) || customElements.define(we, U);
 const oe = [
   "mode",
   "effective_mode",
@@ -935,11 +935,11 @@ class b extends Error {
     super(e), this.name = "ConfigValidationError";
   }
 }
-const dt = "homeowner", we = ["homeowner", "detailed", "system"], ye = ["automatic", "supply_temperature", "disabled"];
+const dt = "homeowner", xe = ["homeowner", "detailed", "system"], ye = ["automatic", "supply_temperature", "disabled"];
 function $e(s) {
   return oe.includes(s);
 }
-const ut = {
+const pt = {
   supply_temperature: "supply_air_temp",
   extract_temperature: "extract_air_temp",
   outdoor_temperature: "outdoor_air_temp",
@@ -950,7 +950,7 @@ const ut = {
   extract_fan: "extract_fan_speed",
   last_airflow_calibration: "last_calibration"
 };
-function pt(s) {
+function ut(s) {
   if (!s || typeof s != "object" || Array.isArray(s))
     throw new b("hiper-mvhr-card: configuration must be an object");
   const e = s;
@@ -961,9 +961,9 @@ function pt(s) {
       `hiper-mvhr-card: unknown manufacturer "${e.manufacturer}". Supported: ${J.join(", ")}`
     );
   const t = e.manufacturer, r = e.display_mode ?? dt;
-  if (!we.includes(r))
+  if (!xe.includes(r))
     throw new b(
-      `hiper-mvhr-card: invalid "display_mode" value "${String(e.display_mode)}". Expected one of: ${we.join(", ")}`
+      `hiper-mvhr-card: invalid "display_mode" value "${String(e.display_mode)}". Expected one of: ${xe.join(", ")}`
     );
   if (e.name !== void 0 && typeof e.name != "string")
     throw new b('hiper-mvhr-card: "name" must be a string if provided');
@@ -971,13 +971,13 @@ function pt(s) {
     throw new b('hiper-mvhr-card: "title" must be a string if provided');
   if (e.subtitle !== void 0 && typeof e.subtitle != "string")
     throw new b('hiper-mvhr-card: "subtitle" must be a string if provided');
-  const i = e.heat_recovery_method ?? "automatic";
-  if (!ye.includes(i))
+  const a = e.heat_recovery_method ?? "automatic";
+  if (!ye.includes(a))
     throw new b(
       `hiper-mvhr-card: invalid "heat_recovery_method" value "${String(e.heat_recovery_method)}". Expected one of: ${ye.join(", ")}`
     );
-  const a = e.filter_max_days ?? 365;
-  if (typeof a != "number" || !Number.isFinite(a) || a <= 0)
+  const i = e.filter_max_days ?? 365;
+  if (typeof i != "number" || !Number.isFinite(i) || i <= 0)
     throw new b('hiper-mvhr-card: "filter_max_days" must be a positive number');
   const o = e.entities ?? {};
   if (typeof o != "object" || Array.isArray(o) || o === null)
@@ -985,34 +985,34 @@ function pt(s) {
       'hiper-mvhr-card: "entities" must be a mapping of role to entity id'
     );
   const n = {};
-  for (const [d, u] of Object.entries(o)) {
-    const h = ut[d] ?? d;
+  for (const [d, p] of Object.entries(o)) {
+    const h = pt[d] ?? d;
     if (!$e(h)) {
       console.warn(`hiper-mvhr-card: ignoring unknown entity role "${d}" in config`);
       continue;
     }
-    if (typeof u != "string" || u.length === 0)
+    if (typeof p != "string" || p.length === 0)
       throw new b(
         `hiper-mvhr-card: entity id for role "${d}" must be a non-empty string`
       );
-    n[h] = u;
+    n[h] = p;
   }
   const l = e.feature_flags ?? {};
   if (typeof l != "object" || Array.isArray(l) || l === null)
     throw new b(
       'hiper-mvhr-card: "feature_flags" must be a mapping of role to boolean'
     );
-  const p = {};
-  for (const [d, u] of Object.entries(l)) {
+  const u = {};
+  for (const [d, p] of Object.entries(l)) {
     if (!$e(d)) {
       console.warn(`hiper-mvhr-card: ignoring unknown feature flag role "${d}" in config`);
       continue;
     }
-    if (typeof u != "boolean")
+    if (typeof p != "boolean")
       throw new b(
-        `hiper-mvhr-card: feature flag "${d}" must be true or false, got ${JSON.stringify(u)}`
+        `hiper-mvhr-card: feature flag "${d}" must be true or false, got ${JSON.stringify(p)}`
       );
-    p[d] = u;
+    u[d] = p;
   }
   return {
     type: "custom:hiper-mvhr-card",
@@ -1022,26 +1022,26 @@ function pt(s) {
     manufacturer: t,
     display_mode: r,
     entities: n,
-    feature_flags: p,
+    feature_flags: u,
     show_airflow_on_all_paths: e.show_airflow_on_all_paths === !0,
     show_controls: e.show_controls !== !1,
     show_fan_speeds: e.show_fan_speeds !== !1,
     show_filter: e.show_filter !== !1,
     show_calibration: e.show_calibration !== !1,
-    filter_max_days: a,
-    heat_recovery_method: i,
+    filter_max_days: i,
+    heat_recovery_method: a,
     show_airflow_animation: e.show_airflow_animation !== !1,
     show_advanced_controls: e.show_advanced_controls !== !1
   };
 }
 function ht(s, e) {
-  const t = Pe(s);
+  const t = Le(s);
   if (!e || Object.keys(e).length === 0)
     return t;
-  const r = new Set(t.unsupportedRoles ?? []), i = { ...t.supportedRoles };
-  for (const a of Object.keys(e))
-    r.has(a) || (e[a] ? i[a] = i[a] ?? {} : delete i[a]);
-  return { ...t, supportedRoles: i };
+  const r = new Set(t.unsupportedRoles ?? []), a = { ...t.supportedRoles };
+  for (const i of Object.keys(e))
+    r.has(i) || (e[i] ? a[i] = a[i] ?? {} : delete a[i]);
+  return { ...t, supportedRoles: a };
 }
 const mt = /* @__PURE__ */ new Set(["unavailable", "unknown"]), ft = /* @__PURE__ */ new Set(["button", "input_button"]);
 function gt(s) {
@@ -1049,34 +1049,34 @@ function gt(s) {
   return e ?? "";
 }
 function vt(s, e, t) {
-  var i;
+  var a;
   const r = {};
-  for (const a of oe) {
-    if (!e.supportedRoles[a]) {
-      r[a] = { status: "unsupported" };
+  for (const i of oe) {
+    if (!e.supportedRoles[i]) {
+      r[i] = { status: "unsupported" };
       continue;
     }
-    const o = t[a];
+    const o = t[i];
     if (!o) {
-      r[a] = { status: "not_configured" };
+      r[i] = { status: "not_configured" };
       continue;
     }
     const n = s.states[o];
     if (!n) {
-      r[a] = { status: "entity_missing", entityId: o };
+      r[i] = { status: "entity_missing", entityId: o };
       continue;
     }
     const l = n.state === "unknown" && ft.has(gt(o));
     if (mt.has(n.state) && !l) {
-      r[a] = { status: "unavailable" };
+      r[i] = { status: "unavailable" };
       continue;
     }
-    const p = Number(n.state);
-    r[a] = {
+    const u = Number(n.state);
+    r[i] = {
       status: "ok",
       value: n.state,
-      numericValue: Number.isFinite(p) ? p : void 0,
-      unit: typeof ((i = n.attributes) == null ? void 0 : i.unit_of_measurement) == "string" ? n.attributes.unit_of_measurement : void 0,
+      numericValue: Number.isFinite(u) ? u : void 0,
+      unit: typeof ((a = n.attributes) == null ? void 0 : a.unit_of_measurement) == "string" ? n.attributes.unit_of_measurement : void 0,
       attributes: n.attributes ?? {}
     };
   }
@@ -1084,23 +1084,23 @@ function vt(s, e, t) {
 }
 function bt(s, e, t = {}) {
   const r = new Set(t.ignoreRoles ?? []);
-  let i = 0, a = 0, o = 0;
+  let a = 0, i = 0, o = 0;
   for (const n of Object.keys(e.supportedRoles)) {
     if (r.has(n))
       continue;
     const l = s[n];
-    l && (l.status === "ok" ? i += 1 : l.status === "unavailable" ? a += 1 : l.status === "entity_missing" && (o += 1));
+    l && (l.status === "ok" ? a += 1 : l.status === "unavailable" ? i += 1 : l.status === "entity_missing" && (o += 1));
   }
   return o > 0 ? {
     tone: "warning",
     label: o === 1 ? "1 configuration issue" : `${o} configuration issues`
-  } : a > 0 ? {
+  } : i > 0 ? {
     tone: "muted",
-    label: a === 1 ? "1 sensor unavailable" : `${a} sensors unavailable`
-  } : i > 0 ? { tone: "success", label: "All sensors reporting" } : { tone: "muted", label: "Not configured" };
+    label: i === 1 ? "1 sensor unavailable" : `${i} sensors unavailable`
+  } : a > 0 ? { tone: "success", label: "All sensors reporting" } : { tone: "muted", label: "Not configured" };
 }
-const _t = 1e4, xt = "press";
-function wt(s) {
+const _t = 1e4, wt = "press";
+function xt(s) {
   const [e] = s.split(".");
   return e ?? "";
 }
@@ -1133,15 +1133,15 @@ class yt {
     if (!(e != null && e.callService) || this._state.status === "pending")
       return;
     this._setState({ status: "pending" });
-    const r = wt(t);
-    let i;
-    const a = new Promise((o) => {
-      i = setTimeout(() => o("timeout"), this._timeoutMs);
+    const r = xt(t);
+    let a;
+    const i = new Promise((o) => {
+      a = setTimeout(() => o("timeout"), this._timeoutMs);
     });
     try {
       if (await Promise.race([
-        e.callService(r, xt, { entity_id: t }).then(() => "done"),
-        a
+        e.callService(r, wt, { entity_id: t }).then(() => "done"),
+        i
       ]) === "timeout") {
         this._setState({ status: "error", message: "Timed out waiting for a response." });
         return;
@@ -1153,7 +1153,7 @@ class yt {
         message: o instanceof Error ? o.message : "The action failed."
       });
     } finally {
-      clearTimeout(i);
+      clearTimeout(a);
     }
   }
 }
@@ -1198,7 +1198,7 @@ const Et = {
   shower_trigger_temperature: "mdi:thermometer-water",
   shower_pipe_temperature: "mdi:thermometer-water"
 };
-function Z(s) {
+function Q(s) {
   return Et[s];
 }
 function Ct(s) {
@@ -1218,12 +1218,12 @@ function Ct(s) {
     raw: t
   };
 }
-var Rt = Object.defineProperty, W = (s, e, t, r) => {
-  for (var i = void 0, a = s.length - 1, o; a >= 0; a--)
-    (o = s[a]) && (i = o(e, t, i) || i);
-  return i && Rt(e, t, i), i;
+var Tt = Object.defineProperty, W = (s, e, t, r) => {
+  for (var a = void 0, i = s.length - 1, o; i >= 0; i--)
+    (o = s[i]) && (a = o(e, t, a) || a);
+  return a && Tt(e, t, a), a;
 };
-const V = "hiper-mvhr-card", Tt = [
+const V = "hiper-mvhr-card", Rt = [
   ["outdoor_air_temp", "Outdoor air"],
   ["supply_air_temp", "Supply air"],
   ["extract_air_temp", "Extract air"],
@@ -1247,7 +1247,7 @@ const V = "hiper-mvhr-card", Tt = [
   success: "mdi:check-circle",
   warning: "mdi:alert",
   muted: "mdi:information-outline"
-}, Le = [
+}, Ne = [
   "effective_mode",
   "fault_active",
   "frost_protection_active",
@@ -1267,19 +1267,19 @@ const V = "hiper-mvhr-card", Tt = [
   "shower_detected",
   "shower_trigger_temperature",
   "shower_pipe_temperature"
-], Mt = new Set(Le), Se = 10, Pt = [
+], Mt = new Set(Ne), Se = 10, Lt = [
   ["supply_air_temp", "Supply air"],
   ["extract_air_temp", "Extract air"],
   ["outdoor_air_temp", "Outdoor air"],
   ["exhaust_air_temp", "Exhaust air"]
-], Nt = /* @__PURE__ */ new Set([
+], Pt = /* @__PURE__ */ new Set([
   "calibrated",
   "complete",
   "completed",
   "idle",
   "none",
   "unknown"
-]), Lt = /* @__PURE__ */ new Set(["on", "true", "problem", "active", "detected"]), ne = class ne extends R {
+]), Nt = /* @__PURE__ */ new Set(["on", "true", "problem", "active", "detected"]), ne = class ne extends T {
   constructor() {
     super(...arguments), this._advancedOpen = !1, this._dispatchers = /* @__PURE__ */ new Map();
   }
@@ -1299,7 +1299,7 @@ const V = "hiper-mvhr-card", Tt = [
   }
   setConfig(e) {
     try {
-      this._config = pt(e), this._configError = void 0;
+      this._config = ut(e), this._configError = void 0;
     } catch (t) {
       this._config = void 0, this._configError = t instanceof Error ? t.message : String(t);
     }
@@ -1312,15 +1312,15 @@ const V = "hiper-mvhr-card", Tt = [
       return c`<ha-card><div class="error" role="alert">${this._configError}</div></ha-card>`;
     if (!this._config || !this.hass)
       return c``;
-    const e = this._config, t = this.hass, r = e.display_mode === "detailed", i = e.display_mode === "system", a = ht(e.manufacturer, e.feature_flags), o = Pe(e.manufacturer), n = vt(t, a, e.entities), l = bt(n, a, {
-      ignoreRoles: Le
-    }), p = r || l.label !== "Not configured", d = n.mode ? this._present(n.mode, r) : null, u = e.title ?? e.name ?? o.name, h = e.subtitle ?? "Heat Recovery Ventilation System", m = l.tone !== "warning" && l.label !== "Not configured", v = this._heatRecovery(n, e.heat_recovery_method), _ = this._modeLabel(
+    const e = this._config, t = this.hass, r = e.display_mode === "detailed", a = e.display_mode === "system", i = ht(e.manufacturer, e.feature_flags), o = Le(e.manufacturer), n = vt(t, i, e.entities), l = bt(n, i, {
+      ignoreRoles: Ne
+    }), u = r || l.label !== "Not configured", d = n.mode ? this._present(n.mode, r) : null, p = e.title ?? e.name ?? o.name, h = e.subtitle ?? "Heat Recovery Ventilation System", m = l.tone !== "warning" && l.label !== "Not configured", v = this._heatRecovery(n, e.heat_recovery_method), _ = this._modeLabel(
       (d == null ? void 0 : d.text) ?? this._text(n.effective_mode)
     ), f = e.title ?? o.name;
     return c`
-      <ha-card class=${i ? "card-system" : ""}>
-        ${i ? this._systemHeader(u, h, _, n, e, t) : this._header(u, h, _, l, p)}
-        ${i ? this._systemDashboard(n, e, t, v, _, f, m) : r ? this._dashboard(n, e, t, v, _, f, m) : this._legacyContent(n, e, t, r)}
+      <ha-card class=${a ? "card-system" : ""}>
+        ${a ? this._systemHeader(p, h, _, n, e, t) : this._header(p, h, _, l, u)}
+        ${a ? this._systemDashboard(n, e, t, v, _, f, m) : r ? this._dashboard(n, e, t, v, _, f, m) : this._legacyContent(n, e, t, r)}
       </ha-card>
     `;
   }
@@ -1331,19 +1331,19 @@ const V = "hiper-mvhr-card", Tt = [
    * `OPTIONAL_AVAILABILITY_ROLES` above), never an unconfigured optional
    * sensor like fault/frost.
    */
-  _header(e, t, r, i, a) {
+  _header(e, t, r, a, i) {
     return c`
       <div class="header mvhr-header">
         <div class="header-row">
           <div class="header-title-group">
             <h2 class="title">${e}</h2>
-            <span class="status-dot dot-${i.tone}" aria-hidden="true"></span>
+            <span class="status-dot dot-${a.tone}" aria-hidden="true"></span>
             ${r ? c`<span class="mode-pill">${r}</span>` : ""}
           </div>
-          ${a ? c`
-                  <div class="availability tone-${i.tone}" role="status">
-                    <ha-icon icon=${K[i.tone]} aria-hidden="true"></ha-icon>
-                    <span>${i.label}</span>
+          ${i ? c`
+                  <div class="availability tone-${a.tone}" role="status">
+                    <ha-icon icon=${K[a.tone]} aria-hidden="true"></ha-icon>
+                    <span>${a.label}</span>
                   </div>
                 ` : ""}
         </div>
@@ -1359,12 +1359,12 @@ const V = "hiper-mvhr-card", Tt = [
    * `_dashboard` below, which is its full replacement (ROADMAP.md "Rebuild
    * detailed MVHR dashboard layout").
    */
-  _legacyContent(e, t, r, i) {
+  _legacyContent(e, t, r, a) {
     return c`
       <div class="content">
-        ${this._metricSection("Temperatures", Tt, e, i)}
-        ${this._metricSection("Airflow", Ot, e, i)}
-        ${this._statusSection("System status", zt, e, i, t, r)}
+        ${this._metricSection("Temperatures", Rt, e, a)}
+        ${this._metricSection("Airflow", Ot, e, a)}
+        ${this._statusSection("System status", zt, e, a, t, r)}
       </div>
     `;
   }
@@ -1375,16 +1375,16 @@ const V = "hiper-mvhr-card", Tt = [
    * bottom. Nothing from the legacy homeowner content (`_legacyContent`)
    * renders alongside it.
    */
-  _dashboard(e, t, r, i, a, o, n) {
+  _dashboard(e, t, r, a, i, o, n) {
     const l = t.show_controls && this._hasControls(e, t);
     return c`
       <div class="mvhr-dashboard ${l ? "" : "no-controls"}">
         <section class="visual-panel" aria-label="MVHR airflow diagram">
-          ${this._heroVisual(e, t, n, o, i)}
+          ${this._heroVisual(e, t, n, o, a)}
         </section>
         ${l ? this._controlsPanel(e, t, r) : ""}
         <section class="metrics-grid" aria-label="MVHR metrics">
-          ${this._infoTile("Mode", a || "—", "mdi:fan-auto")}
+          ${this._infoTile("Mode", i || "—", "mdi:fan-auto")}
           ${this._infoTile(
       "Measured airflow",
       this._value(e.airflow, !0) ?? this._value(e.supply_airflow, !0) ?? "—",
@@ -1394,9 +1394,9 @@ const V = "hiper-mvhr-card", Tt = [
           ${this._infoTile("Mapped level", this._value(e.mapped_level, !0) ?? "—", "mdi:tune-variant")}
           ${this._infoTile(
       "Heat recovery",
-      i.label,
+      a.label,
       "mdi:heat-wave",
-      i.status,
+      a.status,
       "Apparent temperature recovery"
     )}
           ${t.show_fan_speeds ? this._infoTile("Fan speeds", this._pair(ke, e, !0), "mdi:fan") : ""}
@@ -1417,8 +1417,8 @@ const V = "hiper-mvhr-card", Tt = [
    * this was extracted rather than re-implemented.
    */
   _statusStrip(e, t) {
-    var a;
-    const r = this._dashboardStatus(e), i = ((a = e.last_calibration) == null ? void 0 : a.status) === "ok" ? St(e.last_calibration.value) : null;
+    var i;
+    const r = this._dashboardStatus(e), a = ((i = e.last_calibration) == null ? void 0 : i.status) === "ok" ? St(e.last_calibration.value) : null;
     return c`
       <section class="status-strip tone-${r.tone}" aria-label="MVHR status">
         <span class="status-chip">
@@ -1427,7 +1427,7 @@ const V = "hiper-mvhr-card", Tt = [
         </span>
         ${t.show_calibration ? c`
                 <span>Calibration: ${this._value(e.calibration_result, !0) ?? "—"}</span>
-                ${i ? c`<span>Last calibration: ${i}</span>` : ""}
+                ${a ? c`<span>Last calibration: ${a}</span>` : ""}
               ` : ""}
       </section>
     `;
@@ -1440,23 +1440,23 @@ const V = "hiper-mvhr-card", Tt = [
   _present(e, t) {
     return e.status === "unsupported" ? null : e.status === "not_configured" ? t ? { tone: "muted", text: "Not configured" } : null : e.status === "entity_missing" ? t ? { tone: "warning", text: `Entity not found: ${e.entityId}` } : { tone: "muted", text: "Unavailable" } : e.status === "unavailable" ? { tone: "muted", text: "Unavailable" } : { tone: "normal", text: kt(e) };
   }
-  _metricSection(e, t, r, i) {
-    const a = t.map(([o, n]) => {
-      const l = r[o], p = l ? this._present(l, i) : null;
-      return p ? this._metricCell(o, n, p) : null;
+  _metricSection(e, t, r, a) {
+    const i = t.map(([o, n]) => {
+      const l = r[o], u = l ? this._present(l, a) : null;
+      return u ? this._metricCell(o, n, u) : null;
     }).filter((o) => o !== null);
-    return a.length === 0 ? c`` : c`
+    return i.length === 0 ? c`` : c`
       <section class="metric-section" aria-label=${e}>
         <h3>${e}</h3>
-        <div class="metric-grid">${a}</div>
+        <div class="metric-grid">${i}</div>
       </section>
     `;
   }
   _metricCell(e, t, r) {
-    const i = Z(e);
+    const a = Q(e);
     return c`
       <div class="metric tone-${r.tone}">
-        ${i ? c`<ha-icon icon=${i} aria-hidden="true"></ha-icon>` : ""}
+        ${a ? c`<ha-icon icon=${a} aria-hidden="true"></ha-icon>` : ""}
         <div class="metric-text">
           <span class="metric-label">${t}</span>
           <span class="metric-value">${r.text}</span>
@@ -1464,17 +1464,26 @@ const V = "hiper-mvhr-card", Tt = [
       </div>
     `;
   }
-  _statusSection(e, t, r, i, a, o) {
-    const n = t.map(([d, u]) => {
-      const h = r[d], m = h ? this._present(h, i) : null;
-      return m ? this._statusRow(d, u, m) : null;
+  _statusSection(e, t, r, a, i, o) {
+    const n = t.map(([d, p]) => {
+      const h = r[d], m = h ? this._present(h, a) : null;
+      return m ? this._statusRow(d, p, m) : null;
     }).filter((d) => d !== null), l = Ae.map(
-      ([d, u, h, m]) => this._controlRow(d, u, r[d], i, a, o, h, m)
-    ).filter((d) => d !== null), p = [...n, ...l];
-    return p.length === 0 ? c`` : c`
+      ([d, p, h, m]) => this._controlRow(
+        d,
+        p,
+        r[d],
+        a,
+        i,
+        o,
+        h,
+        m
+      )
+    ).filter((d) => d !== null), u = [...n, ...l];
+    return u.length === 0 ? c`` : c`
       <section class="status-section" aria-label=${e}>
         <h3>${e}</h3>
-        <div class="status-list">${p}</div>
+        <div class="status-list">${u}</div>
       </section>
     `;
   }
@@ -1488,20 +1497,20 @@ const V = "hiper-mvhr-card", Tt = [
    * Altair/Zehnder/Aerofresh, which don't declare this role supported.
    */
   _extraControls(e, t, r) {
-    const i = Ae.map(
-      ([a, o, n, l]) => this._controlRow(a, o, e[a], !0, t, r, n, l)
-    ).filter((a) => a !== null);
-    return i.length === 0 ? c`` : c`
+    const a = Ae.map(
+      ([i, o, n, l]) => this._controlRow(i, o, e[i], !0, t, r, n, l)
+    ).filter((i) => i !== null);
+    return a.length === 0 ? c`` : c`
       <section class="status-section extra-controls" aria-label="Additional controls">
-        <div class="status-list">${i}</div>
+        <div class="status-list">${a}</div>
       </section>
     `;
   }
   _statusRow(e, t, r) {
-    const i = Z(e);
+    const a = Q(e);
     return c`
       <div class="status-row tone-${r.tone}">
-        ${i ? c`<ha-icon icon=${i} aria-hidden="true"></ha-icon>` : ""}
+        ${a ? c`<ha-icon icon=${a} aria-hidden="true"></ha-icon>` : ""}
         <span class="status-label">${t}</span>
         <span class="status-value">${r.text}</span>
       </div>
@@ -1515,30 +1524,32 @@ const V = "hiper-mvhr-card", Tt = [
    * interactive button instead of formatted text, since a button entity's
    * raw state (a last-pressed timestamp) isn't meaningful to show.
    */
-  _controlRow(e, t, r, i, a, o, n, l) {
+  _controlRow(e, t, r, a, i, o, n, l) {
     if (!r)
       return null;
     if (r.status !== "ok") {
-      const m = this._present(r, i);
+      const m = this._present(r, a);
       return m ? this._statusRow(e, t, m) : null;
     }
-    const p = a.entities[e];
-    if (!p)
+    const u = i.entities[e];
+    if (!u)
       return null;
-    const d = this._getDispatcher(e), u = d.state, h = Z(e);
+    const d = this._getDispatcher(e), p = d.state, h = Q(e);
     return c`
       <div class="status-row">
         ${h ? c`<ha-icon icon=${h} aria-hidden="true"></ha-icon>` : ""}
         <span class="status-label">${t}</span>
-        ${u.status === "error" ? c`<span class="status-value tone-warning">Couldn't ${n.toLowerCase()}</span>` : ""}
+        ${p.status === "error" ? c`<span class="status-value tone-warning"
+                >Couldn't ${n.toLowerCase()}</span
+              >` : ""}
         <button
           type="button"
           class="control-button"
           aria-label=${t}
-          ?disabled=${u.status === "pending"}
-          @click=${() => d.dispatchAction(o, p)}
+          ?disabled=${p.status === "pending"}
+          @click=${() => d.dispatchAction(o, u)}
         >
-          ${u.status === "pending" ? l : n}
+          ${p.status === "pending" ? l : n}
         </button>
       </div>
     `;
@@ -1550,13 +1561,13 @@ const V = "hiper-mvhr-card", Tt = [
    * manufacturer profile, which is exactly why Altair, which has none,
    * never gets one) and the heat-recovery badge inside the unit itself.
    */
-  _heroVisual(e, t, r, i, a) {
-    const o = this._value(e.airflow, !0) ?? this._value(e.supply_airflow, !0), n = t.show_airflow_on_all_paths, l = (p, d, u, h) => {
+  _heroVisual(e, t, r, a, i) {
+    const o = this._value(e.airflow, !0) ?? this._value(e.supply_airflow, !0), n = t.show_airflow_on_all_paths, l = (u, d, p, h) => {
       const m = n || h ? o : null;
       return c`
-        <div class="air-path ${p} ${r ? "active" : ""}">
+        <div class="air-path ${u} ${r ? "active" : ""}">
           <span class="path-label">${d}</span>
-          <span class="path-temp">${this._value(e[u], !0) ?? "—"}</span>
+          <span class="path-temp">${this._value(e[p], !0) ?? "—"}</span>
           ${m ? c`<span class="path-airflow">${m}</span>` : ""}
         </div>
       `;
@@ -1567,7 +1578,7 @@ const V = "hiper-mvhr-card", Tt = [
         ${l("exhaust", "Exhaust air", "exhaust_air_temp", !1)}
         <div class="unit" aria-label="Heat recovery unit">
           <div class="brand">
-            ${i}${i.toLowerCase().includes("mvhr") ? "" : c`<br /><span>MVHR</span>`}
+            ${a}${a.toLowerCase().includes("mvhr") ? "" : c`<br /><span>MVHR</span>`}
           </div>
           <div class="duct duct-top" aria-hidden="true"></div>
           <div class="duct duct-bottom" aria-hidden="true"></div>
@@ -1578,7 +1589,7 @@ const V = "hiper-mvhr-card", Tt = [
           <div class="fan fan-b" aria-hidden="true">✦</div>
           <div class="recovery-badge" title="Apparent temperature recovery">
             <span class="recovery-label">Heat Recovery</span>
-            <strong class="recovery-value">${a.label}</strong>
+            <strong class="recovery-value">${i.label}</strong>
           </div>
         </div>
         ${l("outdoor", "Outdoor air", "outdoor_air_temp", !1)}
@@ -1594,7 +1605,7 @@ const V = "hiper-mvhr-card", Tt = [
    */
   _controlsPanel(e, t, r) {
     var m, v, _;
-    const i = t.entities.mode, a = t.entities.boost_duration, o = t.entities.override_duration, n = this._modeOptions(e.mode), l = this._selectOptions(e.override_duration), p = (m = this._state(e.mode)) == null ? void 0 : m.toLowerCase(), d = this._state(e.boost_active) === "on", u = ((v = e.boost_remaining) == null ? void 0 : v.status) === "ok" ? this._value(e.boost_remaining) : null, h = ((_ = e.override_remaining) == null ? void 0 : _.status) === "ok" ? this._value(e.override_remaining) : null;
+    const a = t.entities.mode, i = t.entities.boost_duration, o = t.entities.override_duration, n = this._modeOptions(e.mode), l = this._selectOptions(e.override_duration), u = (m = this._state(e.mode)) == null ? void 0 : m.toLowerCase(), d = this._state(e.boost_active) === "on", p = ((v = e.boost_remaining) == null ? void 0 : v.status) === "ok" ? this._value(e.boost_remaining) : null, h = ((_ = e.override_remaining) == null ? void 0 : _.status) === "ok" ? this._value(e.override_remaining) : null;
     return c`
       <aside class="controls-panel" aria-label="MVHR controls">
         <div class="panel-heading">Controls</div>
@@ -1603,15 +1614,15 @@ const V = "hiper-mvhr-card", Tt = [
           <span class="control-group-label">Mode</span>
           <div class="mode-buttons" role="group" aria-label="Operating mode">
             ${n.map((f) => {
-      const x = p !== void 0 && f.toLowerCase() === p;
+      const w = u !== void 0 && f.toLowerCase() === u;
       return c`
                 <button
                   type="button"
-                  class="chip ${x ? "active" : ""}"
-                  ?disabled=${!i}
-                  aria-pressed=${x}
+                  class="chip ${w ? "active" : ""}"
+                  ?disabled=${!a}
+                  aria-pressed=${w}
                   aria-label=${`Set mode ${this._modeLabel(f)}`}
-                  @click=${() => i && this._call(r, "select", "select_option", { entity_id: i, option: f })}
+                  @click=${() => a && this._call(r, "select", "select_option", { entity_id: a, option: f })}
                 >
                   ${this._modeLabel(f)}
                 </button>
@@ -1627,7 +1638,7 @@ const V = "hiper-mvhr-card", Tt = [
               >${d ? "Active" : "Ready"}</strong
             >
           </div>
-          ${u ? c`<small>${u} remaining</small>` : ""}
+          ${p ? c`<small>${p} remaining</small>` : ""}
           <label class="field">
             <span>Duration (minutes)</span>
             <input
@@ -1635,13 +1646,13 @@ const V = "hiper-mvhr-card", Tt = [
               min="1"
               step="1"
               .value=${this._state(e.boost_duration) ?? ""}
-              ?disabled=${!a}
+              ?disabled=${!i}
               aria-label="Boost duration"
               @change=${(f) => {
-      const x = Number(f.currentTarget.value);
-      a && Number.isFinite(x) && this._call(r, "number", "set_value", {
-        entity_id: a,
-        value: x
+      const w = Number(f.currentTarget.value);
+      i && Number.isFinite(w) && this._call(r, "number", "set_value", {
+        entity_id: i,
+        value: w
       });
     }}
             />
@@ -1682,10 +1693,10 @@ const V = "hiper-mvhr-card", Tt = [
               ?disabled=${!o}
               aria-label="Override duration"
               @change=${(f) => {
-      const x = f.currentTarget.value;
+      const w = f.currentTarget.value;
       o && this._call(r, "select", "select_option", {
         entity_id: o,
-        option: x
+        option: w
       });
     }}
             >
@@ -1731,8 +1742,8 @@ const V = "hiper-mvhr-card", Tt = [
    * A separate method from `_header` on purpose — `display_mode: detailed`
    * is not touched by the system-mode build.
    */
-  _systemHeader(e, t, r, i, a, o) {
-    const n = this._dashboardStatus(i);
+  _systemHeader(e, t, r, a, i, o) {
+    const n = this._dashboardStatus(a);
     return c`
       <div class="header mvhr-header">
         <div class="header-row">
@@ -1744,7 +1755,7 @@ const V = "hiper-mvhr-card", Tt = [
               <span>${n.label}</span>
             </span>
           </div>
-          ${this._systemHeaderControls(i, a, o, r)}
+          ${this._systemHeaderControls(a, i, o, r)}
         </div>
         <div class="subheader">${t}</div>
       </div>
@@ -1766,12 +1777,12 @@ const V = "hiper-mvhr-card", Tt = [
    * appears when `show_controls` is on and a boost role is actually mapped,
    * matching how boost has always been gated everywhere else in this file.
    */
-  _systemHeaderControls(e, t, r, i) {
+  _systemHeaderControls(e, t, r, a) {
     var m, v, _;
-    const a = t.entities.mode, o = this._modeOptions(e.mode), n = (m = this._state(e.mode)) == null ? void 0 : m.toLowerCase(), l = t.show_controls && !!a && ((v = e.mode) == null ? void 0 : v.status) === "ok", p = t.show_controls && [e.boost_duration, e.start_boost, e.cancel_boost].some(
+    const i = t.entities.mode, o = this._modeOptions(e.mode), n = (m = this._state(e.mode)) == null ? void 0 : m.toLowerCase(), l = t.show_controls && !!i && ((v = e.mode) == null ? void 0 : v.status) === "ok", u = t.show_controls && [e.boost_duration, e.start_boost, e.cancel_boost].some(
       (f) => (f == null ? void 0 : f.status) === "ok"
-    ), d = this._state(e.boost_active) === "on", u = d && ((_ = e.boost_remaining) == null ? void 0 : _.status) === "ok" ? this._value(e.boost_remaining) : null, h = this._shower(e);
-    return !l && !i && !p && !h.render ? c`` : c`
+    ), d = this._state(e.boost_active) === "on", p = d && ((_ = e.boost_remaining) == null ? void 0 : _.status) === "ok" ? this._value(e.boost_remaining) : null, h = this._shower(e);
+    return !l && !a && !u && !h.render ? c`` : c`
       <div class="system-controls header-controls" role="group" aria-label="MVHR quick controls">
         ${l ? c`
                 <label class="header-control">
@@ -1780,10 +1791,10 @@ const V = "hiper-mvhr-card", Tt = [
                     class="mode-select-pill"
                     aria-label="Operating mode"
                     @change=${(f) => {
-      const x = f.currentTarget.value;
-      a && this._call(r, "select", "select_option", {
-        entity_id: a,
-        option: x
+      const w = f.currentTarget.value;
+      i && this._call(r, "select", "select_option", {
+        entity_id: i,
+        option: w
       });
     }}
                   >
@@ -1799,8 +1810,8 @@ const V = "hiper-mvhr-card", Tt = [
     )}
                   </select>
                 </label>
-              ` : i ? c`<span class="mode-pill">${i}</span>` : ""}
-        ${p ? c`
+              ` : a ? c`<span class="mode-pill">${a}</span>` : ""}
+        ${u ? c`
                 <div class="header-control">
                   <span class="header-control-label">Boost</span>
                   <button
@@ -1812,7 +1823,7 @@ const V = "hiper-mvhr-card", Tt = [
                   >
                     <ha-icon icon="mdi:rocket-launch" aria-hidden="true"></ha-icon>
                     ${d ? "Active" : "Ready"}
-                    ${u ? c`<small>${u} left</small>` : ""}
+                    ${p ? c`<small>${p} left</small>` : ""}
                   </button>
                 </div>
               ` : ""}
@@ -1832,23 +1843,26 @@ const V = "hiper-mvhr-card", Tt = [
    * `display_mode: detailed`/`homeowner` are unaffected by this method
    * existing.
    */
-  _systemDashboard(e, t, r, i, a, o, n) {
-    const l = this._number(e.airflow) ?? this._number(e.supply_airflow), p = t.show_airflow_animation && n && (l ?? 0) > 0, d = this._shower(e), u = this._state(e.boost_active) === "on";
+  _systemDashboard(e, t, r, a, i, o, n) {
+    const l = this._number(e.airflow) ?? this._number(e.supply_airflow), u = t.show_airflow_animation && n && (l ?? 0) > 0, d = this._shower(e), p = this._state(e.boost_active) === "on";
     return c`
       <div class="mvhr-system">
         ${d.active ? this._systemShowerBanner(d) : ""}
         <section class="system-main">
-          <section class="visual-panel system-visual-panel system-overview" aria-label="System overview">
+          <section
+            class="visual-panel system-visual-panel system-overview"
+            aria-label="System overview"
+          >
             <div class="panel-heading-row">
               <h3>System Overview</h3>
             </div>
-            ${this._systemHeroVisual(e, t, p, o, i, u)}
+            ${this._systemHeroVisual(e, t, u, o, a, p)}
           </section>
         </section>
 
         <section class="system-lower-grid" aria-label="MVHR details">
           ${this._systemAirflowCard(e, t)}
-          ${this._systemTemperaturesCard(e, i)}
+          ${this._systemTemperaturesCard(e, a)}
           ${this._systemStatusCard(e, t)}
         </section>
 
@@ -1900,23 +1914,23 @@ const V = "hiper-mvhr-card", Tt = [
    *    reading for an unavailable sensor).
    */
   _shower(e) {
-    var l, p;
-    const t = e.shower_detected, r = !!t && (t == null ? void 0 : t.status) !== "unsupported" && (t == null ? void 0 : t.status) !== "not_configured", i = (t == null ? void 0 : t.status) === "ok" && t.value.toLowerCase() === "on", a = e.shower_trigger_temperature, o = this._number(a), n = o === void 0 ? null : `${(o - Se).toFixed(1)}${(a == null ? void 0 : a.status) === "ok" && a.unit ? ` ${a.unit}` : ""}`;
+    var l, u;
+    const t = e.shower_detected, r = !!t && (t == null ? void 0 : t.status) !== "unsupported" && (t == null ? void 0 : t.status) !== "not_configured", a = (t == null ? void 0 : t.status) === "ok" && t.value.toLowerCase() === "on", i = e.shower_trigger_temperature, o = this._number(i), n = o === void 0 ? null : `${(o - Se).toFixed(1)}${(i == null ? void 0 : i.status) === "ok" && i.unit ? ` ${i.unit}` : ""}`;
     return {
       render: r,
-      active: i,
+      active: a,
       boostActive: this._state(e.boost_active) === "on",
       // Each fact is shown only when its own entity is genuinely 'ok' — an
       // unavailable/missing sensor omits its row entirely rather than
       // showing a hollow "Pipe temperature: Unavailable" line, per the
       // redesign's "never a fake reading" rule.
       pipeTemperature: ((l = e.shower_pipe_temperature) == null ? void 0 : l.status) === "ok" ? this._value(e.shower_pipe_temperature, !0) : null,
-      triggerTemperature: (a == null ? void 0 : a.status) === "ok" ? this._value(a, !0) : null,
-      rearmTemperature: i ? n : null,
+      triggerTemperature: (i == null ? void 0 : i.status) === "ok" ? this._value(i, !0) : null,
+      rearmTemperature: a ? n : null,
       // Gated on boost actually being on, not just the sensor having a
       // value — otherwise an idle "0 min"/"0" reading renders as if a
       // countdown were running (visual-polish follow-up, round 2).
-      boostRemaining: this._state(e.boost_active) === "on" && ((p = e.boost_remaining) == null ? void 0 : p.status) === "ok" ? this._value(e.boost_remaining) : null
+      boostRemaining: this._state(e.boost_active) === "on" && ((u = e.boost_remaining) == null ? void 0 : u.status) === "ok" ? this._value(e.boost_remaining) : null
     };
   }
   /**
@@ -1961,7 +1975,9 @@ const V = "hiper-mvhr-card", Tt = [
           <div class="shower-banner-titles">
             <h3 class="shower-heading">Shower Detection</h3>
             <strong class="shower-title">Shower detected</strong>
-            <span class="shower-subtitle">${e.boostActive ? "Boost active" : "Boost not active"}</span>
+            <span class="shower-subtitle"
+              >${e.boostActive ? "Boost active" : "Boost not active"}</span
+            >
           </div>
         </div>
         <dl class="shower-facts">
@@ -1980,7 +1996,11 @@ const V = "hiper-mvhr-card", Tt = [
           ${e.rearmTemperature ? c`
                   <div class="shower-fact">
                     <dt>Re-arm at</dt>
-                    <dd>${e.rearmTemperature}<small>(${Se}°C below trigger)</small></dd>
+                    <dd>
+                      ${e.rearmTemperature}<small
+                        >(${Se}°C below trigger)</small
+                      >
+                    </dd>
                   </div>
                 ` : ""}
           ${e.boostRemaining ? c`
@@ -2040,19 +2060,30 @@ const V = "hiper-mvhr-card", Tt = [
    * derived from the other.
    */
   _systemAirflowCard(e, t) {
-    const r = e.airflow ?? e.supply_airflow, i = (r == null ? void 0 : r.status) === "ok" ? r : void 0, a = i ? i.value : null, o = (i == null ? void 0 : i.unit) ?? null, n = this._number(e.airflow) ?? this._number(e.supply_airflow), l = this._number(e.mapped_level) ?? this._number(e.selected_speed), p = l !== void 0 ? Math.max(0, Math.min(1, l / 10)) : 0, d = n !== void 0 && this._prevAirflowNumber !== void 0 && n > this._prevAirflowNumber;
+    const r = e.airflow ?? e.supply_airflow, a = (r == null ? void 0 : r.status) === "ok" ? r : void 0, i = a ? a.value : null, o = (a == null ? void 0 : a.unit) ?? null, n = this._number(e.airflow) ?? this._number(e.supply_airflow), l = this._number(e.mapped_level) ?? this._number(e.selected_speed), u = l !== void 0 ? Math.max(0, Math.min(1, l / 10)) : 0, d = n !== void 0 && this._prevAirflowNumber !== void 0 && n > this._prevAirflowNumber;
     this._prevAirflowNumber = n ?? this._prevAirflowNumber;
-    const u = [];
-    return t.show_fan_speeds && e.supply_fan_speed && e.extract_fan_speed && u.push(this._diagnosticRow("mdi:fan", "Fan speed", this._pair(ke, e, !0))), e.mapped_level && u.push(
-      this._diagnosticRow("mdi:tune-variant", "Current profile", this._value(e.mapped_level, !0))
-    ), e.target_airflow && u.push(
-      this._diagnosticRow("mdi:target", "Target airflow", this._value(e.target_airflow, !0))
+    const p = [];
+    return t.show_fan_speeds && e.supply_fan_speed && e.extract_fan_speed && p.push(this._diagnosticRow("mdi:fan", "Fan speed", this._pair(ke, e, !0))), e.mapped_level && p.push(
+      this._diagnosticRow(
+        "mdi:tune-variant",
+        "Current profile",
+        this._value(e.mapped_level, !0)
+      )
+    ), e.target_airflow && p.push(
+      this._diagnosticRow(
+        "mdi:target",
+        "Target airflow",
+        this._value(e.target_airflow, !0)
+      )
     ), c`
-      <section class="lower-card airflow-card ${d ? "airflow-brighten" : ""}" aria-label="Airflow">
+      <section
+        class="lower-card airflow-card ${d ? "airflow-brighten" : ""}"
+        aria-label="Airflow"
+      >
         <h3>Airflow</h3>
         <div class="airflow-card-body">
-          ${r ? this._airflowGauge(p, a, o) : ""}
-          <div class="airflow-card-rows">${u}</div>
+          ${r ? this._airflowGauge(u, i, o) : ""}
+          <div class="airflow-card-rows">${p}</div>
         </div>
       </section>
     `;
@@ -2066,7 +2097,7 @@ const V = "hiper-mvhr-card", Tt = [
    * instead of everything on one line" (visual-polish follow-up, round 2).
    */
   _airflowGauge(e, t, r) {
-    const a = Math.PI * 40, o = a * (1 - e), n = t ? `Current airflow ${t}${r ? ` ${r}` : ""}` : "Current airflow unavailable";
+    const i = Math.PI * 40, o = i * (1 - e), n = t ? `Current airflow ${t}${r ? ` ${r}` : ""}` : "Current airflow unavailable";
     return c`
       <div class="gauge" role="img" aria-label=${n}>
         <svg viewBox="0 0 100 56" class="gauge-svg">
@@ -2074,7 +2105,7 @@ const V = "hiper-mvhr-card", Tt = [
           <path
             d="M10 50 A40 40 0 0 1 90 50"
             class="gauge-fill"
-            style=${`stroke-dasharray:${a};stroke-dashoffset:${o}`}
+            style=${`stroke-dasharray:${i};stroke-dashoffset:${o}`}
           />
         </svg>
         <div class="gauge-value">
@@ -2091,16 +2122,15 @@ const V = "hiper-mvhr-card", Tt = [
    * brief), plus the heat-recovery percentage.
    */
   _systemTemperaturesCard(e, t) {
-    const r = Pt.map(([i, a]) => {
-      const o = e[i];
-      return o ? this._diagnosticRow("mdi:thermometer", a, this._value(o, !0)) : null;
-    }).filter((i) => i !== null);
+    const r = Lt.map(([a, i]) => {
+      const o = e[a];
+      return o ? this._diagnosticRow("mdi:thermometer", i, this._value(o, !0)) : null;
+    }).filter((a) => a !== null);
     return c`
       <section class="lower-card temperatures-card" aria-label="Temperatures">
         <h3>Temperatures</h3>
         <div class="status-list">
-          ${r}
-          ${this._diagnosticRow("mdi:heat-wave", "Heat recovery", t.label)}
+          ${r} ${this._diagnosticRow("mdi:heat-wave", "Heat recovery", t.label)}
         </div>
       </section>
     `;
@@ -2113,12 +2143,19 @@ const V = "hiper-mvhr-card", Tt = [
    * override/calibration controls live in `_advancedDrawer`, not here.
    */
   _systemStatusCard(e, t) {
-    var u, h;
-    const r = this._dashboardStatus(e), i = this._state(e.boost_active) === "on", a = [e.boost_active, e.boost_duration, e.start_boost].some(
-      (m) => (m == null ? void 0 : m.status) === "ok"
-    ), o = ((u = e.override_duration) == null ? void 0 : u.status) === "ok" ? this._modeLabel(e.override_duration.value) : null, n = i && ((h = e.boost_remaining) == null ? void 0 : h.status) === "ok" ? this._value(e.boost_remaining) : null, l = this._number(e.filter_remaining), p = l === void 0 ? "muted" : l / t.filter_max_days <= 0.15 ? "warning" : "success", d = [];
-    return a && d.push(this._statusBadge(i ? "Boost Active" : "Boost Ready", i ? "success" : "muted")), o && d.push(this._statusBadge(`Override: ${o}`, "muted")), t.show_filter && e.filter_remaining && d.push(
-      this._statusBadge(`Filter ${this._value(e.filter_remaining, !0)}`, p)
+    var p, h;
+    const r = this._dashboardStatus(e), a = this._state(e.boost_active) === "on", i = [
+      e.boost_active,
+      e.boost_duration,
+      e.start_boost
+    ].some((m) => (m == null ? void 0 : m.status) === "ok"), o = ((p = e.override_duration) == null ? void 0 : p.status) === "ok" ? this._modeLabel(e.override_duration.value) : null, n = a && ((h = e.boost_remaining) == null ? void 0 : h.status) === "ok" ? this._value(e.boost_remaining) : null, l = this._number(e.filter_remaining), u = l === void 0 ? "muted" : l / t.filter_max_days <= 0.15 ? "warning" : "success", d = [];
+    return i && d.push(
+      this._statusBadge(
+        a ? "Boost Active" : "Boost Ready",
+        a ? "success" : "muted"
+      )
+    ), o && d.push(this._statusBadge(`Override: ${o}`, "muted")), t.show_filter && e.filter_remaining && d.push(
+      this._statusBadge(`Filter ${this._value(e.filter_remaining, !0)}`, u)
     ), d.push(this._statusBadge(r.label, r.tone)), c`
       <section class="lower-card system-status-card" aria-label="System status">
         <h3>System Status</h3>
@@ -2163,14 +2200,16 @@ const V = "hiper-mvhr-card", Tt = [
    * renders nothing until opened.
    */
   _advancedDrawer(e, t, r) {
-    var u;
+    var p;
     if (!this._advancedOpen)
       return c``;
-    const i = t.entities.override_duration, a = this._selectOptions(e.override_duration), o = ((u = e.override_remaining) == null ? void 0 : u.status) === "ok" ? this._value(e.override_remaining) : null, n = [e.override_duration, e.clear_override].some(
+    const a = t.entities.override_duration, i = this._selectOptions(e.override_duration), o = ((p = e.override_remaining) == null ? void 0 : p.status) === "ok" ? this._value(e.override_remaining) : null, n = [e.override_duration, e.clear_override].some(
       (h) => (h == null ? void 0 : h.status) === "ok"
-    ), l = t.entities.boost_duration, p = this._state(e.boost_active) === "on", d = [e.boost_duration, e.start_boost, e.cancel_boost].some(
-      (h) => (h == null ? void 0 : h.status) === "ok"
-    );
+    ), l = t.entities.boost_duration, u = this._state(e.boost_active) === "on", d = [
+      e.boost_duration,
+      e.start_boost,
+      e.cancel_boost
+    ].some((h) => (h == null ? void 0 : h.status) === "ok");
     return c`
       <section class="advanced-drawer" id="mvhr-advanced-drawer" aria-label="Advanced diagnostics">
         ${d ? c`
@@ -2201,7 +2240,7 @@ const V = "hiper-mvhr-card", Tt = [
                       type="button"
                       class="cta"
                       aria-label="Start Boost"
-                      ?disabled=${p || !t.entities.start_boost}
+                      ?disabled=${u || !t.entities.start_boost}
                       @click=${() => this._press(r, t.entities.start_boost)}
                     >
                       Start Boost
@@ -2210,7 +2249,7 @@ const V = "hiper-mvhr-card", Tt = [
                       type="button"
                       class="cta ghost"
                       aria-label="Cancel Boost"
-                      ?disabled=${!p || !t.entities.cancel_boost}
+                      ?disabled=${!u || !t.entities.cancel_boost}
                       @click=${() => this._press(r, t.entities.cancel_boost)}
                     >
                       Cancel Boost
@@ -2230,17 +2269,17 @@ const V = "hiper-mvhr-card", Tt = [
                   <label class="field">
                     <span>Duration</span>
                     <select
-                      ?disabled=${!i}
+                      ?disabled=${!a}
                       aria-label="Override duration"
                       @change=${(h) => {
       const m = h.currentTarget.value;
-      i && this._call(r, "select", "select_option", {
-        entity_id: i,
+      a && this._call(r, "select", "select_option", {
+        entity_id: a,
         option: m
       });
     }}
                     >
-                      ${a.map(
+                      ${i.map(
       (h) => c`
                           <option
                             .value=${h}
@@ -2342,17 +2381,19 @@ const V = "hiper-mvhr-card", Tt = [
    * (`_recoveryPulseClass`) when the figure actually changes, tracked via
    * `_prevRecoveryLabel`.
    */
-  _systemHeroVisual(e, t, r, i, a, o) {
-    const n = this._value(e.airflow, !0) ?? this._value(e.supply_airflow, !0), l = t.show_airflow_on_all_paths, p = a.status === "ok" && this._prevRecoveryLabel !== void 0 && this._prevRecoveryLabel !== a.label;
-    this._prevRecoveryLabel = a.status === "ok" ? a.label : this._prevRecoveryLabel;
-    const d = (u, h, m, v, _, f, x) => {
+  _systemHeroVisual(e, t, r, a, i, o) {
+    const n = this._value(e.airflow, !0) ?? this._value(e.supply_airflow, !0), l = t.show_airflow_on_all_paths, u = i.status === "ok" && this._prevRecoveryLabel !== void 0 && this._prevRecoveryLabel !== i.label;
+    this._prevRecoveryLabel = i.status === "ok" ? i.label : this._prevRecoveryLabel;
+    const d = (p, h, m, v, _, f, w) => {
       const le = l || v ? n : null;
       return c`
-        <div class="air-path ${u} ${r ? "active" : ""} ${r && o ? "boost-active" : ""}">
+        <div
+          class="air-path ${p} ${r ? "active" : ""} ${r && o ? "boost-active" : ""}"
+        >
           <span class="path-label">
             <ha-icon icon=${_} aria-hidden="true"></ha-icon>
             ${h}
-            <ha-icon class="path-arrow" icon=${f} aria-label=${x}></ha-icon>
+            <ha-icon class="path-arrow" icon=${f} aria-label=${w}></ha-icon>
           </span>
           <span class="path-temp">${this._value(e[m], !0) ?? "—"}</span>
           ${le ? c`<span class="path-airflow"
@@ -2386,23 +2427,71 @@ const V = "hiper-mvhr-card", Tt = [
           aria-label="Heat recovery unit"
         >
           <div class="brand">
-            ${i}${i.toLowerCase().includes("mvhr") ? "" : c`<br /><span>MVHR</span>`}
+            ${a}${a.toLowerCase().includes("mvhr") ? "" : c`<br /><span>MVHR</span>`}
           </div>
-          <div class="duct duct-top" aria-hidden="true"></div>
-          <div class="duct duct-bottom" aria-hidden="true"></div>
-          <div class="duct duct-left" aria-hidden="true"></div>
-          <div class="duct duct-right" aria-hidden="true"></div>
-          <div class="exchanger" aria-hidden="true"></div>
+          <svg
+            class="airflow-schematic"
+            viewBox="0 0 100 100"
+            role="img"
+            aria-label="Two separate air streams cross through the heat exchanger"
+          >
+            <defs>
+              <clipPath id="system-exchanger-clip">
+                <path d="M50 34 L66 50 L50 66 L34 50 Z"></path>
+              </clipPath>
+            </defs>
+            <path
+              class="airflow-path extract-flow"
+              data-flow="inward"
+              d="M0 82 C18 82 25 67 42 55"
+            ></path>
+            <path
+              class="airflow-path exhaust-flow"
+              data-flow="outward"
+              d="M42 45 C25 33 18 18 0 18"
+            ></path>
+            <path
+              class="airflow-path outdoor-flow"
+              data-flow="inward"
+              d="M100 82 C82 82 75 67 58 55"
+            ></path>
+            <path
+              class="airflow-path supply-flow"
+              data-flow="outward"
+              d="M58 45 C75 33 82 18 100 18"
+            ></path>
+            <g class="exchanger-plate" aria-hidden="true">
+              <path class="exchanger-outline" d="M50 34 L66 50 L50 66 L34 50 Z"></path>
+              <g class="warm-channels" clip-path="url(#system-exchanger-clip)">
+                <path d="M32 43 L50 61"></path>
+                <path d="M35 39 L53 57"></path>
+                <path d="M39 35 L57 53"></path>
+              </g>
+              <g class="cool-channels" clip-path="url(#system-exchanger-clip)">
+                <path d="M50 39 L68 57"></path>
+                <path d="M47 43 L65 61"></path>
+                <path d="M43 47 L61 65"></path>
+              </g>
+              <path class="passage-separator" d="M42 50 L50 42 L58 50 L50 58 Z"></path>
+            </g>
+            ${["extract", "exhaust", "outdoor", "supply"].map(
+      (p) => c`<g class="airflow-particles ${p}-particles" aria-hidden="true">
+                  <circle class="airflow-particle particle-1" r="1.1"></circle
+                  ><circle class="airflow-particle particle-2" r="1.1"></circle
+                  ><circle class="airflow-particle particle-3" r="1.1"></circle>
+                </g>`
+    )}
+          </svg>
           <ha-icon class="fan fan-a" icon="mdi:fan" aria-hidden="true"></ha-icon>
           <ha-icon class="fan fan-b" icon="mdi:fan" aria-hidden="true"></ha-icon>
-          ${a.status === "ok" ? c`
+          ${i.status === "ok" ? c`
                   <div
-                    class="recovery-badge-circular ${p ? "recovery-pulse" : ""}"
+                    class="recovery-badge-circular ${u ? "recovery-pulse" : ""}"
                     title="Apparent temperature recovery"
                     role="img"
-                    aria-label=${`Heat recovery ${a.label}`}
+                    aria-label=${`Heat recovery ${i.label}`}
                   >
-                    <strong>${a.label}</strong>
+                    <strong>${i.label}</strong>
                     <span>Heat Recovery</span>
                   </div>
                 ` : ""}
@@ -2428,9 +2517,9 @@ const V = "hiper-mvhr-card", Tt = [
       </div>
     `;
   }
-  _infoTile(e, t, r, i = "ok", a) {
+  _infoTile(e, t, r, a = "ok", i) {
     return c`
-      <div class="info-tile tone-${i}" title=${a ?? g}>
+      <div class="info-tile tone-${a}" title=${i ?? g}>
         <ha-icon icon=${r} aria-hidden="true"></ha-icon>
         <span>${e}</span>
         <strong>${t}</strong>
@@ -2438,13 +2527,13 @@ const V = "hiper-mvhr-card", Tt = [
     `;
   }
   _filterTile(e, t) {
-    const r = this._number(e.filter_remaining), i = r === void 0 ? 0 : Math.max(0, Math.min(100, r / t.filter_max_days * 100)), a = r === void 0 ? "—" : `${Math.round(r)} days`;
+    const r = this._number(e.filter_remaining), a = r === void 0 ? 0 : Math.max(0, Math.min(100, r / t.filter_max_days * 100)), i = r === void 0 ? "—" : `${Math.round(r)} days`;
     return c`
       <div class="info-tile">
         <ha-icon icon="mdi:air-filter" aria-hidden="true"></ha-icon>
         <span>Filter</span>
-        <strong>${a}</strong>
-        <div class="bar" aria-hidden="true"><span style=${`width:${i}%`}></span></div>
+        <strong>${i}</strong>
+        <div class="bar" aria-hidden="true"><span style=${`width:${a}%`}></span></div>
       </div>
     `;
   }
@@ -2458,7 +2547,7 @@ const V = "hiper-mvhr-card", Tt = [
   }
   _pair(e, t, r = !1) {
     return e.map(
-      ([i, a]) => `${a.replace(" fan", "")}: ${this._value(t[i], r) ?? "—"}`
+      ([a, i]) => `${i.replace(" fan", "")}: ${this._value(t[a], r) ?? "—"}`
     ).join(" · ");
   }
   _value(e, t = !1) {
@@ -2505,7 +2594,7 @@ const V = "hiper-mvhr-card", Tt = [
    * configured never factor in here — same rule as the header (Phase 4/10).
    */
   _dashboardStatus(e) {
-    var i, a;
+    var a, i;
     for (const o of oe) {
       if (Mt.has(o))
         continue;
@@ -2514,20 +2603,20 @@ const V = "hiper-mvhr-card", Tt = [
         return { tone: "warning", label: "Communication issue" };
     }
     const t = e.fault_active;
-    if ((t == null ? void 0 : t.status) === "ok" && Lt.has(t.value.toLowerCase()))
+    if ((t == null ? void 0 : t.status) === "ok" && Nt.has(t.value.toLowerCase()))
       return { tone: "warning", label: "Fault detected" };
-    const r = ((i = e.calibration_status) == null ? void 0 : i.status) === "ok" ? e.calibration_status.value.toLowerCase() : "";
-    return r && !Nt.has(r) ? { tone: "muted", label: "Calibrating…" } : ((a = e.calibration_result) == null ? void 0 : a.status) === "ok" && e.calibration_result.value === "not_calibrated" ? { tone: "warning", label: "Calibration required" } : { tone: "success", label: "System OK" };
+    const r = ((a = e.calibration_status) == null ? void 0 : a.status) === "ok" ? e.calibration_status.value.toLowerCase() : "";
+    return r && !Pt.has(r) ? { tone: "muted", label: "Calibrating…" } : ((i = e.calibration_result) == null ? void 0 : i.status) === "ok" && e.calibration_result.value === "not_calibrated" ? { tone: "warning", label: "Calibration required" } : { tone: "success", label: "System OK" };
   }
   _press(e, t) {
     t && this._call(e, "button", "press", { entity_id: t });
   }
-  async _call(e, t, r, i) {
-    var a;
-    await ((a = e.callService) == null ? void 0 : a.call(e, t, r, i));
+  async _call(e, t, r, a) {
+    var i;
+    await ((i = e.callService) == null ? void 0 : i.call(e, t, r, a));
   }
 };
-ne.styles = Re`
+ne.styles = Te`
     :host {
       display: block;
       width: 100%;
@@ -3085,10 +3174,7 @@ ne.styles = Re`
       .system-visual-panel .supply.active::after,
       .system-visual-panel .extract.active::after,
       .system-visual-panel .unit.active .fan,
-      .system-visual-panel .unit.active .duct-top::after,
-      .system-visual-panel .unit.active .duct-right::after,
-      .system-visual-panel .unit.active .duct-bottom::after,
-      .system-visual-panel .unit.active .duct-left::after,
+      .system-visual-panel .unit.active .airflow-particle,
       .recovery-badge-circular.recovery-pulse,
       .airflow-card.airflow-brighten,
       .droplet {
@@ -3101,13 +3187,10 @@ ne.styles = Re`
       .droplet {
         opacity: 0.35;
       }
-      /* Same reasoning for the duct particles: a static dot pattern reads
+      /* Same reasoning for the airflow particles: a static dot reads
          as decoration, not motion, so just leave them off rather than
          freeze mid-animation. */
-      .system-visual-panel .unit.active .duct-top::after,
-      .system-visual-panel .unit.active .duct-right::after,
-      .system-visual-panel .unit.active .duct-bottom::after,
-      .system-visual-panel .unit.active .duct-left::after {
+      .system-visual-panel .unit.active .airflow-particle {
         opacity: 0;
       }
     }
@@ -3341,6 +3424,10 @@ ne.styles = Re`
        Where a browser doesn't support container queries yet, the @media
        rules remain as the fallback. */
     @container (max-width: 640px) {
+      .system-visual-wrap {
+        grid-template-columns: minmax(130px, 1fr) minmax(240px, 320px) minmax(130px, 1fr);
+        min-height: 420px;
+      }
       .system-lower-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
@@ -3351,6 +3438,19 @@ ne.styles = Re`
       }
     }
     @container (max-width: 420px) {
+      .system-visual-wrap {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-rows: auto auto auto;
+        min-height: 0;
+      }
+      .system-visual-panel .unit {
+        grid-column: 1 / -1;
+        grid-row: 2;
+        min-height: 180px;
+      }
+      .system-visual-panel .air-path {
+        min-height: 66px;
+      }
       .system-lower-grid {
         grid-template-columns: minmax(0, 1fr);
       }
@@ -3420,25 +3520,104 @@ ne.styles = Re`
     .system-visual-panel .fan {
       --mdc-icon-size: 48px;
     }
-    .system-visual-panel .exchanger {
-      width: 150px;
-      height: 150px;
+    .airflow-schematic {
+      position: absolute;
+      inset: 9% 0;
+      width: 100%;
+      height: 82%;
+      overflow: visible;
+      --air-outdoor: color-mix(in srgb, var(--primary-color), white 18%);
+      --air-supply: color-mix(in srgb, var(--primary-color), white 42%);
+      --air-extract: color-mix(in srgb, var(--warning-color), var(--primary-text-color) 14%);
+      --air-exhaust: color-mix(in srgb, var(--secondary-text-color), var(--warning-color) 22%);
     }
-    /* Colour the duct stubs on the unit itself so the exchanger graphic
-       reads as "the hero" even before the surrounding air-path panels are
-       scanned — outgoing (top/right, toward supply/exhaust) picks up the
-       same cool-blue family as the supply path; incoming (bottom/left,
-       toward extract/outdoor) picks up the warm-orange extract family.
-       Never the only indicator of direction — the arrow icons and labels
-       on each .air-path already carry that meaning; this is reinforcement
-       on the unit graphic itself. */
-    .system-visual-panel .duct-top,
-    .system-visual-panel .duct-right {
-      background: color-mix(in srgb, #3b82f6, transparent 35%);
+    .airflow-path {
+      fill: none;
+      stroke-width: 4.2;
+      stroke-linecap: round;
+      opacity: 0.74;
+      vector-effect: non-scaling-stroke;
     }
-    .system-visual-panel .duct-bottom,
-    .system-visual-panel .duct-left {
-      background: color-mix(in srgb, #f59e0b, transparent 35%);
+    .extract-flow {
+      stroke: var(--air-extract);
+    }
+    .exhaust-flow {
+      stroke: var(--air-exhaust);
+    }
+    .outdoor-flow {
+      stroke: var(--air-outdoor);
+    }
+    .supply-flow {
+      stroke: var(--air-supply);
+    }
+    .exchanger-outline {
+      fill: color-mix(
+        in srgb,
+        var(--ha-card-background, var(--card-background-color)),
+        transparent 4%
+      );
+      stroke: var(--divider-color);
+      stroke-width: 1.4;
+    }
+    .warm-channels path,
+    .cool-channels path {
+      fill: none;
+      stroke-width: 2.2;
+      stroke-linecap: round;
+    }
+    .warm-channels path {
+      stroke: var(--air-extract);
+    }
+    .cool-channels path {
+      stroke: var(--air-outdoor);
+    }
+    .passage-separator {
+      fill: var(--ha-card-background, var(--card-background-color));
+      stroke: var(--divider-color);
+      stroke-width: 1.2;
+    }
+    .airflow-particle {
+      opacity: 0;
+      offset-rotate: 0deg;
+    }
+    .extract-particles .airflow-particle {
+      fill: var(--air-extract);
+      offset-path: path('M0 82 C18 82 25 67 42 55');
+    }
+    .exhaust-particles .airflow-particle {
+      fill: var(--air-exhaust);
+      offset-path: path('M42 45 C25 33 18 18 0 18');
+    }
+    .outdoor-particles .airflow-particle {
+      fill: var(--air-outdoor);
+      offset-path: path('M100 82 C82 82 75 67 58 55');
+    }
+    .supply-particles .airflow-particle {
+      fill: var(--air-supply);
+      offset-path: path('M58 45 C75 33 82 18 100 18');
+    }
+    .system-visual-panel .unit.active .airflow-particle {
+      animation: schematic-particle 2.4s linear infinite;
+    }
+    .system-visual-panel .unit.active .particle-2 {
+      animation-delay: -0.8s;
+    }
+    .system-visual-panel .unit.active .particle-3 {
+      animation-delay: -1.6s;
+    }
+    @keyframes schematic-particle {
+      0% {
+        offset-distance: 0%;
+        opacity: 0;
+      }
+      12%,
+      88% {
+        opacity: 0.9;
+      }
+      100% {
+        offset-distance: 100%;
+        opacity: 0;
+      }
     }
     /* The heat-recovery figure, centred over the exchanger graphic — "make
        the heat exchanger the hero" / "move the heat recovery number into
@@ -3461,7 +3640,11 @@ ne.styles = Re`
       justify-content: center;
       gap: 2px;
       text-align: center;
-      background: color-mix(in srgb, var(--ha-card-background, var(--card-background-color)), transparent 4%);
+      background: color-mix(
+        in srgb,
+        var(--ha-card-background, var(--card-background-color)),
+        transparent 4%
+      );
       border: 3px solid color-mix(in srgb, var(--success-color), transparent 25%);
       box-shadow: 0 0 0 6px color-mix(in srgb, var(--success-color), transparent 90%);
       cursor: default;
@@ -3569,41 +3752,6 @@ ne.styles = Re`
       background-repeat: repeat;
       opacity: 0.4;
     }
-    /* A few small droplets travelling along each duct stub on the unit
-       itself, so motion is visible right at the exchanger, not just out in
-       the surrounding panels — same gating as the fans (.unit.active) and
-       same reduced-motion rule as everything else in this panel. */
-    .system-visual-panel .duct {
-      overflow: hidden;
-    }
-    .system-visual-panel .duct::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(circle, rgba(255, 255, 255, 0.9) 1.4px, transparent 1.6px);
-      background-size: 9px 9px;
-      opacity: 0;
-    }
-    .system-visual-panel .unit.active .duct-top::after,
-    .system-visual-panel .unit.active .duct-right::after {
-      opacity: 0.9;
-      animation: duct-particles-out 1s linear infinite;
-    }
-    .system-visual-panel .unit.active .duct-bottom::after,
-    .system-visual-panel .unit.active .duct-left::after {
-      opacity: 0.9;
-      animation: duct-particles-in 1s linear infinite;
-    }
-    @keyframes duct-particles-out {
-      to {
-        background-position: 18px 0;
-      }
-    }
-    @keyframes duct-particles-in {
-      to {
-        background-position: -18px 0;
-      }
-    }
     /* "Particles accelerate slightly during Boost" and the fans spin a
        little faster with them — a real boost mode raises fan speed
        noticeably, so this reinforces that state through the animations
@@ -3623,11 +3771,8 @@ ne.styles = Re`
     .system-visual-panel .unit.active.boost-active .fan {
       animation-duration: 3.5s;
     }
-    .system-visual-panel .unit.active.boost-active .duct-top::after,
-    .system-visual-panel .unit.active.boost-active .duct-right::after,
-    .system-visual-panel .unit.active.boost-active .duct-bottom::after,
-    .system-visual-panel .unit.active.boost-active .duct-left::after {
-      animation-duration: 0.6s;
+    .system-visual-panel .unit.active.boost-active .airflow-particle {
+      animation-duration: 1.35s;
     }
 
     /* ---- shower-detection banner (full-width, active only — the idle
@@ -4140,6 +4285,10 @@ ne.styles = Re`
       .system-visual-panel .unit {
         min-height: 170px;
       }
+      .airflow-schematic {
+        inset: 4% 0;
+        height: 92%;
+      }
       .system-visual-panel .fan {
         --mdc-icon-size: 26px;
       }
@@ -4190,7 +4339,7 @@ ne.styles = Re`
   `;
 let E = ne;
 W([
-  ae({ attribute: !1 })
+  ie({ attribute: !1 })
 ], E.prototype, "hass");
 W([
   q()

@@ -491,7 +491,16 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       .filter((row): row is TemplateResult => row !== null);
 
     const controlRows = CONTROL_ROLES.map(([role, label, actionVerb, pendingVerb]) =>
-      this._controlRow(role, label, snapshot[role], detailed, config, hass, actionVerb, pendingVerb),
+      this._controlRow(
+        role,
+        label,
+        snapshot[role],
+        detailed,
+        config,
+        hass,
+        actionVerb,
+        pendingVerb,
+      ),
     ).filter((row): row is TemplateResult => row !== null);
 
     const rows = [...valueRows, ...controlRows];
@@ -595,7 +604,9 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
         <span class="status-label">${label}</span>
         ${
           state.status === 'error'
-            ? html`<span class="status-value tone-warning">Couldn't ${actionVerb.toLowerCase()}</span>`
+            ? html`<span class="status-value tone-warning"
+                >Couldn't ${actionVerb.toLowerCase()}</span
+              >`
             : ''
         }
         <button
@@ -901,7 +912,8 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     const modeEntity = config.entities.mode;
     const modeOptions = this._modeOptions(snapshot.mode);
     const currentModeRaw = this._state(snapshot.mode)?.toLowerCase();
-    const canEditMode = config.show_controls && Boolean(modeEntity) && snapshot.mode?.status === 'ok';
+    const canEditMode =
+      config.show_controls && Boolean(modeEntity) && snapshot.mode?.status === 'ok';
     const hasBoost =
       config.show_controls &&
       [snapshot.boost_duration, snapshot.start_boost, snapshot.cancel_boost].some(
@@ -1028,7 +1040,10 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       <div class="mvhr-system">
         ${shower.active ? this._systemShowerBanner(shower) : ''}
         <section class="system-main">
-          <section class="visual-panel system-visual-panel system-overview" aria-label="System overview">
+          <section
+            class="visual-panel system-visual-panel system-overview"
+            aria-label="System overview"
+          >
             <div class="panel-heading-row">
               <h3>System Overview</h3>
             </div>
@@ -1101,7 +1116,10 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     boostRemaining: string | null;
   } {
     const detected = snapshot.shower_detected;
-    const configured = Boolean(detected) && detected?.status !== 'unsupported' && detected?.status !== 'not_configured';
+    const configured =
+      Boolean(detected) &&
+      detected?.status !== 'unsupported' &&
+      detected?.status !== 'not_configured';
     const active = detected?.status === 'ok' && detected.value.toLowerCase() === 'on';
 
     const triggerValue = snapshot.shower_trigger_temperature;
@@ -1180,7 +1198,9 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
           <div class="shower-banner-titles">
             <h3 class="shower-heading">Shower Detection</h3>
             <strong class="shower-title">Shower detected</strong>
-            <span class="shower-subtitle">${shower.boostActive ? 'Boost active' : 'Boost not active'}</span>
+            <span class="shower-subtitle"
+              >${shower.boostActive ? 'Boost active' : 'Boost not active'}</span
+            >
           </div>
         </div>
         <dl class="shower-facts">
@@ -1209,7 +1229,11 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
               ? html`
                   <div class="shower-fact">
                     <dt>Re-arm at</dt>
-                    <dd>${shower.rearmTemperature}<small>(${SHOWER_REARM_OFFSET_C}°C below trigger)</small></dd>
+                    <dd>
+                      ${shower.rearmTemperature}<small
+                        >(${SHOWER_REARM_OFFSET_C}°C below trigger)</small
+                      >
+                    </dd>
                   </div>
                 `
               : ''
@@ -1291,7 +1315,8 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     const airflowNumber = this._number(snapshot.airflow) ?? this._number(snapshot.supply_airflow);
     // Altair's mapped/selected speed is a 0-10 scale — read directly as
     // 0-100% (level 4 -> 40% of the arc, level 10 -> completely full).
-    const levelNumber = this._number(snapshot.mapped_level) ?? this._number(snapshot.selected_speed);
+    const levelNumber =
+      this._number(snapshot.mapped_level) ?? this._number(snapshot.selected_speed);
     const fraction = levelNumber !== undefined ? Math.max(0, Math.min(1, levelNumber / 10)) : 0;
     // "Airflow cards brighten when airflow increases" — a one-shot
     // brightening, only when the reading genuinely went up from the
@@ -1314,24 +1339,31 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       // profile" instead, per the visual-polish follow-up. Same role, same
       // value, just a label a homeowner would actually recognise.
       rows.push(
-        this._diagnosticRow('mdi:tune-variant', 'Current profile', this._value(snapshot.mapped_level, true)),
+        this._diagnosticRow(
+          'mdi:tune-variant',
+          'Current profile',
+          this._value(snapshot.mapped_level, true),
+        ),
       );
     }
     if (snapshot.target_airflow) {
       rows.push(
-        this._diagnosticRow('mdi:target', 'Target airflow', this._value(snapshot.target_airflow, true)),
+        this._diagnosticRow(
+          'mdi:target',
+          'Target airflow',
+          this._value(snapshot.target_airflow, true),
+        ),
       );
     }
 
     return html`
-      <section class="lower-card airflow-card ${airflowIncreased ? 'airflow-brighten' : ''}" aria-label="Airflow">
+      <section
+        class="lower-card airflow-card ${airflowIncreased ? 'airflow-brighten' : ''}"
+        aria-label="Airflow"
+      >
         <h3>Airflow</h3>
         <div class="airflow-card-body">
-          ${
-            airflowValue
-              ? this._airflowGauge(fraction, airflowNumberText, airflowUnitText)
-              : ''
-          }
+          ${airflowValue ? this._airflowGauge(fraction, airflowNumberText, airflowUnitText) : ''}
           <div class="airflow-card-rows">${rows}</div>
         </div>
       </section>
@@ -1394,8 +1426,7 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       <section class="lower-card temperatures-card" aria-label="Temperatures">
         <h3>Temperatures</h3>
         <div class="status-list">
-          ${rows}
-          ${this._diagnosticRow('mdi:heat-wave', 'Heat recovery', recovery.label)}
+          ${rows} ${this._diagnosticRow('mdi:heat-wave', 'Heat recovery', recovery.label)}
         </div>
       </section>
     `;
@@ -1414,9 +1445,11 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
   ): TemplateResult {
     const status = this._dashboardStatus(snapshot);
     const boostActive = this._state(snapshot.boost_active) === 'on';
-    const hasBoostRole = [snapshot.boost_active, snapshot.boost_duration, snapshot.start_boost].some(
-      (value) => value?.status === 'ok',
-    );
+    const hasBoostRole = [
+      snapshot.boost_active,
+      snapshot.boost_duration,
+      snapshot.start_boost,
+    ].some((value) => value?.status === 'ok');
     const overrideText =
       snapshot.override_duration?.status === 'ok'
         ? this._modeLabel(snapshot.override_duration.value)
@@ -1439,7 +1472,12 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
 
     const badges: TemplateResult[] = [];
     if (hasBoostRole) {
-      badges.push(this._statusBadge(boostActive ? 'Boost Active' : 'Boost Ready', boostActive ? 'success' : 'muted'));
+      badges.push(
+        this._statusBadge(
+          boostActive ? 'Boost Active' : 'Boost Ready',
+          boostActive ? 'success' : 'muted',
+        ),
+      );
     }
     if (overrideText) {
       badges.push(this._statusBadge(`Override: ${overrideText}`, 'muted'));
@@ -1520,9 +1558,11 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     );
     const durationEntity = config.entities.boost_duration;
     const boostActive = this._state(snapshot.boost_active) === 'on';
-    const hasBoostDetail = [snapshot.boost_duration, snapshot.start_boost, snapshot.cancel_boost].some(
-      (value) => value?.status === 'ok',
-    );
+    const hasBoostDetail = [
+      snapshot.boost_duration,
+      snapshot.start_boost,
+      snapshot.cancel_boost,
+    ].some((value) => value?.status === 'ok');
 
     return html`
       <section class="advanced-drawer" id="mvhr-advanced-drawer" aria-label="Advanced diagnostics">
@@ -1765,7 +1805,9 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     ) => {
       const airflow = showAllAirflows || showAirflowByDefault ? sharedAirflow : null;
       return html`
-        <div class="air-path ${key} ${animated ? 'active' : ''} ${animated && boostActive ? 'boost-active' : ''}">
+        <div
+          class="air-path ${key} ${animated ? 'active' : ''} ${animated && boostActive ? 'boost-active' : ''}"
+        >
           <span class="path-label">
             <ha-icon icon=${endpointIcon} aria-hidden="true"></ha-icon>
             ${label}
@@ -1810,11 +1852,60 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
           <div class="brand">
             ${unitBrand}${unitBrand.toLowerCase().includes('mvhr') ? '' : html`<br /><span>MVHR</span>`}
           </div>
-          <div class="duct duct-top" aria-hidden="true"></div>
-          <div class="duct duct-bottom" aria-hidden="true"></div>
-          <div class="duct duct-left" aria-hidden="true"></div>
-          <div class="duct duct-right" aria-hidden="true"></div>
-          <div class="exchanger" aria-hidden="true"></div>
+          <svg
+            class="airflow-schematic"
+            viewBox="0 0 100 100"
+            role="img"
+            aria-label="Two separate air streams cross through the heat exchanger"
+          >
+            <defs>
+              <clipPath id="system-exchanger-clip">
+                <path d="M50 34 L66 50 L50 66 L34 50 Z"></path>
+              </clipPath>
+            </defs>
+            <path
+              class="airflow-path extract-flow"
+              data-flow="inward"
+              d="M0 82 C18 82 25 67 42 55"
+            ></path>
+            <path
+              class="airflow-path exhaust-flow"
+              data-flow="outward"
+              d="M42 45 C25 33 18 18 0 18"
+            ></path>
+            <path
+              class="airflow-path outdoor-flow"
+              data-flow="inward"
+              d="M100 82 C82 82 75 67 58 55"
+            ></path>
+            <path
+              class="airflow-path supply-flow"
+              data-flow="outward"
+              d="M58 45 C75 33 82 18 100 18"
+            ></path>
+            <g class="exchanger-plate" aria-hidden="true">
+              <path class="exchanger-outline" d="M50 34 L66 50 L50 66 L34 50 Z"></path>
+              <g class="warm-channels" clip-path="url(#system-exchanger-clip)">
+                <path d="M32 43 L50 61"></path>
+                <path d="M35 39 L53 57"></path>
+                <path d="M39 35 L57 53"></path>
+              </g>
+              <g class="cool-channels" clip-path="url(#system-exchanger-clip)">
+                <path d="M50 39 L68 57"></path>
+                <path d="M47 43 L65 61"></path>
+                <path d="M43 47 L61 65"></path>
+              </g>
+              <path class="passage-separator" d="M42 50 L50 42 L58 50 L50 58 Z"></path>
+            </g>
+            ${['extract', 'exhaust', 'outdoor', 'supply'].map(
+              (stream) =>
+                html`<g class="airflow-particles ${stream}-particles" aria-hidden="true">
+                  <circle class="airflow-particle particle-1" r="1.1"></circle
+                  ><circle class="airflow-particle particle-2" r="1.1"></circle
+                  ><circle class="airflow-particle particle-3" r="1.1"></circle>
+                </g>`,
+            )}
+          </svg>
           <ha-icon class="fan fan-a" icon="mdi:fan" aria-hidden="true"></ha-icon>
           <ha-icon class="fan fan-b" icon="mdi:fan" aria-hidden="true"></ha-icon>
           ${
@@ -2588,10 +2679,7 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       .system-visual-panel .supply.active::after,
       .system-visual-panel .extract.active::after,
       .system-visual-panel .unit.active .fan,
-      .system-visual-panel .unit.active .duct-top::after,
-      .system-visual-panel .unit.active .duct-right::after,
-      .system-visual-panel .unit.active .duct-bottom::after,
-      .system-visual-panel .unit.active .duct-left::after,
+      .system-visual-panel .unit.active .airflow-particle,
       .recovery-badge-circular.recovery-pulse,
       .airflow-card.airflow-brighten,
       .droplet {
@@ -2604,13 +2692,10 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       .droplet {
         opacity: 0.35;
       }
-      /* Same reasoning for the duct particles: a static dot pattern reads
+      /* Same reasoning for the airflow particles: a static dot reads
          as decoration, not motion, so just leave them off rather than
          freeze mid-animation. */
-      .system-visual-panel .unit.active .duct-top::after,
-      .system-visual-panel .unit.active .duct-right::after,
-      .system-visual-panel .unit.active .duct-bottom::after,
-      .system-visual-panel .unit.active .duct-left::after {
+      .system-visual-panel .unit.active .airflow-particle {
         opacity: 0;
       }
     }
@@ -2844,6 +2929,10 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
        Where a browser doesn't support container queries yet, the @media
        rules remain as the fallback. */
     @container (max-width: 640px) {
+      .system-visual-wrap {
+        grid-template-columns: minmax(130px, 1fr) minmax(240px, 320px) minmax(130px, 1fr);
+        min-height: 420px;
+      }
       .system-lower-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
@@ -2854,6 +2943,19 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       }
     }
     @container (max-width: 420px) {
+      .system-visual-wrap {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-rows: auto auto auto;
+        min-height: 0;
+      }
+      .system-visual-panel .unit {
+        grid-column: 1 / -1;
+        grid-row: 2;
+        min-height: 180px;
+      }
+      .system-visual-panel .air-path {
+        min-height: 66px;
+      }
       .system-lower-grid {
         grid-template-columns: minmax(0, 1fr);
       }
@@ -2923,25 +3025,104 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     .system-visual-panel .fan {
       --mdc-icon-size: 48px;
     }
-    .system-visual-panel .exchanger {
-      width: 150px;
-      height: 150px;
+    .airflow-schematic {
+      position: absolute;
+      inset: 9% 0;
+      width: 100%;
+      height: 82%;
+      overflow: visible;
+      --air-outdoor: color-mix(in srgb, var(--primary-color), white 18%);
+      --air-supply: color-mix(in srgb, var(--primary-color), white 42%);
+      --air-extract: color-mix(in srgb, var(--warning-color), var(--primary-text-color) 14%);
+      --air-exhaust: color-mix(in srgb, var(--secondary-text-color), var(--warning-color) 22%);
     }
-    /* Colour the duct stubs on the unit itself so the exchanger graphic
-       reads as "the hero" even before the surrounding air-path panels are
-       scanned — outgoing (top/right, toward supply/exhaust) picks up the
-       same cool-blue family as the supply path; incoming (bottom/left,
-       toward extract/outdoor) picks up the warm-orange extract family.
-       Never the only indicator of direction — the arrow icons and labels
-       on each .air-path already carry that meaning; this is reinforcement
-       on the unit graphic itself. */
-    .system-visual-panel .duct-top,
-    .system-visual-panel .duct-right {
-      background: color-mix(in srgb, #3b82f6, transparent 35%);
+    .airflow-path {
+      fill: none;
+      stroke-width: 4.2;
+      stroke-linecap: round;
+      opacity: 0.74;
+      vector-effect: non-scaling-stroke;
     }
-    .system-visual-panel .duct-bottom,
-    .system-visual-panel .duct-left {
-      background: color-mix(in srgb, #f59e0b, transparent 35%);
+    .extract-flow {
+      stroke: var(--air-extract);
+    }
+    .exhaust-flow {
+      stroke: var(--air-exhaust);
+    }
+    .outdoor-flow {
+      stroke: var(--air-outdoor);
+    }
+    .supply-flow {
+      stroke: var(--air-supply);
+    }
+    .exchanger-outline {
+      fill: color-mix(
+        in srgb,
+        var(--ha-card-background, var(--card-background-color)),
+        transparent 4%
+      );
+      stroke: var(--divider-color);
+      stroke-width: 1.4;
+    }
+    .warm-channels path,
+    .cool-channels path {
+      fill: none;
+      stroke-width: 2.2;
+      stroke-linecap: round;
+    }
+    .warm-channels path {
+      stroke: var(--air-extract);
+    }
+    .cool-channels path {
+      stroke: var(--air-outdoor);
+    }
+    .passage-separator {
+      fill: var(--ha-card-background, var(--card-background-color));
+      stroke: var(--divider-color);
+      stroke-width: 1.2;
+    }
+    .airflow-particle {
+      opacity: 0;
+      offset-rotate: 0deg;
+    }
+    .extract-particles .airflow-particle {
+      fill: var(--air-extract);
+      offset-path: path('M0 82 C18 82 25 67 42 55');
+    }
+    .exhaust-particles .airflow-particle {
+      fill: var(--air-exhaust);
+      offset-path: path('M42 45 C25 33 18 18 0 18');
+    }
+    .outdoor-particles .airflow-particle {
+      fill: var(--air-outdoor);
+      offset-path: path('M100 82 C82 82 75 67 58 55');
+    }
+    .supply-particles .airflow-particle {
+      fill: var(--air-supply);
+      offset-path: path('M58 45 C75 33 82 18 100 18');
+    }
+    .system-visual-panel .unit.active .airflow-particle {
+      animation: schematic-particle 2.4s linear infinite;
+    }
+    .system-visual-panel .unit.active .particle-2 {
+      animation-delay: -0.8s;
+    }
+    .system-visual-panel .unit.active .particle-3 {
+      animation-delay: -1.6s;
+    }
+    @keyframes schematic-particle {
+      0% {
+        offset-distance: 0%;
+        opacity: 0;
+      }
+      12%,
+      88% {
+        opacity: 0.9;
+      }
+      100% {
+        offset-distance: 100%;
+        opacity: 0;
+      }
     }
     /* The heat-recovery figure, centred over the exchanger graphic — "make
        the heat exchanger the hero" / "move the heat recovery number into
@@ -2964,7 +3145,11 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       justify-content: center;
       gap: 2px;
       text-align: center;
-      background: color-mix(in srgb, var(--ha-card-background, var(--card-background-color)), transparent 4%);
+      background: color-mix(
+        in srgb,
+        var(--ha-card-background, var(--card-background-color)),
+        transparent 4%
+      );
       border: 3px solid color-mix(in srgb, var(--success-color), transparent 25%);
       box-shadow: 0 0 0 6px color-mix(in srgb, var(--success-color), transparent 90%);
       cursor: default;
@@ -3072,41 +3257,6 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       background-repeat: repeat;
       opacity: 0.4;
     }
-    /* A few small droplets travelling along each duct stub on the unit
-       itself, so motion is visible right at the exchanger, not just out in
-       the surrounding panels — same gating as the fans (.unit.active) and
-       same reduced-motion rule as everything else in this panel. */
-    .system-visual-panel .duct {
-      overflow: hidden;
-    }
-    .system-visual-panel .duct::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(circle, rgba(255, 255, 255, 0.9) 1.4px, transparent 1.6px);
-      background-size: 9px 9px;
-      opacity: 0;
-    }
-    .system-visual-panel .unit.active .duct-top::after,
-    .system-visual-panel .unit.active .duct-right::after {
-      opacity: 0.9;
-      animation: duct-particles-out 1s linear infinite;
-    }
-    .system-visual-panel .unit.active .duct-bottom::after,
-    .system-visual-panel .unit.active .duct-left::after {
-      opacity: 0.9;
-      animation: duct-particles-in 1s linear infinite;
-    }
-    @keyframes duct-particles-out {
-      to {
-        background-position: 18px 0;
-      }
-    }
-    @keyframes duct-particles-in {
-      to {
-        background-position: -18px 0;
-      }
-    }
     /* "Particles accelerate slightly during Boost" and the fans spin a
        little faster with them — a real boost mode raises fan speed
        noticeably, so this reinforces that state through the animations
@@ -3126,11 +3276,8 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     .system-visual-panel .unit.active.boost-active .fan {
       animation-duration: 3.5s;
     }
-    .system-visual-panel .unit.active.boost-active .duct-top::after,
-    .system-visual-panel .unit.active.boost-active .duct-right::after,
-    .system-visual-panel .unit.active.boost-active .duct-bottom::after,
-    .system-visual-panel .unit.active.boost-active .duct-left::after {
-      animation-duration: 0.6s;
+    .system-visual-panel .unit.active.boost-active .airflow-particle {
+      animation-duration: 1.35s;
     }
 
     /* ---- shower-detection banner (full-width, active only — the idle
@@ -3642,6 +3789,10 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       }
       .system-visual-panel .unit {
         min-height: 170px;
+      }
+      .airflow-schematic {
+        inset: 4% 0;
+        height: 92%;
       }
       .system-visual-panel .fan {
         --mdc-icon-size: 26px;

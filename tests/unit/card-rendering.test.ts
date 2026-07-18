@@ -1183,6 +1183,33 @@ describe('hiper-mvhr-card', () => {
         expect(text).toContain('Supply air');
       });
 
+      it('draws four separate SVG paths with the correct inward and outward directions', async () => {
+        const el = mountSystem();
+        await el.updateComplete;
+
+        const schematic = el.shadowRoot?.querySelector('.airflow-schematic');
+        expect(schematic).toBeTruthy();
+        expect(schematic?.querySelectorAll('.airflow-path')).toHaveLength(4);
+        expect(schematic?.querySelector('.extract-flow')?.getAttribute('data-flow')).toBe('inward');
+        expect(schematic?.querySelector('.outdoor-flow')?.getAttribute('data-flow')).toBe('inward');
+        expect(schematic?.querySelector('.exhaust-flow')?.getAttribute('data-flow')).toBe(
+          'outward',
+        );
+        expect(schematic?.querySelector('.supply-flow')?.getAttribute('data-flow')).toBe('outward');
+        expect(schematic?.querySelectorAll('.airflow-particle')).toHaveLength(12);
+      });
+
+      it('keeps warm and cool exchanger channels visually separate beneath the centred badge', async () => {
+        const el = mountSystem();
+        await el.updateComplete;
+
+        const unit = el.shadowRoot?.querySelector('.system-visual-panel .unit');
+        expect(unit?.querySelector('.warm-channels')).toBeTruthy();
+        expect(unit?.querySelector('.cool-channels')).toBeTruthy();
+        expect(unit?.querySelector('.passage-separator')).toBeTruthy();
+        expect(unit?.querySelector('.recovery-badge-circular')?.textContent).toContain('74%');
+      });
+
       it('extract and supply show measured airflow; outdoor and exhaust omit it by default', async () => {
         const el = mountSystem();
         await el.updateComplete;
@@ -1578,8 +1605,11 @@ describe('hiper-mvhr-card', () => {
 
       it('the lower dashboard cards (Airflow/Temperatures/System Status) collapse to a single column on mobile', () => {
         const cssText = HiperMvhrCard.styles.cssText;
-        const mobileBlock = cssText.match(/@media \(max-width: 599px\)\s*{[\s\S]*?\n {4}}/)?.[0] ?? '';
-        expect(mobileBlock).toMatch(/\.system-lower-grid\s*{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)/);
+        const mobileBlock =
+          cssText.match(/@media \(max-width: 599px\)\s*{[\s\S]*?\n {4}}/)?.[0] ?? '';
+        expect(mobileBlock).toMatch(
+          /\.system-lower-grid\s*{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)/,
+        );
         // .system-main is always full width now (System Overview is the
         // sole hero, no side-by-side shower column to collapse — see the
         // "shower detection panel" tests below) — the mobile-specific rule
@@ -1589,16 +1619,18 @@ describe('hiper-mvhr-card', () => {
 
       it('the airflow gauge becomes fluid-width (not a fixed px width) on mobile', () => {
         const cssText = HiperMvhrCard.styles.cssText;
-        const mobileBlock = cssText.match(/@media \(max-width: 599px\)\s*{[\s\S]*?\n {4}}/)?.[0] ?? '';
+        const mobileBlock =
+          cssText.match(/@media \(max-width: 599px\)\s*{[\s\S]*?\n {4}}/)?.[0] ?? '';
         expect(mobileBlock).toMatch(/\.gauge\s*{[^}]*width:\s*100%/);
       });
 
-      it('respects prefers-reduced-motion for the duct, fan, and shower-droplet animations', () => {
+      it('respects prefers-reduced-motion for airflow, fan, and shower-droplet animations', () => {
         const cssText = HiperMvhrCard.styles.cssText;
         const reducedMotionBlock =
           cssText.match(/@media \(prefers-reduced-motion: reduce\)\s*{[^}]*}/)?.[0] ?? '';
         expect(reducedMotionBlock).toMatch(/animation:\s*none/);
         expect(reducedMotionBlock).toMatch(/system-visual-panel/);
+        expect(reducedMotionBlock).toMatch(/airflow-particle/);
         expect(reducedMotionBlock).toMatch(/\.droplet/);
       });
     });
@@ -1619,7 +1651,7 @@ describe('hiper-mvhr-card', () => {
      * a more prominent boost-remaining countdown.
      */
     describe('visual polish follow-up', () => {
-      it('adds a container-query fallback so the overview/shower layout reacts to the card\'s own width, not just the viewport', () => {
+      it("adds a container-query fallback so the overview/shower layout reacts to the card's own width, not just the viewport", () => {
         const cssText = HiperMvhrCard.styles.cssText;
         expect(cssText).toMatch(/container-type:\s*inline-size/);
         expect(cssText).toMatch(/@container[^{]*max-width/);
@@ -1684,7 +1716,9 @@ describe('hiper-mvhr-card', () => {
         expect(statusCard?.textContent).toMatch(/system ok/i);
         // Colour is never the only signal — every badge spells out its
         // state in words too.
-        badges?.forEach((badge) => expect((badge.textContent ?? '').trim().length).toBeGreaterThan(0));
+        badges?.forEach((badge) =>
+          expect((badge.textContent ?? '').trim().length).toBeGreaterThan(0),
+        );
       });
 
       it('gives an active boost a prominent countdown callout in the System Status card', async () => {
@@ -1782,13 +1816,14 @@ describe('hiper-mvhr-card', () => {
         expect(systemMainBlock).toMatch(/display:\s*block/);
       });
 
-      it('adds a moving-particle animation to the duct stubs on the unit, gated on activity and reduced-motion', () => {
+      it('adds moving particles to all four schematic paths, gated on activity and reduced-motion', () => {
         const cssText = HiperMvhrCard.styles.cssText;
-        expect(cssText).toMatch(/@keyframes duct-particles-out/);
-        expect(cssText).toMatch(/@keyframes duct-particles-in/);
+        expect(cssText).toMatch(/@keyframes schematic-particle/);
+        expect(cssText).toMatch(/\.extract-particles \.airflow-particle/);
+        expect(cssText).toMatch(/\.supply-particles \.airflow-particle/);
         const reducedMotionBlock =
           cssText.match(/@media \(prefers-reduced-motion: reduce\)\s*{[\s\S]*?\n {4}}/)?.[0] ?? '';
-        expect(reducedMotionBlock).toMatch(/duct-top::after/);
+        expect(reducedMotionBlock).toMatch(/airflow-particle/);
       });
 
       it('gives the header controls a bordered control-panel appearance instead of floating pills', () => {
@@ -1847,11 +1882,13 @@ describe('hiper-mvhr-card', () => {
         expect(el.shadowRoot?.querySelector('button[aria-label="Run calibration"]')).toBeNull();
       });
 
-      it('speeds up the duct-particle and fan animations while boost is active', () => {
+      it('speeds up the schematic-particle and fan animations while boost is active', () => {
         const cssText = HiperMvhrCard.styles.cssText;
-        expect(cssText).toMatch(/\.unit\.active\.boost-active \.fan\s*{[^}]*animation-duration:\s*3\.5s/);
         expect(cssText).toMatch(
-          /\.unit\.active\.boost-active \.duct-top::after,[\s\S]*?animation-duration:\s*0\.6s/,
+          /\.unit\.active\.boost-active \.fan\s*{[^}]*animation-duration:\s*3\.5s/,
+        );
+        expect(cssText).toMatch(
+          /\.unit\.active\.boost-active \.airflow-particle\s*{[^}]*animation-duration:\s*1\.35s/,
         );
       });
 
@@ -1860,13 +1897,17 @@ describe('hiper-mvhr-card', () => {
           const el = mountSystem();
           await el.updateComplete;
 
-          expect(el.shadowRoot?.querySelector('.recovery-badge-circular.recovery-pulse')).toBeNull();
+          expect(
+            el.shadowRoot?.querySelector('.recovery-badge-circular.recovery-pulse'),
+          ).toBeNull();
         });
 
         it('pulses the recovery badge only on the render where the figure actually changes', async () => {
           const el = mountSystem();
           await el.updateComplete;
-          expect(el.shadowRoot?.querySelector('.recovery-badge-circular')?.textContent).toContain('74%');
+          expect(el.shadowRoot?.querySelector('.recovery-badge-circular')?.textContent).toContain(
+            '74%',
+          );
 
           // Same instance, a later hass update with a genuinely different
           // supply temperature -> a different recovery percentage.
@@ -1909,7 +1950,9 @@ describe('hiper-mvhr-card', () => {
           };
           await el.updateComplete;
           expect(
-            el.shadowRoot?.querySelector('.recovery-badge-circular')?.classList.contains('recovery-pulse'),
+            el.shadowRoot
+              ?.querySelector('.recovery-badge-circular')
+              ?.classList.contains('recovery-pulse'),
           ).toBe(false);
         });
 
@@ -1937,9 +1980,9 @@ describe('hiper-mvhr-card', () => {
             },
           };
           await el.updateComplete;
-          expect(el.shadowRoot?.querySelector('.airflow-card')?.classList.contains('airflow-brighten')).toBe(
-            true,
-          );
+          expect(
+            el.shadowRoot?.querySelector('.airflow-card')?.classList.contains('airflow-brighten'),
+          ).toBe(true);
 
           el.hass = {
             ...altairHass,
@@ -1954,9 +1997,9 @@ describe('hiper-mvhr-card', () => {
             },
           };
           await el.updateComplete;
-          expect(el.shadowRoot?.querySelector('.airflow-card')?.classList.contains('airflow-brighten')).toBe(
-            false,
-          );
+          expect(
+            el.shadowRoot?.querySelector('.airflow-card')?.classList.contains('airflow-brighten'),
+          ).toBe(false);
         });
       });
     });
