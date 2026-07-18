@@ -1202,7 +1202,7 @@ describe('hiper-mvhr-card', () => {
         expect(schematic?.querySelectorAll('.port-collars rect')).toHaveLength(4);
       });
 
-      it('groups indoor and outdoor ports on their physical sides and keeps both fans inside the casing', async () => {
+      it('groups outdoor ports on the left, indoor ports on the right, and keeps both fans inside the casing', async () => {
         const el = mountSystem();
         await el.updateComplete;
 
@@ -1222,7 +1222,16 @@ describe('hiper-mvhr-card', () => {
         expect(schematic?.querySelector('.cutaway-shell')).toBeTruthy();
         expect(schematic?.querySelectorAll('.fan-assembly')).toHaveLength(2);
         expect(schematic?.querySelectorAll('.fan-rotor')).toHaveLength(2);
-        expect(schematic?.querySelectorAll('.filters rect')).toHaveLength(2);
+        expect(schematic?.querySelectorAll('.filter-cartridge')).toHaveLength(2);
+        expect(schematic?.querySelectorAll('.filter-cartridge[data-path="incoming"]')).toHaveLength(
+          2,
+        );
+        expect(schematic?.querySelectorAll('.fan-assembly[data-location="internal"]')).toHaveLength(
+          2,
+        );
+        expect(el.shadowRoot?.querySelectorAll('.system-visual-wrap > .fan-assembly')).toHaveLength(
+          0,
+        );
         const paths = [...(el.shadowRoot?.querySelectorAll('.system-visual-wrap > .air-path') ?? [])];
         expect(paths.map((node) => node.getAttribute('data-side'))).toEqual([
           'outdoor',
@@ -1230,6 +1239,37 @@ describe('hiper-mvhr-card', () => {
           'outdoor',
           'indoor',
         ]);
+        expect(schematic?.querySelector('.outdoor-flow')?.getAttribute('d')).toMatch(/^M0 /);
+        expect(schematic?.querySelector('.exhaust-flow')?.getAttribute('d')).toMatch(/H0$/);
+        expect(schematic?.querySelector('.extract-flow')?.getAttribute('d')).toMatch(/^M700 /);
+        expect(schematic?.querySelector('.supply-flow')?.getAttribute('d')).toMatch(/H700$/);
+      });
+
+      it('renders a layered equipment shell with depth, mounts, formed ducts, and pleated filters', async () => {
+        const el = mountSystem();
+        await el.updateComplete;
+
+        const schematic = el.shadowRoot?.querySelector('.airflow-schematic');
+        expect(schematic?.getAttribute('viewBox')).toBe('0 0 700 360');
+        expect(schematic?.querySelector('.cabinet-outer')).toBeTruthy();
+        expect(schematic?.querySelector('.cabinet-seam')).toBeTruthy();
+        expect(schematic?.querySelector('.mounting-brackets')).toBeTruthy();
+        expect(schematic?.querySelector('.duct-highlights')).toBeTruthy();
+        expect(schematic?.querySelectorAll('.filter-pleat').length).toBeGreaterThan(10);
+        expect(schematic?.querySelectorAll('.fan-blade')).toHaveLength(16);
+        expect(schematic?.querySelector('.fan-motor')).toBeTruthy();
+        expect(schematic?.querySelector('.fan-ring')?.namespaceURI).toBe(
+          'http://www.w3.org/2000/svg',
+        );
+        expect(schematic?.querySelector('.filter-depth')?.namespaceURI).toBe(
+          'http://www.w3.org/2000/svg',
+        );
+        expect(schematic?.querySelector('.airflow-particle')?.namespaceURI).toBe(
+          'http://www.w3.org/2000/svg',
+        );
+        expect(schematic?.querySelector('.exchanger-shadow')).toBeTruthy();
+        expect(schematic?.querySelectorAll('.warm-channels path').length).toBeGreaterThan(10);
+        expect(schematic?.querySelectorAll('.cool-channels path').length).toBeGreaterThan(10);
       });
 
       it('keeps warm and cool exchanger channels visually separate beneath the centred badge', async () => {
@@ -1377,6 +1417,22 @@ describe('hiper-mvhr-card', () => {
         expect(el.shadowRoot?.querySelector('.outdoor-collar')?.getAttribute('style')).toContain(
           'var(--secondary-text-color)',
         );
+        expect(
+          el.shadowRoot?.querySelector('.outdoor-particles')?.classList.contains('unavailable'),
+        ).toBe(true);
+      });
+
+      it('keeps unavailable blowers and filters visible but neutral and stopped', async () => {
+        const states = { ...altairHass.states, ...systemStates };
+        delete states['sensor.altair_mvhr_supply_fan_speed'];
+        delete states['sensor.altair_mvhr_extract_fan_speed'];
+        delete states['sensor.altair_mvhr_filter_days_remaining'];
+        const el = mountSystem({ ...altairHass, states });
+        await el.updateComplete;
+
+        expect(el.shadowRoot?.querySelectorAll('.fan-assembly.unavailable')).toHaveLength(2);
+        expect(el.shadowRoot?.querySelectorAll('.filter-cartridge.unavailable')).toHaveLength(2);
+        expect(el.shadowRoot?.querySelectorAll('.filter-cartridge.known')).toHaveLength(0);
       });
     });
 

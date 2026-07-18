@@ -3,18 +3,18 @@
  * Copyright 2019 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const I = globalThis, re = I.ShadowRoot && (I.ShadyCSS === void 0 || I.ShadyCSS.nativeShadow) && "adoptedStyleSheets" in Document.prototype && "replace" in CSSStyleSheet.prototype, ae = Symbol(), pe = /* @__PURE__ */ new WeakMap();
-let Re = class {
+const q = globalThis, le = q.ShadowRoot && (q.ShadyCSS === void 0 || q.ShadyCSS.nativeShadow) && "adoptedStyleSheets" in Document.prototype && "replace" in CSSStyleSheet.prototype, ce = Symbol(), be = /* @__PURE__ */ new WeakMap();
+let Pe = class {
   constructor(e, t, r) {
-    if (this._$cssResult$ = !0, r !== ae) throw Error("CSSResult is not constructable. Use `unsafeCSS` or `css` instead.");
+    if (this._$cssResult$ = !0, r !== ce) throw Error("CSSResult is not constructable. Use `unsafeCSS` or `css` instead.");
     this.cssText = e, this.t = t;
   }
   get styleSheet() {
     let e = this.o;
     const t = this.t;
-    if (re && e === void 0) {
+    if (le && e === void 0) {
       const r = t !== void 0 && t.length === 1;
-      r && (e = pe.get(t)), e === void 0 && ((this.o = e = new CSSStyleSheet()).replaceSync(this.cssText), r && pe.set(t, e));
+      r && (e = be.get(t)), e === void 0 && ((this.o = e = new CSSStyleSheet()).replaceSync(this.cssText), r && be.set(t, e));
     }
     return e;
   }
@@ -22,33 +22,33 @@ let Re = class {
     return this.cssText;
   }
 };
-const qe = (s) => new Re(typeof s == "string" ? s : s + "", void 0, ae), Oe = (s, ...e) => {
+const Qe = (s) => new Pe(typeof s == "string" ? s : s + "", void 0, ce), Ue = (s, ...e) => {
   const t = s.length === 1 ? s[0] : e.reduce((r, a, o) => r + ((i) => {
     if (i._$cssResult$ === !0) return i.cssText;
     if (typeof i == "number") return i;
     throw Error("Value passed to 'css' function must be a 'css' function result: " + i + ". Use 'unsafeCSS' to pass non-literal values, but take care to ensure page security.");
   })(a) + s[o + 1], s[0]);
-  return new Re(t, s, ae);
-}, Ge = (s, e) => {
-  if (re) s.adoptedStyleSheets = e.map((t) => t instanceof CSSStyleSheet ? t : t.styleSheet);
+  return new Pe(t, s, ce);
+}, Ke = (s, e) => {
+  if (le) s.adoptedStyleSheets = e.map((t) => t instanceof CSSStyleSheet ? t : t.styleSheet);
   else for (const t of e) {
-    const r = document.createElement("style"), a = I.litNonce;
+    const r = document.createElement("style"), a = q.litNonce;
     a !== void 0 && r.setAttribute("nonce", a), r.textContent = t.cssText, s.appendChild(r);
   }
-}, ue = re ? (s) => s : (s) => s instanceof CSSStyleSheet ? ((e) => {
+}, ve = le ? (s) => s : (s) => s instanceof CSSStyleSheet ? ((e) => {
   let t = "";
   for (const r of e.cssRules) t += r.cssText;
-  return qe(t);
+  return Qe(t);
 })(s) : s;
 /**
  * @license
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const { is: Ze, defineProperty: We, getOwnPropertyDescriptor: Ye, getOwnPropertyNames: Xe, getOwnPropertySymbols: Qe, getPrototypeOf: Ke } = Object, y = globalThis, he = y.trustedTypes, Je = he ? he.emptyScript : "", Y = y.reactiveElementPolyfillSupport, L = (s, e) => s, j = { toAttribute(s, e) {
+const { is: Xe, defineProperty: Je, getOwnPropertyDescriptor: et, getOwnPropertyNames: tt, getOwnPropertySymbols: rt, getPrototypeOf: at } = Object, S = globalThis, _e = S.trustedTypes, ot = _e ? _e.emptyScript : "", te = S.reactiveElementPolyfillSupport, D = (s, e) => s, Z = { toAttribute(s, e) {
   switch (e) {
     case Boolean:
-      s = s ? Je : null;
+      s = s ? ot : null;
       break;
     case Object:
     case Array:
@@ -73,23 +73,23 @@ const { is: Ze, defineProperty: We, getOwnPropertyDescriptor: Ye, getOwnProperty
       }
   }
   return t;
-} }, oe = (s, e) => !Ze(s, e), me = { attribute: !0, type: String, converter: j, reflect: !1, useDefault: !1, hasChanged: oe };
-Symbol.metadata ?? (Symbol.metadata = Symbol("metadata")), y.litPropertyMetadata ?? (y.litPropertyMetadata = /* @__PURE__ */ new WeakMap());
-let T = class extends HTMLElement {
+} }, de = (s, e) => !Xe(s, e), we = { attribute: !0, type: String, converter: Z, reflect: !1, useDefault: !1, hasChanged: de };
+Symbol.metadata ?? (Symbol.metadata = Symbol("metadata")), S.litPropertyMetadata ?? (S.litPropertyMetadata = /* @__PURE__ */ new WeakMap());
+let z = class extends HTMLElement {
   static addInitializer(e) {
     this._$Ei(), (this.l ?? (this.l = [])).push(e);
   }
   static get observedAttributes() {
     return this.finalize(), this._$Eh && [...this._$Eh.keys()];
   }
-  static createProperty(e, t = me) {
+  static createProperty(e, t = we) {
     if (t.state && (t.attribute = !1), this._$Ei(), this.prototype.hasOwnProperty(e) && ((t = Object.create(t)).wrapped = !0), this.elementProperties.set(e, t), !t.noAccessor) {
       const r = Symbol(), a = this.getPropertyDescriptor(e, r, t);
-      a !== void 0 && We(this.prototype, e, a);
+      a !== void 0 && Je(this.prototype, e, a);
     }
   }
   static getPropertyDescriptor(e, t, r) {
-    const { get: a, set: o } = Ye(this.prototype, e) ?? { get() {
+    const { get: a, set: o } = et(this.prototype, e) ?? { get() {
       return this[t];
     }, set(i) {
       this[t] = i;
@@ -100,17 +100,17 @@ let T = class extends HTMLElement {
     }, configurable: !0, enumerable: !0 };
   }
   static getPropertyOptions(e) {
-    return this.elementProperties.get(e) ?? me;
+    return this.elementProperties.get(e) ?? we;
   }
   static _$Ei() {
-    if (this.hasOwnProperty(L("elementProperties"))) return;
-    const e = Ke(this);
+    if (this.hasOwnProperty(D("elementProperties"))) return;
+    const e = at(this);
     e.finalize(), e.l !== void 0 && (this.l = [...e.l]), this.elementProperties = new Map(e.elementProperties);
   }
   static finalize() {
-    if (this.hasOwnProperty(L("finalized"))) return;
-    if (this.finalized = !0, this._$Ei(), this.hasOwnProperty(L("properties"))) {
-      const t = this.properties, r = [...Xe(t), ...Qe(t)];
+    if (this.hasOwnProperty(D("finalized"))) return;
+    if (this.finalized = !0, this._$Ei(), this.hasOwnProperty(D("properties"))) {
+      const t = this.properties, r = [...tt(t), ...rt(t)];
       for (const a of r) this.createProperty(a, t[a]);
     }
     const e = this[Symbol.metadata];
@@ -129,8 +129,8 @@ let T = class extends HTMLElement {
     const t = [];
     if (Array.isArray(e)) {
       const r = new Set(e.flat(1 / 0).reverse());
-      for (const a of r) t.unshift(ue(a));
-    } else e !== void 0 && t.push(ue(e));
+      for (const a of r) t.unshift(ve(a));
+    } else e !== void 0 && t.push(ve(e));
     return t;
   }
   static _$Eu(e, t) {
@@ -159,7 +159,7 @@ let T = class extends HTMLElement {
   }
   createRenderRoot() {
     const e = this.shadowRoot ?? this.attachShadow(this.constructor.shadowRootOptions);
-    return Ge(e, this.constructor.elementStyles), e;
+    return Ke(e, this.constructor.elementStyles), e;
   }
   connectedCallback() {
     var e;
@@ -184,7 +184,7 @@ let T = class extends HTMLElement {
     var o;
     const r = this.constructor.elementProperties.get(e), a = this.constructor._$Eu(e, r);
     if (a !== void 0 && r.reflect === !0) {
-      const i = (((o = r.converter) == null ? void 0 : o.toAttribute) !== void 0 ? r.converter : j).toAttribute(t, r.type);
+      const i = (((o = r.converter) == null ? void 0 : o.toAttribute) !== void 0 ? r.converter : Z).toAttribute(t, r.type);
       this._$Em = e, i == null ? this.removeAttribute(a) : this.setAttribute(a, i), this._$Em = null;
     }
   }
@@ -192,7 +192,7 @@ let T = class extends HTMLElement {
     var o, i;
     const r = this.constructor, a = r._$Eh.get(e);
     if (a !== void 0 && this._$Em !== a) {
-      const n = r.getPropertyOptions(a), l = typeof n.converter == "function" ? { fromAttribute: n.converter } : ((o = n.converter) == null ? void 0 : o.fromAttribute) !== void 0 ? n.converter : j;
+      const n = r.getPropertyOptions(a), l = typeof n.converter == "function" ? { fromAttribute: n.converter } : ((o = n.converter) == null ? void 0 : o.fromAttribute) !== void 0 ? n.converter : Z;
       this._$Em = a;
       const u = l.fromAttribute(t, n.type);
       this[a] = u ?? ((i = this._$Ej) == null ? void 0 : i.get(a)) ?? u, this._$Em = null;
@@ -202,7 +202,7 @@ let T = class extends HTMLElement {
     var i;
     if (e !== void 0) {
       const n = this.constructor;
-      if (a === !1 && (o = this[e]), r ?? (r = n.getPropertyOptions(e)), !((r.hasChanged ?? oe)(o, t) || r.useDefault && r.reflect && o === ((i = this._$Ej) == null ? void 0 : i.get(e)) && !this.hasAttribute(n._$Eu(e, r)))) return;
+      if (a === !1 && (o = this[e]), r ?? (r = n.getPropertyOptions(e)), !((r.hasChanged ?? de)(o, t) || r.useDefault && r.reflect && o === ((i = this._$Ej) == null ? void 0 : i.get(e)) && !this.hasAttribute(n._$Eu(e, r)))) return;
       this.C(e, t, r);
     }
     this.isUpdatePending === !1 && (this._$ES = this._$EP());
@@ -278,76 +278,76 @@ let T = class extends HTMLElement {
   firstUpdated(e) {
   }
 };
-T.elementStyles = [], T.shadowRootOptions = { mode: "open" }, T[L("elementProperties")] = /* @__PURE__ */ new Map(), T[L("finalized")] = /* @__PURE__ */ new Map(), Y == null || Y({ ReactiveElement: T }), (y.reactiveElementVersions ?? (y.reactiveElementVersions = [])).push("2.1.2");
+z.elementStyles = [], z.shadowRootOptions = { mode: "open" }, z[D("elementProperties")] = /* @__PURE__ */ new Map(), z[D("finalized")] = /* @__PURE__ */ new Map(), te == null || te({ ReactiveElement: z }), (S.reactiveElementVersions ?? (S.reactiveElementVersions = [])).push("2.1.2");
 /**
  * @license
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const P = globalThis, fe = (s) => s, V = P.trustedTypes, ge = V ? V.createPolicy("lit-html", { createHTML: (s) => s }) : void 0, Me = "$lit$", w = `lit$${Math.random().toFixed(9).slice(2)}$`, ze = "?" + w, et = `<${ze}>`, S = document, U = () => S.createComment(""), N = (s) => s === null || typeof s != "object" && typeof s != "function", ie = Array.isArray, tt = (s) => ie(s) || typeof (s == null ? void 0 : s[Symbol.iterator]) == "function", X = `[ 	
-\f\r]`, z = /<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g, ve = /-->/g, be = />/g, $ = RegExp(`>|${X}(?:([^\\s"'>=/]+)(${X}*=${X}*(?:[^ 	
-\f\r"'\`<>=]|("|')|))|$)`, "g"), _e = /'/g, xe = /"/g, Le = /^(?:script|style|textarea|title)$/i, rt = (s) => (e, ...t) => ({ _$litType$: s, strings: e, values: t }), d = rt(1), O = Symbol.for("lit-noChange"), v = Symbol.for("lit-nothing"), we = /* @__PURE__ */ new WeakMap(), k = S.createTreeWalker(S, 129);
-function Pe(s, e) {
-  if (!ie(s) || !s.hasOwnProperty("raw")) throw Error("invalid template strings array");
-  return ge !== void 0 ? ge.createHTML(e) : e;
+const B = globalThis, xe = (s) => s, W = B.trustedTypes, ye = W ? W.createPolicy("lit-html", { createHTML: (s) => s }) : void 0, Ne = "$lit$", A = `lit$${Math.random().toFixed(9).slice(2)}$`, De = "?" + A, it = `<${De}>`, T = document, I = () => T.createComment(""), j = (s) => s === null || typeof s != "object" && typeof s != "function", pe = Array.isArray, st = (s) => pe(s) || typeof (s == null ? void 0 : s[Symbol.iterator]) == "function", re = `[ 	
+\f\r]`, N = /<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g, $e = /-->/g, ke = />/g, E = RegExp(`>|${re}(?:([^\\s"'>=/]+)(${re}*=${re}*(?:[^ 	
+\f\r"'\`<>=]|("|')|))|$)`, "g"), Ae = /'/g, Se = /"/g, Be = /^(?:script|style|textarea|title)$/i, Ie = (s) => (e, ...t) => ({ _$litType$: s, strings: e, values: t }), d = Ie(1), k = Ie(2), L = Symbol.for("lit-noChange"), g = Symbol.for("lit-nothing"), Ee = /* @__PURE__ */ new WeakMap(), C = T.createTreeWalker(T, 129);
+function je(s, e) {
+  if (!pe(s) || !s.hasOwnProperty("raw")) throw Error("invalid template strings array");
+  return ye !== void 0 ? ye.createHTML(e) : e;
 }
-const at = (s, e) => {
+const nt = (s, e) => {
   const t = s.length - 1, r = [];
-  let a, o = e === 2 ? "<svg>" : e === 3 ? "<math>" : "", i = z;
+  let a, o = e === 2 ? "<svg>" : e === 3 ? "<math>" : "", i = N;
   for (let n = 0; n < t; n++) {
     const l = s[n];
     let u, c, p = -1, h = 0;
-    for (; h < l.length && (i.lastIndex = h, c = i.exec(l), c !== null); ) h = i.lastIndex, i === z ? c[1] === "!--" ? i = ve : c[1] !== void 0 ? i = be : c[2] !== void 0 ? (Le.test(c[2]) && (a = RegExp("</" + c[2], "g")), i = $) : c[3] !== void 0 && (i = $) : i === $ ? c[0] === ">" ? (i = a ?? z, p = -1) : c[1] === void 0 ? p = -2 : (p = i.lastIndex - c[2].length, u = c[1], i = c[3] === void 0 ? $ : c[3] === '"' ? xe : _e) : i === xe || i === _e ? i = $ : i === ve || i === be ? i = z : (i = $, a = void 0);
-    const m = i === $ && s[n + 1].startsWith("/>") ? " " : "";
-    o += i === z ? l + et : p >= 0 ? (r.push(u), l.slice(0, p) + Me + l.slice(p) + w + m) : l + w + (p === -2 ? n : m);
+    for (; h < l.length && (i.lastIndex = h, c = i.exec(l), c !== null); ) h = i.lastIndex, i === N ? c[1] === "!--" ? i = $e : c[1] !== void 0 ? i = ke : c[2] !== void 0 ? (Be.test(c[2]) && (a = RegExp("</" + c[2], "g")), i = E) : c[3] !== void 0 && (i = E) : i === E ? c[0] === ">" ? (i = a ?? N, p = -1) : c[1] === void 0 ? p = -2 : (p = i.lastIndex - c[2].length, u = c[1], i = c[3] === void 0 ? E : c[3] === '"' ? Se : Ae) : i === Se || i === Ae ? i = E : i === $e || i === ke ? i = N : (i = E, a = void 0);
+    const m = i === E && s[n + 1].startsWith("/>") ? " " : "";
+    o += i === N ? l + it : p >= 0 ? (r.push(u), l.slice(0, p) + Ne + l.slice(p) + A + m) : l + A + (p === -2 ? n : m);
   }
-  return [Pe(s, o + (s[t] || "<?>") + (e === 2 ? "</svg>" : e === 3 ? "</math>" : "")), r];
+  return [je(s, o + (s[t] || "<?>") + (e === 2 ? "</svg>" : e === 3 ? "</math>" : "")), r];
 };
-class H {
+class V {
   constructor({ strings: e, _$litType$: t }, r) {
     let a;
     this.parts = [];
     let o = 0, i = 0;
-    const n = e.length - 1, l = this.parts, [u, c] = at(e, t);
-    if (this.el = H.createElement(u, r), k.currentNode = this.el.content, t === 2 || t === 3) {
+    const n = e.length - 1, l = this.parts, [u, c] = nt(e, t);
+    if (this.el = V.createElement(u, r), C.currentNode = this.el.content, t === 2 || t === 3) {
       const p = this.el.content.firstChild;
       p.replaceWith(...p.childNodes);
     }
-    for (; (a = k.nextNode()) !== null && l.length < n; ) {
+    for (; (a = C.nextNode()) !== null && l.length < n; ) {
       if (a.nodeType === 1) {
-        if (a.hasAttributes()) for (const p of a.getAttributeNames()) if (p.endsWith(Me)) {
-          const h = c[i++], m = a.getAttribute(p).split(w), b = /([.?@])?(.*)/.exec(h);
-          l.push({ type: 1, index: o, name: b[2], strings: m, ctor: b[1] === "." ? it : b[1] === "?" ? st : b[1] === "@" ? nt : q }), a.removeAttribute(p);
-        } else p.startsWith(w) && (l.push({ type: 6, index: o }), a.removeAttribute(p));
-        if (Le.test(a.tagName)) {
-          const p = a.textContent.split(w), h = p.length - 1;
+        if (a.hasAttributes()) for (const p of a.getAttributeNames()) if (p.endsWith(Ne)) {
+          const h = c[i++], m = a.getAttribute(p).split(A), v = /([.?@])?(.*)/.exec(h);
+          l.push({ type: 1, index: o, name: v[2], strings: m, ctor: v[1] === "." ? ct : v[1] === "?" ? dt : v[1] === "@" ? pt : Q }), a.removeAttribute(p);
+        } else p.startsWith(A) && (l.push({ type: 6, index: o }), a.removeAttribute(p));
+        if (Be.test(a.tagName)) {
+          const p = a.textContent.split(A), h = p.length - 1;
           if (h > 0) {
-            a.textContent = V ? V.emptyScript : "";
-            for (let m = 0; m < h; m++) a.append(p[m], U()), k.nextNode(), l.push({ type: 2, index: ++o });
-            a.append(p[h], U());
+            a.textContent = W ? W.emptyScript : "";
+            for (let m = 0; m < h; m++) a.append(p[m], I()), C.nextNode(), l.push({ type: 2, index: ++o });
+            a.append(p[h], I());
           }
         }
-      } else if (a.nodeType === 8) if (a.data === ze) l.push({ type: 2, index: o });
+      } else if (a.nodeType === 8) if (a.data === De) l.push({ type: 2, index: o });
       else {
         let p = -1;
-        for (; (p = a.data.indexOf(w, p + 1)) !== -1; ) l.push({ type: 7, index: o }), p += w.length - 1;
+        for (; (p = a.data.indexOf(A, p + 1)) !== -1; ) l.push({ type: 7, index: o }), p += A.length - 1;
       }
       o++;
     }
   }
   static createElement(e, t) {
-    const r = S.createElement("template");
+    const r = T.createElement("template");
     return r.innerHTML = e, r;
   }
 }
-function M(s, e, t = s, r) {
+function P(s, e, t = s, r) {
   var i, n;
-  if (e === O) return e;
+  if (e === L) return e;
   let a = r !== void 0 ? (i = t._$Co) == null ? void 0 : i[r] : t._$Cl;
-  const o = N(e) ? void 0 : e._$litDirective$;
-  return (a == null ? void 0 : a.constructor) !== o && ((n = a == null ? void 0 : a._$AO) == null || n.call(a, !1), o === void 0 ? a = void 0 : (a = new o(s), a._$AT(s, t, r)), r !== void 0 ? (t._$Co ?? (t._$Co = []))[r] = a : t._$Cl = a), a !== void 0 && (e = M(s, a._$AS(s, e.values), a, r)), e;
+  const o = j(e) ? void 0 : e._$litDirective$;
+  return (a == null ? void 0 : a.constructor) !== o && ((n = a == null ? void 0 : a._$AO) == null || n.call(a, !1), o === void 0 ? a = void 0 : (a = new o(s), a._$AT(s, t, r)), r !== void 0 ? (t._$Co ?? (t._$Co = []))[r] = a : t._$Cl = a), a !== void 0 && (e = P(s, a._$AS(s, e.values), a, r)), e;
 }
-class ot {
+class lt {
   constructor(e, t) {
     this._$AV = [], this._$AN = void 0, this._$AD = e, this._$AM = t;
   }
@@ -358,30 +358,30 @@ class ot {
     return this._$AM._$AU;
   }
   u(e) {
-    const { el: { content: t }, parts: r } = this._$AD, a = ((e == null ? void 0 : e.creationScope) ?? S).importNode(t, !0);
-    k.currentNode = a;
-    let o = k.nextNode(), i = 0, n = 0, l = r[0];
+    const { el: { content: t }, parts: r } = this._$AD, a = ((e == null ? void 0 : e.creationScope) ?? T).importNode(t, !0);
+    C.currentNode = a;
+    let o = C.nextNode(), i = 0, n = 0, l = r[0];
     for (; l !== void 0; ) {
       if (i === l.index) {
         let u;
-        l.type === 2 ? u = new D(o, o.nextSibling, this, e) : l.type === 1 ? u = new l.ctor(o, l.name, l.strings, this, e) : l.type === 6 && (u = new lt(o, this, e)), this._$AV.push(u), l = r[++n];
+        l.type === 2 ? u = new G(o, o.nextSibling, this, e) : l.type === 1 ? u = new l.ctor(o, l.name, l.strings, this, e) : l.type === 6 && (u = new ut(o, this, e)), this._$AV.push(u), l = r[++n];
       }
-      i !== (l == null ? void 0 : l.index) && (o = k.nextNode(), i++);
+      i !== (l == null ? void 0 : l.index) && (o = C.nextNode(), i++);
     }
-    return k.currentNode = S, a;
+    return C.currentNode = T, a;
   }
   p(e) {
     let t = 0;
     for (const r of this._$AV) r !== void 0 && (r.strings !== void 0 ? (r._$AI(e, r, t), t += r.strings.length - 2) : r._$AI(e[t])), t++;
   }
 }
-class D {
+class G {
   get _$AU() {
     var e;
     return ((e = this._$AM) == null ? void 0 : e._$AU) ?? this._$Cv;
   }
   constructor(e, t, r, a) {
-    this.type = 2, this._$AH = v, this._$AN = void 0, this._$AA = e, this._$AB = t, this._$AM = r, this.options = a, this._$Cv = (a == null ? void 0 : a.isConnected) ?? !0;
+    this.type = 2, this._$AH = g, this._$AN = void 0, this._$AA = e, this._$AB = t, this._$AM = r, this.options = a, this._$Cv = (a == null ? void 0 : a.isConnected) ?? !0;
   }
   get parentNode() {
     let e = this._$AA.parentNode;
@@ -395,7 +395,7 @@ class D {
     return this._$AB;
   }
   _$AI(e, t = this) {
-    e = M(this, e, t), N(e) ? e === v || e == null || e === "" ? (this._$AH !== v && this._$AR(), this._$AH = v) : e !== this._$AH && e !== O && this._(e) : e._$litType$ !== void 0 ? this.$(e) : e.nodeType !== void 0 ? this.T(e) : tt(e) ? this.k(e) : this._(e);
+    e = P(this, e, t), j(e) ? e === g || e == null || e === "" ? (this._$AH !== g && this._$AR(), this._$AH = g) : e !== this._$AH && e !== L && this._(e) : e._$litType$ !== void 0 ? this.$(e) : e.nodeType !== void 0 ? this.T(e) : st(e) ? this.k(e) : this._(e);
   }
   O(e) {
     return this._$AA.parentNode.insertBefore(e, this._$AB);
@@ -404,33 +404,33 @@ class D {
     this._$AH !== e && (this._$AR(), this._$AH = this.O(e));
   }
   _(e) {
-    this._$AH !== v && N(this._$AH) ? this._$AA.nextSibling.data = e : this.T(S.createTextNode(e)), this._$AH = e;
+    this._$AH !== g && j(this._$AH) ? this._$AA.nextSibling.data = e : this.T(T.createTextNode(e)), this._$AH = e;
   }
   $(e) {
     var o;
-    const { values: t, _$litType$: r } = e, a = typeof r == "number" ? this._$AC(e) : (r.el === void 0 && (r.el = H.createElement(Pe(r.h, r.h[0]), this.options)), r);
+    const { values: t, _$litType$: r } = e, a = typeof r == "number" ? this._$AC(e) : (r.el === void 0 && (r.el = V.createElement(je(r.h, r.h[0]), this.options)), r);
     if (((o = this._$AH) == null ? void 0 : o._$AD) === a) this._$AH.p(t);
     else {
-      const i = new ot(a, this), n = i.u(this.options);
+      const i = new lt(a, this), n = i.u(this.options);
       i.p(t), this.T(n), this._$AH = i;
     }
   }
   _$AC(e) {
-    let t = we.get(e.strings);
-    return t === void 0 && we.set(e.strings, t = new H(e)), t;
+    let t = Ee.get(e.strings);
+    return t === void 0 && Ee.set(e.strings, t = new V(e)), t;
   }
   k(e) {
-    ie(this._$AH) || (this._$AH = [], this._$AR());
+    pe(this._$AH) || (this._$AH = [], this._$AR());
     const t = this._$AH;
     let r, a = 0;
-    for (const o of e) a === t.length ? t.push(r = new D(this.O(U()), this.O(U()), this, this.options)) : r = t[a], r._$AI(o), a++;
+    for (const o of e) a === t.length ? t.push(r = new G(this.O(I()), this.O(I()), this, this.options)) : r = t[a], r._$AI(o), a++;
     a < t.length && (this._$AR(r && r._$AB.nextSibling, a), t.length = a);
   }
   _$AR(e = this._$AA.nextSibling, t) {
     var r;
     for ((r = this._$AP) == null ? void 0 : r.call(this, !1, !0, t); e !== this._$AB; ) {
-      const a = fe(e).nextSibling;
-      fe(e).remove(), e = a;
+      const a = xe(e).nextSibling;
+      xe(e).remove(), e = a;
     }
   }
   setConnected(e) {
@@ -438,7 +438,7 @@ class D {
     this._$AM === void 0 && (this._$Cv = e, (t = this._$AP) == null || t.call(this, e));
   }
 }
-class q {
+class Q {
   get tagName() {
     return this.element.tagName;
   }
@@ -446,46 +446,46 @@ class q {
     return this._$AM._$AU;
   }
   constructor(e, t, r, a, o) {
-    this.type = 1, this._$AH = v, this._$AN = void 0, this.element = e, this.name = t, this._$AM = a, this.options = o, r.length > 2 || r[0] !== "" || r[1] !== "" ? (this._$AH = Array(r.length - 1).fill(new String()), this.strings = r) : this._$AH = v;
+    this.type = 1, this._$AH = g, this._$AN = void 0, this.element = e, this.name = t, this._$AM = a, this.options = o, r.length > 2 || r[0] !== "" || r[1] !== "" ? (this._$AH = Array(r.length - 1).fill(new String()), this.strings = r) : this._$AH = g;
   }
   _$AI(e, t = this, r, a) {
     const o = this.strings;
     let i = !1;
-    if (o === void 0) e = M(this, e, t, 0), i = !N(e) || e !== this._$AH && e !== O, i && (this._$AH = e);
+    if (o === void 0) e = P(this, e, t, 0), i = !j(e) || e !== this._$AH && e !== L, i && (this._$AH = e);
     else {
       const n = e;
       let l, u;
-      for (e = o[0], l = 0; l < o.length - 1; l++) u = M(this, n[r + l], t, l), u === O && (u = this._$AH[l]), i || (i = !N(u) || u !== this._$AH[l]), u === v ? e = v : e !== v && (e += (u ?? "") + o[l + 1]), this._$AH[l] = u;
+      for (e = o[0], l = 0; l < o.length - 1; l++) u = P(this, n[r + l], t, l), u === L && (u = this._$AH[l]), i || (i = !j(u) || u !== this._$AH[l]), u === g ? e = g : e !== g && (e += (u ?? "") + o[l + 1]), this._$AH[l] = u;
     }
     i && !a && this.j(e);
   }
   j(e) {
-    e === v ? this.element.removeAttribute(this.name) : this.element.setAttribute(this.name, e ?? "");
+    e === g ? this.element.removeAttribute(this.name) : this.element.setAttribute(this.name, e ?? "");
   }
 }
-class it extends q {
+class ct extends Q {
   constructor() {
     super(...arguments), this.type = 3;
   }
   j(e) {
-    this.element[this.name] = e === v ? void 0 : e;
+    this.element[this.name] = e === g ? void 0 : e;
   }
 }
-class st extends q {
+class dt extends Q {
   constructor() {
     super(...arguments), this.type = 4;
   }
   j(e) {
-    this.element.toggleAttribute(this.name, !!e && e !== v);
+    this.element.toggleAttribute(this.name, !!e && e !== g);
   }
 }
-class nt extends q {
+class pt extends Q {
   constructor(e, t, r, a, o) {
     super(e, t, r, a, o), this.type = 5;
   }
   _$AI(e, t = this) {
-    if ((e = M(this, e, t, 0) ?? v) === O) return;
-    const r = this._$AH, a = e === v && r !== v || e.capture !== r.capture || e.once !== r.once || e.passive !== r.passive, o = e !== v && (r === v || a);
+    if ((e = P(this, e, t, 0) ?? g) === L) return;
+    const r = this._$AH, a = e === g && r !== g || e.capture !== r.capture || e.once !== r.once || e.passive !== r.passive, o = e !== g && (r === g || a);
     a && this.element.removeEventListener(this.name, this, r), o && this.element.addEventListener(this.name, this, e), this._$AH = e;
   }
   handleEvent(e) {
@@ -493,7 +493,7 @@ class nt extends q {
     typeof this._$AH == "function" ? this._$AH.call(((t = this.options) == null ? void 0 : t.host) ?? this.element, e) : this._$AH.handleEvent(e);
   }
 }
-class lt {
+class ut {
   constructor(e, t, r) {
     this.element = e, this.type = 6, this._$AN = void 0, this._$AM = t, this.options = r;
   }
@@ -501,17 +501,17 @@ class lt {
     return this._$AM._$AU;
   }
   _$AI(e) {
-    M(this, e);
+    P(this, e);
   }
 }
-const Q = P.litHtmlPolyfillSupport;
-Q == null || Q(H, D), (P.litHtmlVersions ?? (P.litHtmlVersions = [])).push("3.3.3");
-const ct = (s, e, t) => {
+const ae = B.litHtmlPolyfillSupport;
+ae == null || ae(V, G), (B.litHtmlVersions ?? (B.litHtmlVersions = [])).push("3.3.3");
+const ht = (s, e, t) => {
   const r = (t == null ? void 0 : t.renderBefore) ?? e;
   let a = r._$litPart$;
   if (a === void 0) {
     const o = (t == null ? void 0 : t.renderBefore) ?? null;
-    r._$litPart$ = a = new D(e.insertBefore(U(), o), o, void 0, t ?? {});
+    r._$litPart$ = a = new G(e.insertBefore(I(), o), o, void 0, t ?? {});
   }
   return a._$AI(s), a;
 };
@@ -520,8 +520,8 @@ const ct = (s, e, t) => {
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const A = globalThis;
-class R extends T {
+const M = globalThis;
+class H extends z {
   constructor() {
     super(...arguments), this.renderOptions = { host: this }, this._$Do = void 0;
   }
@@ -532,7 +532,7 @@ class R extends T {
   }
   update(e) {
     const t = this.render();
-    this.hasUpdated || (this.renderOptions.isConnected = this.isConnected), super.update(e), this._$Do = ct(t, this.renderRoot, this.renderOptions);
+    this.hasUpdated || (this.renderOptions.isConnected = this.isConnected), super.update(e), this._$Do = ht(t, this.renderRoot, this.renderOptions);
   }
   connectedCallback() {
     var e;
@@ -543,20 +543,20 @@ class R extends T {
     super.disconnectedCallback(), (e = this._$Do) == null || e.setConnected(!1);
   }
   render() {
-    return O;
+    return L;
   }
 }
-var Te;
-R._$litElement$ = !0, R.finalized = !0, (Te = A.litElementHydrateSupport) == null || Te.call(A, { LitElement: R });
-const K = A.litElementPolyfillSupport;
-K == null || K({ LitElement: R });
-(A.litElementVersions ?? (A.litElementVersions = [])).push("4.2.2");
+var Le;
+H._$litElement$ = !0, H.finalized = !0, (Le = M.litElementHydrateSupport) == null || Le.call(M, { LitElement: H });
+const oe = M.litElementPolyfillSupport;
+oe == null || oe({ LitElement: H });
+(M.litElementVersions ?? (M.litElementVersions = [])).push("4.2.2");
 /**
  * @license
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const dt = { attribute: !0, type: String, converter: j, reflect: !1, hasChanged: oe }, pt = (s = dt, e, t) => {
+const mt = { attribute: !0, type: String, converter: Z, reflect: !1, hasChanged: de }, ft = (s = mt, e, t) => {
   const { kind: r, metadata: a } = t;
   let o = globalThis.litPropertyMetadata.get(a);
   if (o === void 0 && globalThis.litPropertyMetadata.set(a, o = /* @__PURE__ */ new Map()), r === "setter" && ((s = Object.create(s)).wrapped = !0), o.set(t.name, s), r === "accessor") {
@@ -577,8 +577,8 @@ const dt = { attribute: !0, type: String, converter: j, reflect: !1, hasChanged:
   }
   throw Error("Unsupported decorator location: " + r);
 };
-function se(s) {
-  return (e, t) => typeof t == "object" ? pt(s, e, t) : ((r, a, o) => {
+function ue(s) {
+  return (e, t) => typeof t == "object" ? ft(s, e, t) : ((r, a, o) => {
     const i = a.hasOwnProperty(o);
     return a.constructor.createProperty(o, r), i ? Object.getOwnPropertyDescriptor(a, o) : void 0;
   })(s, e, t);
@@ -588,10 +588,10 @@ function se(s) {
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-function G(s) {
-  return se({ ...s, state: !0, attribute: !1 });
+function K(s) {
+  return ue({ ...s, state: !0, attribute: !1 });
 }
-const ut = {
+const gt = {
   id: "altair",
   name: "Altair 160",
   vendor: "Altair",
@@ -638,7 +638,7 @@ const ut = {
   // Confirmed product fact, not a "not configured yet" default: the Altair
   // 160 has no summer bypass. See docs/manufacturers/altair.md.
   unsupportedRoles: ["bypass_state"]
-}, ht = {
+}, bt = {
   id: "zehnder-comfoair-q",
   // Self-contained display name (shown alone in the card header, Phase 2) —
   // includes the brand so it reads correctly without needing `vendor`
@@ -659,7 +659,7 @@ const ut = {
     fault_active: {},
     frost_protection_active: {}
   }
-}, mt = {
+}, vt = {
   id: "vent_axia_sentinel_econiq",
   name: "Aerofresh",
   vendor: "Aerofresh",
@@ -677,31 +677,31 @@ const ut = {
     fault_active: {},
     frost_protection_active: {}
   }
-}, ft = {
+}, _t = {
   id: "generic",
   name: "Generic MVHR",
   vendor: "Generic",
   supportedRoles: {}
-}, te = [
+}, ne = [
   "altair",
   "zehnder-comfoair-q",
   "vent_axia_sentinel_econiq",
   "generic"
-], gt = {
-  altair: ut,
-  "zehnder-comfoair-q": ht,
-  vent_axia_sentinel_econiq: mt,
-  generic: ft
+], wt = {
+  altair: gt,
+  "zehnder-comfoair-q": bt,
+  vent_axia_sentinel_econiq: vt,
+  generic: _t
 };
-function Ue(s) {
-  return gt[s];
+function Ve(s) {
+  return wt[s];
 }
-var vt = Object.defineProperty, Ne = (s, e, t, r) => {
+var xt = Object.defineProperty, Fe = (s, e, t, r) => {
   for (var a = void 0, o = s.length - 1, i; o >= 0; o--)
     (i = s[o]) && (a = i(e, t, a) || a);
-  return a && vt(e, t, a), a;
+  return a && xt(e, t, a), a;
 };
-const ye = "hiper-mvhr-card-editor", le = class le extends R {
+const Ce = "hiper-mvhr-card-editor", me = class me extends H {
   setConfig(e) {
     this._config = { ...e };
   }
@@ -717,7 +717,7 @@ const ye = "hiper-mvhr-card-editor", le = class le extends R {
             .value=${e.manufacturer ?? "generic"}
             @change=${(t) => this._set("manufacturer", t.currentTarget.value)}
           >
-            ${te.map(
+            ${ne.map(
       (t) => d`<option .value=${t}>${t}</option>`
     )}
           </select>
@@ -812,7 +812,7 @@ const ye = "hiper-mvhr-card-editor", le = class le extends R {
     );
   }
 };
-le.styles = Oe`
+me.styles = Ue`
     .editor {
       display: grid;
       gap: 12px;
@@ -847,15 +847,15 @@ le.styles = Oe`
       width: auto;
     }
   `;
-let B = le;
-Ne([
-  se({ attribute: !1 })
-], B.prototype, "hass");
-Ne([
-  G()
-], B.prototype, "_config");
-customElements.get(ye) || customElements.define(ye, B);
-const ne = [
+let F = me;
+Fe([
+  ue({ attribute: !1 })
+], F.prototype, "hass");
+Fe([
+  K()
+], F.prototype, "_config");
+customElements.get(Ce) || customElements.define(Ce, F);
+const he = [
   "mode",
   "effective_mode",
   "outdoor_air_temp",
@@ -935,11 +935,11 @@ class x extends Error {
     super(e), this.name = "ConfigValidationError";
   }
 }
-const bt = "homeowner", $e = ["homeowner", "detailed", "system"], ke = ["automatic", "supply_temperature", "disabled"];
-function Ae(s) {
-  return ne.includes(s);
+const yt = "homeowner", Me = ["homeowner", "detailed", "system"], Te = ["automatic", "supply_temperature", "disabled"];
+function Re(s) {
+  return he.includes(s);
 }
-const _t = {
+const $t = {
   supply_temperature: "supply_air_temp",
   extract_temperature: "extract_air_temp",
   outdoor_temperature: "outdoor_air_temp",
@@ -950,20 +950,20 @@ const _t = {
   extract_fan: "extract_fan_speed",
   last_airflow_calibration: "last_calibration"
 };
-function xt(s) {
+function kt(s) {
   if (!s || typeof s != "object" || Array.isArray(s))
     throw new x("hiper-mvhr-card: configuration must be an object");
   const e = s;
   if (typeof e.manufacturer != "string" || e.manufacturer.length === 0)
     throw new x('hiper-mvhr-card: "manufacturer" is required');
-  if (!te.includes(e.manufacturer))
+  if (!ne.includes(e.manufacturer))
     throw new x(
-      `hiper-mvhr-card: unknown manufacturer "${e.manufacturer}". Supported: ${te.join(", ")}`
+      `hiper-mvhr-card: unknown manufacturer "${e.manufacturer}". Supported: ${ne.join(", ")}`
     );
-  const t = e.manufacturer, r = e.display_mode ?? bt;
-  if (!$e.includes(r))
+  const t = e.manufacturer, r = e.display_mode ?? yt;
+  if (!Me.includes(r))
     throw new x(
-      `hiper-mvhr-card: invalid "display_mode" value "${String(e.display_mode)}". Expected one of: ${$e.join(", ")}`
+      `hiper-mvhr-card: invalid "display_mode" value "${String(e.display_mode)}". Expected one of: ${Me.join(", ")}`
     );
   if (e.name !== void 0 && typeof e.name != "string")
     throw new x('hiper-mvhr-card: "name" must be a string if provided');
@@ -972,9 +972,9 @@ function xt(s) {
   if (e.subtitle !== void 0 && typeof e.subtitle != "string")
     throw new x('hiper-mvhr-card: "subtitle" must be a string if provided');
   const a = e.heat_recovery_method ?? "automatic";
-  if (!ke.includes(a))
+  if (!Te.includes(a))
     throw new x(
-      `hiper-mvhr-card: invalid "heat_recovery_method" value "${String(e.heat_recovery_method)}". Expected one of: ${ke.join(", ")}`
+      `hiper-mvhr-card: invalid "heat_recovery_method" value "${String(e.heat_recovery_method)}". Expected one of: ${Te.join(", ")}`
     );
   const o = e.filter_max_days ?? 365;
   if (typeof o != "number" || !Number.isFinite(o) || o <= 0)
@@ -986,8 +986,8 @@ function xt(s) {
     );
   const n = {};
   for (const [c, p] of Object.entries(i)) {
-    const h = _t[c] ?? c;
-    if (!Ae(h)) {
+    const h = $t[c] ?? c;
+    if (!Re(h)) {
       console.warn(`hiper-mvhr-card: ignoring unknown entity role "${c}" in config`);
       continue;
     }
@@ -1004,7 +1004,7 @@ function xt(s) {
     );
   const u = {};
   for (const [c, p] of Object.entries(l)) {
-    if (!Ae(c)) {
+    if (!Re(c)) {
       console.warn(`hiper-mvhr-card: ignoring unknown feature flag role "${c}" in config`);
       continue;
     }
@@ -1034,8 +1034,8 @@ function xt(s) {
     show_advanced_controls: e.show_advanced_controls !== !1
   };
 }
-function wt(s, e) {
-  const t = Ue(s);
+function At(s, e) {
+  const t = Ve(s);
   if (!e || Object.keys(e).length === 0)
     return t;
   const r = new Set(t.unsupportedRoles ?? []), a = { ...t.supportedRoles };
@@ -1043,15 +1043,15 @@ function wt(s, e) {
     r.has(o) || (e[o] ? a[o] = a[o] ?? {} : delete a[o]);
   return { ...t, supportedRoles: a };
 }
-const yt = /* @__PURE__ */ new Set(["unavailable", "unknown"]), $t = /* @__PURE__ */ new Set(["button", "input_button"]);
-function kt(s) {
+const St = /* @__PURE__ */ new Set(["unavailable", "unknown"]), Et = /* @__PURE__ */ new Set(["button", "input_button"]);
+function Ct(s) {
   const [e] = s.split(".");
   return e ?? "";
 }
-function At(s, e, t) {
+function Mt(s, e, t) {
   var a;
   const r = {};
-  for (const o of ne) {
+  for (const o of he) {
     if (!e.supportedRoles[o]) {
       r[o] = { status: "unsupported" };
       continue;
@@ -1066,8 +1066,8 @@ function At(s, e, t) {
       r[o] = { status: "entity_missing", entityId: i };
       continue;
     }
-    const l = n.state === "unknown" && $t.has(kt(i));
-    if (yt.has(n.state) && !l) {
+    const l = n.state === "unknown" && Et.has(Ct(i));
+    if (St.has(n.state) && !l) {
       r[o] = { status: "unavailable" };
       continue;
     }
@@ -1082,7 +1082,7 @@ function At(s, e, t) {
   }
   return r;
 }
-function St(s, e, t = {}) {
+function Tt(s, e, t = {}) {
   const r = new Set(t.ignoreRoles ?? []);
   let a = 0, o = 0, i = 0;
   for (const n of Object.keys(e.supportedRoles)) {
@@ -1099,14 +1099,14 @@ function St(s, e, t = {}) {
     label: o === 1 ? "1 sensor unavailable" : `${o} sensors unavailable`
   } : a > 0 ? { tone: "success", label: "All sensors reporting" } : { tone: "muted", label: "Not configured" };
 }
-const Et = 1e4, Ct = "press";
-function Tt(s) {
+const Rt = 1e4, Ot = "press";
+function zt(s) {
   const [e] = s.split(".");
   return e ?? "";
 }
-class Rt {
+class Ht {
   constructor(e = {}) {
-    this._state = { status: "idle" }, this._listeners = /* @__PURE__ */ new Set(), this._timeoutMs = e.timeoutMs ?? Et;
+    this._state = { status: "idle" }, this._listeners = /* @__PURE__ */ new Set(), this._timeoutMs = e.timeoutMs ?? Rt;
   }
   get state() {
     return this._state;
@@ -1133,14 +1133,14 @@ class Rt {
     if (!(e != null && e.callService) || this._state.status === "pending")
       return;
     this._setState({ status: "pending" });
-    const r = Tt(t);
+    const r = zt(t);
     let a;
     const o = new Promise((i) => {
       a = setTimeout(() => i("timeout"), this._timeoutMs);
     });
     try {
       if (await Promise.race([
-        e.callService(r, Ct, { entity_id: t }).then(() => "done"),
+        e.callService(r, Ot, { entity_id: t }).then(() => "done"),
         o
       ]) === "timeout") {
         this._setState({ status: "error", message: "Timed out waiting for a response." });
@@ -1157,7 +1157,7 @@ class Rt {
     }
   }
 }
-const Ot = {
+const Lt = {
   unsupported: "",
   not_configured: "Not configured",
   // Homeowner-safe generic text — deliberately identical to `unavailable`.
@@ -1167,19 +1167,19 @@ const Ot = {
   entity_missing: "Unavailable",
   unavailable: "Unavailable"
 };
-function Mt(s) {
-  return s.status === "ok" ? s.unit ? `${s.value} ${s.unit}` : s.value : Ot[s.status] ?? "";
+function Pt(s) {
+  return s.status === "ok" ? s.unit ? `${s.value} ${s.unit}` : s.value : Lt[s.status] ?? "";
 }
-function zt(s) {
+function Ut(s) {
   return s.length > 0 ? s.charAt(0).toUpperCase() + s.slice(1) : s;
 }
-function Lt(s) {
+function Nt(s) {
   if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(s))
     return s;
   const e = new Date(s);
   return Number.isNaN(e.getTime()) ? s : e.toLocaleString(void 0, { dateStyle: "medium", timeStyle: "short" });
 }
-const Pt = {
+const Dt = {
   mode: "mdi:fan",
   outdoor_air_temp: "mdi:thermometer",
   supply_air_temp: "mdi:thermometer",
@@ -1198,10 +1198,10 @@ const Pt = {
   shower_trigger_temperature: "mdi:thermometer-water",
   shower_pipe_temperature: "mdi:thermometer-water"
 };
-function J(s) {
-  return Pt[s];
+function ie(s) {
+  return Dt[s];
 }
-function Ut(s) {
+function Bt(s) {
   if (s.method === "disabled")
     return { label: "Disabled", status: "not_applicable" };
   if (s.outdoor === void 0 || s.extract === void 0 || s.supply === void 0)
@@ -1218,43 +1218,43 @@ function Ut(s) {
     raw: t
   };
 }
-var Nt = Object.defineProperty, Z = (s, e, t, r) => {
+var It = Object.defineProperty, X = (s, e, t, r) => {
   for (var a = void 0, o = s.length - 1, i; o >= 0; o--)
     (i = s[o]) && (a = i(e, t, a) || a);
-  return a && Nt(e, t, a), a;
+  return a && It(e, t, a), a;
 };
-const F = "hiper-mvhr-card", C = [
+const Y = "hiper-mvhr-card", O = [
   [0, 30, 90, 210],
   [10, 55, 145, 230],
   [16, 165, 205, 235],
   [20, 238, 190, 105],
   [25, 235, 120, 45],
   [35, 205, 45, 45]
-], Ht = [
+], jt = [
   ["outdoor_air_temp", "Outdoor air"],
   ["supply_air_temp", "Supply air"],
   ["extract_air_temp", "Extract air"],
   ["exhaust_air_temp", "Exhaust air"]
-], Bt = [
+], Vt = [
   ["supply_airflow", "Supply airflow"],
   ["extract_airflow", "Extract airflow"]
-], Se = [
+], Oe = [
   ["supply_fan_speed", "Supply fan"],
   ["extract_fan_speed", "Extract fan"]
-], Dt = [
+], Ft = [
   ["bypass_state", "Summer bypass"],
   ["filter_remaining", "Filter"],
   ["calibration_result", "Calibration"],
   ["fault_active", "Fault"],
   ["frost_protection_active", "Frost protection"]
-], Ee = [
+], ze = [
   ["filter_reset_control", "Filter reset", "Reset", "Resetting…"],
   ["calibration_start_control", "Run calibration", "Run", "Running…"]
-], ee = {
+], se = {
   success: "mdi:check-circle",
   warning: "mdi:alert",
   muted: "mdi:information-outline"
-}, He = [
+}, Ge = [
   "effective_mode",
   "fault_active",
   "frost_protection_active",
@@ -1274,25 +1274,25 @@ const F = "hiper-mvhr-card", C = [
   "shower_detected",
   "shower_trigger_temperature",
   "shower_pipe_temperature"
-], It = new Set(He), Ce = 10, jt = [
+], Gt = new Set(Ge), He = 10, qt = [
   ["supply_air_temp", "Supply air"],
   ["extract_air_temp", "Extract air"],
   ["outdoor_air_temp", "Outdoor air"],
   ["exhaust_air_temp", "Exhaust air"]
-], Vt = /* @__PURE__ */ new Set([
+], Zt = /* @__PURE__ */ new Set([
   "calibrated",
   "complete",
   "completed",
   "idle",
   "none",
   "unknown"
-]), Ft = /* @__PURE__ */ new Set(["on", "true", "problem", "active", "detected"]), ce = class ce extends R {
+]), Wt = /* @__PURE__ */ new Set(["on", "true", "problem", "active", "detected"]), fe = class fe extends H {
   constructor() {
     super(...arguments), this._advancedOpen = !1, this._dispatchers = /* @__PURE__ */ new Map();
   }
   _getDispatcher(e) {
     let t = this._dispatchers.get(e);
-    return t || (t = new Rt(), t.onChange(() => this.requestUpdate()), this._dispatchers.set(e, t)), t;
+    return t || (t = new Ht(), t.onChange(() => this.requestUpdate()), this._dispatchers.set(e, t)), t;
   }
   static getStubConfig() {
     return {
@@ -1306,7 +1306,7 @@ const F = "hiper-mvhr-card", C = [
   }
   setConfig(e) {
     try {
-      this._config = xt(e), this._configError = void 0;
+      this._config = kt(e), this._configError = void 0;
     } catch (t) {
       this._config = void 0, this._configError = t instanceof Error ? t.message : String(t);
     }
@@ -1319,15 +1319,15 @@ const F = "hiper-mvhr-card", C = [
       return d`<ha-card><div class="error" role="alert">${this._configError}</div></ha-card>`;
     if (!this._config || !this.hass)
       return d``;
-    const e = this._config, t = this.hass, r = e.display_mode === "detailed", a = e.display_mode === "system", o = wt(e.manufacturer, e.feature_flags), i = Ue(e.manufacturer), n = At(t, o, e.entities), l = St(n, o, {
-      ignoreRoles: He
-    }), u = r || l.label !== "Not configured", c = n.mode ? this._present(n.mode, r) : null, p = e.title ?? e.name ?? i.name, h = e.subtitle ?? "Heat Recovery Ventilation System", m = l.tone !== "warning" && l.label !== "Not configured", b = this._heatRecovery(n, e.heat_recovery_method), g = this._modeLabel(
+    const e = this._config, t = this.hass, r = e.display_mode === "detailed", a = e.display_mode === "system", o = At(e.manufacturer, e.feature_flags), i = Ve(e.manufacturer), n = Mt(t, o, e.entities), l = Tt(n, o, {
+      ignoreRoles: Ge
+    }), u = r || l.label !== "Not configured", c = n.mode ? this._present(n.mode, r) : null, p = e.title ?? e.name ?? i.name, h = e.subtitle ?? "Heat Recovery Ventilation System", m = l.tone !== "warning" && l.label !== "Not configured", v = this._heatRecovery(n, e.heat_recovery_method), y = this._modeLabel(
       (c == null ? void 0 : c.text) ?? this._text(n.effective_mode)
     ), f = e.title ?? i.name;
     return d`
       <ha-card class=${a ? "card-system" : ""}>
-        ${a ? this._systemHeader(p, h, g, n, e, t) : this._header(p, h, g, l, u)}
-        ${a ? this._systemDashboard(n, e, t, b, g, f, m) : r ? this._dashboard(n, e, t, b, g, f, m) : this._legacyContent(n, e, t, r)}
+        ${a ? this._systemHeader(p, h, y, n, e, t) : this._header(p, h, y, l, u)}
+        ${a ? this._systemDashboard(n, e, t, v, y, f, m) : r ? this._dashboard(n, e, t, v, y, f, m) : this._legacyContent(n, e, t, r)}
       </ha-card>
     `;
   }
@@ -1349,7 +1349,7 @@ const F = "hiper-mvhr-card", C = [
           </div>
           ${o ? d`
                   <div class="availability tone-${a.tone}" role="status">
-                    <ha-icon icon=${ee[a.tone]} aria-hidden="true"></ha-icon>
+                    <ha-icon icon=${se[a.tone]} aria-hidden="true"></ha-icon>
                     <span>${a.label}</span>
                   </div>
                 ` : ""}
@@ -1369,9 +1369,9 @@ const F = "hiper-mvhr-card", C = [
   _legacyContent(e, t, r, a) {
     return d`
       <div class="content">
-        ${this._metricSection("Temperatures", Ht, e, a)}
-        ${this._metricSection("Airflow", Bt, e, a)}
-        ${this._statusSection("System status", Dt, e, a, t, r)}
+        ${this._metricSection("Temperatures", jt, e, a)}
+        ${this._metricSection("Airflow", Vt, e, a)}
+        ${this._statusSection("System status", Ft, e, a, t, r)}
       </div>
     `;
   }
@@ -1406,7 +1406,7 @@ const F = "hiper-mvhr-card", C = [
       a.status,
       "Apparent temperature recovery"
     )}
-          ${t.show_fan_speeds ? this._infoTile("Fan speeds", this._pair(Se, e, !0), "mdi:fan") : ""}
+          ${t.show_fan_speeds ? this._infoTile("Fan speeds", this._pair(Oe, e, !0), "mdi:fan") : ""}
           ${this._infoTile("Humidity", this._value(e.indoor_humidity, !0) ?? "—", "mdi:water-percent")}
           ${t.show_filter ? this._filterTile(e, t) : ""}
         </section>
@@ -1425,11 +1425,11 @@ const F = "hiper-mvhr-card", C = [
    */
   _statusStrip(e, t) {
     var o;
-    const r = this._dashboardStatus(e), a = ((o = e.last_calibration) == null ? void 0 : o.status) === "ok" ? Lt(e.last_calibration.value) : null;
+    const r = this._dashboardStatus(e), a = ((o = e.last_calibration) == null ? void 0 : o.status) === "ok" ? Nt(e.last_calibration.value) : null;
     return d`
       <section class="status-strip tone-${r.tone}" aria-label="MVHR status">
         <span class="status-chip">
-          <ha-icon icon=${ee[r.tone]} aria-hidden="true"></ha-icon>
+          <ha-icon icon=${se[r.tone]} aria-hidden="true"></ha-icon>
           <span>${r.label}</span>
         </span>
         ${t.show_calibration ? d`
@@ -1445,7 +1445,7 @@ const F = "hiper-mvhr-card", C = [
    * Returns null when nothing should render for this role at all.
    */
   _present(e, t) {
-    return e.status === "unsupported" ? null : e.status === "not_configured" ? t ? { tone: "muted", text: "Not configured" } : null : e.status === "entity_missing" ? t ? { tone: "warning", text: `Entity not found: ${e.entityId}` } : { tone: "muted", text: "Unavailable" } : e.status === "unavailable" ? { tone: "muted", text: "Unavailable" } : { tone: "normal", text: Mt(e) };
+    return e.status === "unsupported" ? null : e.status === "not_configured" ? t ? { tone: "muted", text: "Not configured" } : null : e.status === "entity_missing" ? t ? { tone: "warning", text: `Entity not found: ${e.entityId}` } : { tone: "muted", text: "Unavailable" } : e.status === "unavailable" ? { tone: "muted", text: "Unavailable" } : { tone: "normal", text: Pt(e) };
   }
   _metricSection(e, t, r, a) {
     const o = t.map(([i, n]) => {
@@ -1460,7 +1460,7 @@ const F = "hiper-mvhr-card", C = [
     `;
   }
   _metricCell(e, t, r) {
-    const a = J(e);
+    const a = ie(e);
     return d`
       <div class="metric tone-${r.tone}">
         ${a ? d`<ha-icon icon=${a} aria-hidden="true"></ha-icon>` : ""}
@@ -1475,7 +1475,7 @@ const F = "hiper-mvhr-card", C = [
     const n = t.map(([c, p]) => {
       const h = r[c], m = h ? this._present(h, a) : null;
       return m ? this._statusRow(c, p, m) : null;
-    }).filter((c) => c !== null), l = Ee.map(
+    }).filter((c) => c !== null), l = ze.map(
       ([c, p, h, m]) => this._controlRow(
         c,
         p,
@@ -1504,7 +1504,7 @@ const F = "hiper-mvhr-card", C = [
    * Altair/Zehnder/Aerofresh, which don't declare this role supported.
    */
   _extraControls(e, t, r) {
-    const a = Ee.map(
+    const a = ze.map(
       ([o, i, n, l]) => this._controlRow(o, i, e[o], !0, t, r, n, l)
     ).filter((o) => o !== null);
     return a.length === 0 ? d`` : d`
@@ -1514,7 +1514,7 @@ const F = "hiper-mvhr-card", C = [
     `;
   }
   _statusRow(e, t, r) {
-    const a = J(e);
+    const a = ie(e);
     return d`
       <div class="status-row tone-${r.tone}">
         ${a ? d`<ha-icon icon=${a} aria-hidden="true"></ha-icon>` : ""}
@@ -1541,7 +1541,7 @@ const F = "hiper-mvhr-card", C = [
     const u = o.entities[e];
     if (!u)
       return null;
-    const c = this._getDispatcher(e), p = c.state, h = J(e);
+    const c = this._getDispatcher(e), p = c.state, h = ie(e);
     return d`
       <div class="status-row">
         ${h ? d`<ha-icon icon=${h} aria-hidden="true"></ha-icon>` : ""}
@@ -1611,8 +1611,8 @@ const F = "hiper-mvhr-card", C = [
    * are new.
    */
   _controlsPanel(e, t, r) {
-    var m, b, g;
-    const a = t.entities.mode, o = t.entities.boost_duration, i = t.entities.override_duration, n = this._modeOptions(e.mode), l = this._selectOptions(e.override_duration), u = (m = this._state(e.mode)) == null ? void 0 : m.toLowerCase(), c = this._state(e.boost_active) === "on", p = ((b = e.boost_remaining) == null ? void 0 : b.status) === "ok" ? this._value(e.boost_remaining) : null, h = ((g = e.override_remaining) == null ? void 0 : g.status) === "ok" ? this._value(e.override_remaining) : null;
+    var m, v, y;
+    const a = t.entities.mode, o = t.entities.boost_duration, i = t.entities.override_duration, n = this._modeOptions(e.mode), l = this._selectOptions(e.override_duration), u = (m = this._state(e.mode)) == null ? void 0 : m.toLowerCase(), c = this._state(e.boost_active) === "on", p = ((v = e.boost_remaining) == null ? void 0 : v.status) === "ok" ? this._value(e.boost_remaining) : null, h = ((y = e.override_remaining) == null ? void 0 : y.status) === "ok" ? this._value(e.override_remaining) : null;
     return d`
       <aside class="controls-panel" aria-label="MVHR controls">
         <div class="panel-heading">Controls</div>
@@ -1621,13 +1621,13 @@ const F = "hiper-mvhr-card", C = [
           <span class="control-group-label">Mode</span>
           <div class="mode-buttons" role="group" aria-label="Operating mode">
             ${n.map((f) => {
-      const _ = u !== void 0 && f.toLowerCase() === u;
+      const w = u !== void 0 && f.toLowerCase() === u;
       return d`
                 <button
                   type="button"
-                  class="chip ${_ ? "active" : ""}"
+                  class="chip ${w ? "active" : ""}"
                   ?disabled=${!a}
-                  aria-pressed=${_}
+                  aria-pressed=${w}
                   aria-label=${`Set mode ${this._modeLabel(f)}`}
                   @click=${() => a && this._call(r, "select", "select_option", { entity_id: a, option: f })}
                 >
@@ -1656,10 +1656,10 @@ const F = "hiper-mvhr-card", C = [
               ?disabled=${!o}
               aria-label="Boost duration"
               @change=${(f) => {
-      const _ = Number(f.currentTarget.value);
-      o && Number.isFinite(_) && this._call(r, "number", "set_value", {
+      const w = Number(f.currentTarget.value);
+      o && Number.isFinite(w) && this._call(r, "number", "set_value", {
         entity_id: o,
-        value: _
+        value: w
       });
     }}
             />
@@ -1700,10 +1700,10 @@ const F = "hiper-mvhr-card", C = [
               ?disabled=${!i}
               aria-label="Override duration"
               @change=${(f) => {
-      const _ = f.currentTarget.value;
+      const w = f.currentTarget.value;
       i && this._call(r, "select", "select_option", {
         entity_id: i,
-        option: _
+        option: w
       });
     }}
             >
@@ -1758,7 +1758,7 @@ const F = "hiper-mvhr-card", C = [
             <h2 class="title">${e}</h2>
             <span class="status-dot dot-${n.tone}" aria-hidden="true"></span>
             <span class="availability tone-${n.tone}" role="status">
-              <ha-icon icon=${ee[n.tone]} aria-hidden="true"></ha-icon>
+              <ha-icon icon=${se[n.tone]} aria-hidden="true"></ha-icon>
               <span>${n.label}</span>
             </span>
           </div>
@@ -1785,10 +1785,10 @@ const F = "hiper-mvhr-card", C = [
    * matching how boost has always been gated everywhere else in this file.
    */
   _systemHeaderControls(e, t, r, a) {
-    var m, b, g;
-    const o = t.entities.mode, i = this._modeOptions(e.mode), n = (m = this._state(e.mode)) == null ? void 0 : m.toLowerCase(), l = t.show_controls && !!o && ((b = e.mode) == null ? void 0 : b.status) === "ok", u = t.show_controls && [e.boost_duration, e.start_boost, e.cancel_boost].some(
+    var m, v, y;
+    const o = t.entities.mode, i = this._modeOptions(e.mode), n = (m = this._state(e.mode)) == null ? void 0 : m.toLowerCase(), l = t.show_controls && !!o && ((v = e.mode) == null ? void 0 : v.status) === "ok", u = t.show_controls && [e.boost_duration, e.start_boost, e.cancel_boost].some(
       (f) => (f == null ? void 0 : f.status) === "ok"
-    ), c = this._state(e.boost_active) === "on", p = c && ((g = e.boost_remaining) == null ? void 0 : g.status) === "ok" ? this._value(e.boost_remaining) : null, h = this._shower(e);
+    ), c = this._state(e.boost_active) === "on", p = c && ((y = e.boost_remaining) == null ? void 0 : y.status) === "ok" ? this._value(e.boost_remaining) : null, h = this._shower(e);
     return !l && !a && !u && !h.render ? d`` : d`
       <div class="system-controls header-controls" role="group" aria-label="MVHR quick controls">
         ${l ? d`
@@ -1798,10 +1798,10 @@ const F = "hiper-mvhr-card", C = [
                     class="mode-select-pill"
                     aria-label="Operating mode"
                     @change=${(f) => {
-      const _ = f.currentTarget.value;
+      const w = f.currentTarget.value;
       o && this._call(r, "select", "select_option", {
         entity_id: o,
-        option: _
+        option: w
       });
     }}
                   >
@@ -1922,7 +1922,7 @@ const F = "hiper-mvhr-card", C = [
    */
   _shower(e) {
     var l, u;
-    const t = e.shower_detected, r = !!t && (t == null ? void 0 : t.status) !== "unsupported" && (t == null ? void 0 : t.status) !== "not_configured", a = (t == null ? void 0 : t.status) === "ok" && t.value.toLowerCase() === "on", o = e.shower_trigger_temperature, i = this._number(o), n = i === void 0 ? null : `${(i - Ce).toFixed(1)}${(o == null ? void 0 : o.status) === "ok" && o.unit ? ` ${o.unit}` : ""}`;
+    const t = e.shower_detected, r = !!t && (t == null ? void 0 : t.status) !== "unsupported" && (t == null ? void 0 : t.status) !== "not_configured", a = (t == null ? void 0 : t.status) === "ok" && t.value.toLowerCase() === "on", o = e.shower_trigger_temperature, i = this._number(o), n = i === void 0 ? null : `${(i - He).toFixed(1)}${(o == null ? void 0 : o.status) === "ok" && o.unit ? ` ${o.unit}` : ""}`;
     return {
       render: r,
       active: a,
@@ -2005,7 +2005,7 @@ const F = "hiper-mvhr-card", C = [
                     <dt>Re-arm at</dt>
                     <dd>
                       ${e.rearmTemperature}<small
-                        >(${Ce}°C below trigger)</small
+                        >(${He}°C below trigger)</small
                       >
                     </dd>
                   </div>
@@ -2070,7 +2070,7 @@ const F = "hiper-mvhr-card", C = [
     const r = e.airflow ?? e.supply_airflow, a = (r == null ? void 0 : r.status) === "ok" ? r : void 0, o = a ? a.value : null, i = (a == null ? void 0 : a.unit) ?? null, n = this._number(e.airflow) ?? this._number(e.supply_airflow), l = this._number(e.mapped_level) ?? this._number(e.selected_speed), u = l !== void 0 ? Math.max(0, Math.min(1, l / 10)) : 0, c = n !== void 0 && this._prevAirflowNumber !== void 0 && n > this._prevAirflowNumber;
     this._prevAirflowNumber = n ?? this._prevAirflowNumber;
     const p = [];
-    return t.show_fan_speeds && e.supply_fan_speed && e.extract_fan_speed && p.push(this._diagnosticRow("mdi:fan", "Fan speed", this._pair(Se, e, !0))), e.mapped_level && p.push(
+    return t.show_fan_speeds && e.supply_fan_speed && e.extract_fan_speed && p.push(this._diagnosticRow("mdi:fan", "Fan speed", this._pair(Oe, e, !0))), e.mapped_level && p.push(
       this._diagnosticRow(
         "mdi:tune-variant",
         "Current profile",
@@ -2129,7 +2129,7 @@ const F = "hiper-mvhr-card", C = [
    * brief), plus the heat-recovery percentage.
    */
   _systemTemperaturesCard(e, t) {
-    const r = jt.map(([a, o]) => {
+    const r = qt.map(([a, o]) => {
       const i = e[a];
       return i ? this._diagnosticRow("mdi:thermometer", o, this._value(i, !0)) : null;
     }).filter((a) => a !== null);
@@ -2362,31 +2362,11 @@ const F = "hiper-mvhr-card", C = [
     `;
   }
   /**
-   * Phase 5-7 (system mode variant), enlarged and recoloured for the
-   * visual-redesign brief: the same four-air-path-around-a-unit concept as
-   * `_heroVisual`, but a distinct method — `display_mode: detailed` keeps
-   * its own left/right (inbound-left/outbound-right) arrangement and colour
-   * scheme untouched, while system mode uses the top/bottom
-   * (outbound-top/inbound-bottom) arrangement its spec calls for: Exhaust
-   * (top-left) and Supply (top-right) both flow away from the unit; Extract
-   * (bottom-left) and Outdoor (bottom-right) both flow toward it. Each path
-   * also gets a small directional arrow icon (redesign requirement:
-   * "directional arrows", without relying on colour alone) and a colour
-   * family scoped to `.system-visual-panel` only — supply/outdoor cool
-   * blue, extract warm orange, exhaust neutral grey — that never touches
-   * `_heroVisual`'s own `.supply`/`.extract`/etc. base colours. Per the
-   * visual-polish follow-up, the heat-recovery figure now lives inside the
-   * unit itself (a large circular badge centred over the exchanger graphic,
-   * `.recovery-badge-circular`) rather than as a small pill in the panel
-   * heading — "make the heat exchanger the hero" / "move the heat recovery
-   * number into the centre of the HRV" — so this method takes a `recovery`
-   * argument again. Per the round-3 micro-animation follow-up ("I wouldn't
-   * make the exchanger itself any more complicated — instead spend time on
-   * micro-animations"), `boostActive` doesn't add any new visual element:
-   * it just shortens the existing particle/fan animation durations via a
-   * `.boost-active` class, and the recovery badge plays a one-shot pulse
-   * (`_recoveryPulseClass`) when the figure actually changes, tracked via
-   * `_prevRecoveryLabel`.
+   * System mode's equipment cutaway. Outdoor intake/exhaust occupy the left
+   * side and indoor extract/supply the right. The static cabinet, chamber,
+   * filters, blower housings, exchanger cassette and collars provide the
+   * appliance structure; temperature gradients, particles and impellers are
+   * reactive overlays. The two physical streams remain separate throughout.
    */
   _systemHeroVisual(e, t, r, a, o, i) {
     const n = this._value(e.airflow, !0) ?? this._value(e.supply_airflow, !0), l = t.show_airflow_on_all_paths, u = {
@@ -2399,33 +2379,33 @@ const F = "hiper-mvhr-card", C = [
       exhaust: this._temperatureColour(u.exhaust),
       outdoor: this._temperatureColour(u.outdoor),
       supply: this._temperatureColour(u.supply)
-    }, p = u.extract !== null && u.exhaust !== null ? this._temperatureColour((u.extract + u.exhaust) / 2) : this._temperatureColour(null), h = u.outdoor !== null && u.supply !== null ? this._temperatureColour((u.outdoor + u.supply) / 2) : this._temperatureColour(null), m = o.status === "ok" && this._prevRecoveryLabel !== void 0 && this._prevRecoveryLabel !== o.label;
+    }, p = u.extract !== null && u.exhaust !== null ? this._temperatureColour((u.extract + u.exhaust) / 2) : this._temperatureColour(null), h = u.outdoor !== null && u.supply !== null ? this._temperatureColour((u.outdoor + u.supply) / 2) : this._temperatureColour(null), m = this._number(e.filter_remaining) !== void 0, v = this._number(e.supply_fan_speed) !== void 0, y = this._number(e.extract_fan_speed) !== void 0, f = o.status === "ok" && this._prevRecoveryLabel !== void 0 && this._prevRecoveryLabel !== o.label;
     this._prevRecoveryLabel = o.status === "ok" ? o.label : this._prevRecoveryLabel;
-    const b = (g, f, _, Be, De, Ie, je) => {
-      const de = l || Be ? n : null, W = this._number(e[_]) ?? null, Ve = this._temperatureColour(W), Fe = this._temperatureColour(W, 0.13);
+    const w = (b, _, $, U, J, qe, Ze) => {
+      const ge = l || U ? n : null, ee = this._number(e[$]) ?? null, We = this._temperatureColour(ee), Ye = this._temperatureColour(ee, 0.13);
       return d`
         <div
-          class="air-path ${g} ${r ? "active" : ""} ${r && i ? "boost-active" : ""}"
-          data-side=${g === "extract" || g === "supply" ? "indoor" : "outdoor"}
-          data-flow=${g === "extract" || g === "outdoor" ? "inward" : "outward"}
-          data-temperature=${W ?? "unavailable"}
-          style=${`--stream-color:${Ve};--stream-soft:${Fe}`}
+          class="air-path ${b} ${r ? "active" : ""} ${r && i ? "boost-active" : ""}"
+          data-side=${b === "extract" || b === "supply" ? "indoor" : "outdoor"}
+          data-flow=${b === "extract" || b === "outdoor" ? "inward" : "outward"}
+          data-temperature=${ee ?? "unavailable"}
+          style=${`--stream-color:${We};--stream-soft:${Ye}`}
         >
           <span class="path-label">
-            <ha-icon icon=${De} aria-hidden="true"></ha-icon>
-            ${f}
-            <ha-icon class="path-arrow" icon=${Ie} aria-label=${je}></ha-icon>
+            <ha-icon icon=${J} aria-hidden="true"></ha-icon>
+            ${_}
+            <ha-icon class="path-arrow" icon=${qe} aria-label=${Ze}></ha-icon>
           </span>
-          <span class="path-temp">${this._value(e[_], !0) ?? "—"}</span>
-          ${de ? d`<span class="path-airflow"
-                  ><ha-icon icon="mdi:weather-windy" aria-hidden="true"></ha-icon>${de}</span
+          <span class="path-temp">${this._value(e[$], !0) ?? "—"}</span>
+          ${ge ? d`<span class="path-airflow"
+                  ><ha-icon icon="mdi:weather-windy" aria-hidden="true"></ha-icon>${ge}</span
                 >` : ""}
         </div>
       `;
     };
     return d`
       <div class="visual-wrap system-visual-wrap">
-        ${b(
+        ${w(
       "outdoor",
       "Outdoor air",
       "outdoor_air_temp",
@@ -2434,7 +2414,7 @@ const F = "hiper-mvhr-card", C = [
       "mdi:arrow-bottom-right-thin",
       "Drawn from outdoors"
     )}
-        ${b(
+        ${w(
       "extract",
       "Extract air",
       "extract_air_temp",
@@ -2452,22 +2432,52 @@ const F = "hiper-mvhr-card", C = [
           </div>
           <svg
             class="airflow-schematic"
-            viewBox="0 0 140 80"
+            viewBox="0 0 700 360"
             role="img"
-            aria-label="Two separate air streams cross through the heat exchanger"
+            aria-label="Cutaway MVHR unit with two separate air streams crossing through a plate heat exchanger"
             style=${`--air-extract:${c.extract};--air-exhaust:${c.exhaust};--air-outdoor:${c.outdoor};--air-supply:${c.supply}`}
           >
             <defs>
               <clipPath id="system-exchanger-clip">
-                <path d="M70 13 L97 40 L70 67 L43 40 Z"></path>
+                <path d="M350 62 L470 180 L350 298 L230 180 Z"></path>
               </clipPath>
+              <linearGradient id="cabinet-edge" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" class="metal-light"></stop>
+                <stop offset="0.42" class="metal-mid"></stop>
+                <stop offset="1" class="metal-dark"></stop>
+              </linearGradient>
+              <linearGradient id="inner-chamber" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" class="chamber-top"></stop>
+                <stop offset="1" class="chamber-bottom"></stop>
+              </linearGradient>
+              <linearGradient id="collar-metal" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0" class="metal-dark"></stop>
+                <stop offset="0.3" class="metal-light"></stop>
+                <stop offset="0.72" class="metal-mid"></stop>
+                <stop offset="1" class="metal-dark"></stop>
+              </linearGradient>
+              <linearGradient id="blower-metal" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" class="blower-light"></stop>
+                <stop offset="1" class="blower-dark"></stop>
+              </linearGradient>
+              <linearGradient id="exchanger-frame" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" class="metal-light"></stop>
+                <stop offset="0.5" class="metal-dark"></stop>
+                <stop offset="1" class="metal-mid"></stop>
+              </linearGradient>
+              <filter id="equipment-shadow" x="-20%" y="-30%" width="140%" height="170%">
+                <feDropShadow dx="0" dy="8" stdDeviation="8" flood-opacity="0.28"></feDropShadow>
+              </filter>
+              <filter id="component-shadow" x="-25%" y="-25%" width="150%" height="160%">
+                <feDropShadow dx="0" dy="3" stdDeviation="3" flood-opacity="0.4"></feDropShadow>
+              </filter>
               <linearGradient
                 id="extract-gradient"
                 gradientUnits="userSpaceOnUse"
-                x1="140"
-                y1="22"
-                x2="82"
-                y2="38"
+                x1="700"
+                y1="82"
+                x2="433"
+                y2="154"
               >
                 <stop offset="0" stop-color=${c.extract}></stop>
                 <stop offset="1" stop-color=${p}></stop>
@@ -2475,10 +2485,10 @@ const F = "hiper-mvhr-card", C = [
               <linearGradient
                 id="exhaust-gradient"
                 gradientUnits="userSpaceOnUse"
-                x1="58"
-                y1="42"
+                x1="267"
+                y1="206"
                 x2="0"
-                y2="58"
+                y2="278"
               >
                 <stop offset="0" stop-color=${p}></stop>
                 <stop offset="1" stop-color=${c.exhaust}></stop>
@@ -2487,9 +2497,9 @@ const F = "hiper-mvhr-card", C = [
                 id="outdoor-gradient"
                 gradientUnits="userSpaceOnUse"
                 x1="0"
-                y1="22"
-                x2="58"
-                y2="38"
+                y1="82"
+                x2="267"
+                y2="154"
               >
                 <stop offset="0" stop-color=${c.outdoor}></stop>
                 <stop offset="1" stop-color=${h}></stop>
@@ -2497,10 +2507,10 @@ const F = "hiper-mvhr-card", C = [
               <linearGradient
                 id="supply-gradient"
                 gradientUnits="userSpaceOnUse"
-                x1="82"
-                y1="42"
-                x2="140"
-                y2="58"
+                x1="433"
+                y1="206"
+                x2="700"
+                y2="278"
               >
                 <stop offset="0" stop-color=${h}></stop>
                 <stop offset="1" stop-color=${c.supply}></stop>
@@ -2508,10 +2518,10 @@ const F = "hiper-mvhr-card", C = [
               <linearGradient
                 id="warm-exchanger-gradient"
                 gradientUnits="userSpaceOnUse"
-                x1="90"
-                y1="25"
-                x2="50"
-                y2="55"
+                x1="430"
+                y1="135"
+                x2="270"
+                y2="225"
               >
                 <stop offset="0" stop-color=${c.extract}></stop>
                 <stop offset="1" stop-color=${c.exhaust}></stop>
@@ -2519,159 +2529,189 @@ const F = "hiper-mvhr-card", C = [
               <linearGradient
                 id="cool-exchanger-gradient"
                 gradientUnits="userSpaceOnUse"
-                x1="50"
-                y1="25"
-                x2="90"
-                y2="55"
+                x1="270"
+                y1="135"
+                x2="430"
+                y2="225"
               >
                 <stop offset="0" stop-color=${c.outdoor}></stop>
                 <stop offset="1" stop-color=${c.supply}></stop>
               </linearGradient>
             </defs>
-            <rect class="cutaway-shell" x="2" y="4" width="136" height="72" rx="5"></rect>
+            <g class="cabinet" filter="url(#equipment-shadow)" aria-hidden="true">
+              <rect class="cabinet-outer" x="14" y="16" width="672" height="328" rx="18"></rect>
+              <rect class="cutaway-shell" x="27" y="29" width="646" height="302" rx="11"></rect>
+              <rect class="cabinet-seam" x="36" y="38" width="628" height="284" rx="7"></rect>
+              <path class="cabinet-lip" d="M37 45 H663 M37 315 H663"></path>
+            </g>
             <g class="cutaway-compartments" aria-hidden="true">
-              <path d="M38 7 V73"></path>
-              <path d="M102 7 V73"></path>
-              <path d="M5 40 H135"></path>
+              <path d="M186 42 V318"></path>
+              <path d="M514 42 V318"></path>
+              <path d="M39 180 H661"></path>
+              <path class="support-rail" d="M205 52 V307 M495 52 V307"></path>
+            </g>
+            <g class="mounting-brackets" aria-hidden="true">
+              <path d="M208 83 h28 v9 h-18 v27 h-10 Z"></path>
+              <path d="M492 83 h-28 v9 h18 v27 h10 Z"></path>
+              <path d="M208 277 h28 v-9 h-18 v-27 h-10 Z"></path>
+              <path d="M492 277 h-28 v-9 h18 v-27 h10 Z"></path>
+              <rect x="114" y="305" width="72" height="9" rx="3"></rect>
+              <rect x="514" y="305" width="72" height="9" rx="3"></rect>
             </g>
             <g class="casing-bolts" aria-hidden="true">
               ${[
-      [7, 9],
-      [133, 9],
-      [7, 71],
-      [133, 71],
-      [38, 9],
-      [102, 9]
-    ].map(([g, f]) => d`<circle cx=${g} cy=${f} r="0.8"></circle>`)}
+      [31, 33],
+      [669, 33],
+      [31, 327],
+      [669, 327],
+      [187, 33],
+      [513, 33],
+      [187, 327],
+      [513, 327]
+    ].map(
+      ([b, _]) => k`<g transform=${`translate(${b} ${_})`}><circle r="5"></circle><path d="M-2.2 0 H2.2"></path></g>`
+    )}
             </g>
             <g class="duct-shells" aria-hidden="true">
-              <path d="M140 22 C110 22 97 24 82 38"></path>
-              <path d="M58 42 C43 56 30 58 0 58"></path>
-              <path d="M0 22 C30 22 43 24 58 38"></path>
-              <path d="M82 42 C97 56 110 58 140 58"></path>
+              <path d="M700 82 H566 C512 82 488 111 433 154"></path>
+              <path d="M267 206 C212 249 188 278 134 278 H0"></path>
+              <path d="M0 82 H134 C188 82 212 111 267 154"></path>
+              <path d="M433 206 C488 249 512 278 566 278 H700"></path>
+            </g>
+            <g class="duct-highlights" aria-hidden="true">
+              <path d="M700 76 H566 C512 76 488 105 433 148"></path>
+              <path d="M267 200 C212 243 188 272 134 272 H0"></path>
+              <path d="M0 76 H134 C188 76 212 105 267 148"></path>
+              <path d="M433 200 C488 243 512 272 566 272 H700"></path>
             </g>
             <path
               class="airflow-path extract-flow"
               data-flow="inward"
-              d="M140 22 C110 22 97 24 82 38"
+              d="M700 82 H566 C512 82 488 111 433 154"
             ></path>
             <path
               class="airflow-path exhaust-flow"
               data-flow="outward"
-              d="M58 42 C43 56 30 58 0 58"
+              d="M267 206 C212 249 188 278 134 278 H0"
             ></path>
             <path
               class="airflow-path outdoor-flow"
               data-flow="inward"
-              d="M0 22 C30 22 43 24 58 38"
+              d="M0 82 H134 C188 82 212 111 267 154"
             ></path>
             <path
               class="airflow-path supply-flow"
               data-flow="outward"
-              d="M82 42 C97 56 110 58 140 58"
+              d="M433 206 C488 249 512 278 566 278 H700"
             ></path>
             <g class="filters" aria-hidden="true">
-              <rect class="outdoor-filter" x="17" y="12" width="4" height="20" rx="1"></rect>
-              <rect class="extract-filter" x="119" y="12" width="4" height="20" rx="1"></rect>
-            </g>
-            <g class="port-collars" aria-hidden="true">
-              <rect
-                class="outdoor-collar"
-                x="0"
-                y="14"
-                width="5"
-                height="16"
-                rx="2"
-                style=${`--collar-color:${c.outdoor}`}
-              ></rect>
-              <rect
-                class="exhaust-collar"
-                x="0"
-                y="50"
-                width="5"
-                height="16"
-                rx="2"
-                style=${`--collar-color:${c.exhaust}`}
-              ></rect>
-              <rect
-                class="extract-collar"
-                x="135"
-                y="14"
-                width="5"
-                height="16"
-                rx="2"
-                style=${`--collar-color:${c.extract}`}
-              ></rect>
-              <rect
-                class="supply-collar"
-                x="135"
-                y="50"
-                width="5"
-                height="16"
-                rx="2"
-                style=${`--collar-color:${c.supply}`}
-              ></rect>
-            </g>
-            <g class="fan-assemblies" aria-hidden="true">
               ${[
-      ["exhaust-fan", 27, 58],
-      ["supply-fan", 113, 58]
+      ["outdoor-filter", 134],
+      ["extract-filter", 566]
     ].map(
-      ([g, f, _]) => d`
-                  <g class="fan-assembly ${g}" transform=${`translate(${f} ${_})`}>
-                    <rect class="fan-housing" x="-12" y="-9" width="24" height="18" rx="3"></rect>
-                    <path class="fan-volute" d="M-10 6 C-5 10 5 10 10 6"></path>
-                    <circle class="fan-ring" r="7.5"></circle>
-                    <g class="fan-rotor">
-                      <path class="fan-blade" d="M0 -1 C1 -7 5 -7 5 -3 C5 0 2 1 0 1 Z"></path>
-                      <path
-                        class="fan-blade"
-                        d="M0 -1 C1 -7 5 -7 5 -3 C5 0 2 1 0 1 Z"
-                        transform="rotate(90)"
-                      ></path>
-                      <path
-                        class="fan-blade"
-                        d="M0 -1 C1 -7 5 -7 5 -3 C5 0 2 1 0 1 Z"
-                        transform="rotate(180)"
-                      ></path>
-                      <path
-                        class="fan-blade"
-                        d="M0 -1 C1 -7 5 -7 5 -3 C5 0 2 1 0 1 Z"
-                        transform="rotate(270)"
-                      ></path>
-                      <circle class="fan-hub" r="1.4"></circle>
-                    </g>
+      ([b, _]) => k`
+                  <g
+                    class="filter-cartridge ${b} ${m ? "known" : "unavailable"}"
+                    data-path="incoming"
+                    transform=${`translate(${_} 82)`}
+                    filter="url(#component-shadow)"
+                  >
+                    <rect class="filter-depth" x="-17" y="-50" width="34" height="100" rx="4"></rect>
+                    <rect class="filter-media" x="-12" y="-45" width="24" height="90" rx="2"></rect>
+                    ${[-38, -26, -14, -2, 10, 22, 34].map(
+        ($) => k`<path class="filter-pleat" d=${`M-10 ${$} L10 ${$ + 8}`}></path>`
+      )}
+                    <rect class="filter-status-edge" x="-17" y="-50" width="5" height="100" rx="2"></rect>
                   </g>
                 `
     )}
             </g>
-            <g class="exchanger-plate" aria-hidden="true">
-              <path class="exchanger-outline" d="M70 13 L97 40 L70 67 L43 40 Z"></path>
+            <g class="fan-assemblies" aria-hidden="true">
+              ${[
+      ["exhaust-fan", 148, 273, y],
+      ["supply-fan", 552, 273, v]
+    ].map(
+      ([b, _, $, U]) => k`
+                  <g
+                    class="fan-assembly ${b} ${U ? "known" : "unavailable"}"
+                    data-location="internal"
+                    transform=${`translate(${_} ${$})`}
+                    filter="url(#component-shadow)"
+                  >
+                    <path class="fan-scroll" d="M-58 -43 H30 Q55 -43 58 -18 V34 H33 V13 Q33 -4 15 -4 H-58 Z"></path>
+                    <rect class="fan-motor" x="24" y="-23" width="42" height="45" rx="8"></rect>
+                    <path class="motor-ribs" d="M32 -18 V17 M41 -18 V17 M50 -18 V17 M59 -15 V14"></path>
+                    <circle class="fan-ring" cx="-20" r="34"></circle>
+                    <g class="fan-rotor">
+                      ${[0, 45, 90, 135, 180, 225, 270, 315].map(
+        (J) => k`<path
+                          class="fan-blade"
+                          d="M-20 -4 C-12 -31 1 -31 4 -20 C5 -9 -8 -3 -20 4 Z"
+                          transform=${`rotate(${J} -20 0)`}
+                        ></path>`
+      )}
+                      <circle class="fan-hub" cx="-20" r="8"></circle>
+                    </g>
+                    <path class="fan-feet" d="M-45 39 v9 h18 v-9 M26 39 v9 h18 v-9"></path>
+                  </g>
+                `
+    )}
+            </g>
+            <g class="exchanger-plate" filter="url(#component-shadow)" aria-hidden="true">
+              <path class="exchanger-shadow" d="M350 52 L480 180 L350 308 L220 180 Z"></path>
+              <path class="exchanger-outline" d="M350 62 L470 180 L350 298 L230 180 Z"></path>
+              <path class="exchanger-warm-face" d="M350 70 L462 180 L350 180 L238 180 Z"></path>
+              <path class="exchanger-cool-face" d="M238 180 H350 V290 Z M350 180 H462 L350 290 Z"></path>
               <g class="warm-channels" clip-path="url(#system-exchanger-clip)">
-                <path d="M40 25 L82 67"></path>
-                <path d="M45 20 L87 62"></path>
-                <path d="M50 15 L92 57"></path>
-                <path d="M55 10 L97 52"></path>
+                ${Array.from(
+      { length: 15 },
+      (b, _) => k`<path d=${`M${220 + _ * 11} 75 L${405 + _ * 11} 260`}></path>`
+    )}
               </g>
               <g class="cool-channels" clip-path="url(#system-exchanger-clip)">
-                <path d="M58 10 L100 52"></path>
-                <path d="M53 15 L95 57"></path>
-                <path d="M48 20 L90 62"></path>
-                <path d="M43 25 L85 67"></path>
+                ${Array.from(
+      { length: 15 },
+      (b, _) => k`<path d=${`M${295 + _ * 11} 75 L${110 + _ * 11} 260`}></path>`
+    )}
               </g>
-              <path class="passage-separator" d="M59 40 L70 29 L81 40 L70 51 Z"></path>
+              <path class="passage-separator" d="M350 66 V294 M234 180 H466"></path>
+              <path class="exchanger-frame-detail" d="M350 62 L470 180 L350 298 L230 180 Z"></path>
             </g>
             ${["extract", "exhaust", "outdoor", "supply"].map(
-      (g) => d`<g class="airflow-particles ${g}-particles" aria-hidden="true">
-                  <circle class="airflow-particle particle-1" r="1.1"></circle
-                  ><circle class="airflow-particle particle-2" r="1.1"></circle
-                  ><circle class="airflow-particle particle-3" r="1.1"></circle>
+      (b) => k`<g
+                  class="airflow-particles ${b}-particles ${u[b] === null ? "unavailable" : ""}"
+                  aria-hidden="true"
+                >
+                  <circle class="airflow-particle particle-1" r="5"></circle
+                  ><circle class="airflow-particle particle-2" r="5"></circle
+                  ><circle class="airflow-particle particle-3" r="5"></circle>
                 </g>`
     )}
+            <g class="port-collars" aria-hidden="true">
+              ${[
+      ["outdoor-collar", 24, 82, c.outdoor],
+      ["exhaust-collar", 24, 278, c.exhaust],
+      ["extract-collar", 676, 82, c.extract],
+      ["supply-collar", 676, 278, c.supply]
+    ].map(
+      ([b, _, $, U]) => k`
+                  <g
+                    class="port-collar ${b}"
+                    transform=${`translate(${_} ${$})`}
+                    style=${`--collar-color:${U}`}
+                  >
+                    <rect x="-26" y="-31" width="52" height="62" rx="8"></rect>
+                    <ellipse cx="0" cy="0" rx="14" ry="31"></ellipse>
+                    <path class="collar-highlight" d="M-13 -23 C-5 -29 5 -29 13 -23"></path>
+                    <path class="collar-accent" d="M-18 -26 V26"></path>
+                  </g>
+                `
+    )}
+            </g>
           </svg>
           ${o.status === "ok" ? d`
                   <div
-                    class="recovery-badge-circular ${m ? "recovery-pulse" : ""}"
+                    class="recovery-badge-circular ${f ? "recovery-pulse" : ""}"
                     title="Apparent temperature recovery"
                     role="img"
                     aria-label=${`Heat recovery ${o.label}`}
@@ -2681,7 +2721,7 @@ const F = "hiper-mvhr-card", C = [
                   </div>
                 ` : ""}
         </div>
-        ${b(
+        ${w(
       "exhaust",
       "Exhaust air",
       "exhaust_air_temp",
@@ -2690,7 +2730,7 @@ const F = "hiper-mvhr-card", C = [
       "mdi:arrow-bottom-left-thin",
       "Flowing outdoors"
     )}
-        ${b(
+        ${w(
       "supply",
       "Supply air",
       "supply_air_temp",
@@ -2704,7 +2744,7 @@ const F = "hiper-mvhr-card", C = [
   }
   _infoTile(e, t, r, a = "ok", o) {
     return d`
-      <div class="info-tile tone-${a}" title=${o ?? v}>
+      <div class="info-tile tone-${a}" title=${o ?? g}>
         <ha-icon icon=${r} aria-hidden="true"></ha-icon>
         <span>${e}</span>
         <strong>${t}</strong>
@@ -2723,7 +2763,7 @@ const F = "hiper-mvhr-card", C = [
     `;
   }
   _heatRecovery(e, t) {
-    return Ut({
+    return Bt({
       outdoor: this._number(e.outdoor_air_temp),
       extract: this._number(e.extract_air_temp),
       supply: this._number(e.supply_air_temp),
@@ -2754,12 +2794,12 @@ const F = "hiper-mvhr-card", C = [
     const r = Math.max(0, Math.min(1, t));
     if (e === null || !Number.isFinite(e))
       return `color-mix(in srgb, var(--secondary-text-color), transparent ${Math.round((1 - r) * 100)}%)`;
-    const a = C[0], o = C[C.length - 1], i = Math.max(a[0], Math.min(o[0], e));
+    const a = O[0], o = O[O.length - 1], i = Math.max(a[0], Math.min(o[0], e));
     let n = a, l = o;
-    for (let p = 1; p < C.length; p += 1) {
-      const h = C[p];
+    for (let p = 1; p < O.length; p += 1) {
+      const h = O[p];
       if (i <= h[0]) {
-        n = C[p - 1], l = h;
+        n = O[p - 1], l = h;
         break;
       }
     }
@@ -2768,7 +2808,7 @@ const F = "hiper-mvhr-card", C = [
   }
   _modeLabel(e) {
     const t = e.toLowerCase();
-    return t === "medium" || t === "normal" ? "Home" : t === "boost" ? "Boost" : e ? zt(e) : "";
+    return t === "medium" || t === "normal" ? "Home" : t === "boost" ? "Boost" : e ? Ut(e) : "";
   }
   _modeOptions(e) {
     return ((e == null ? void 0 : e.status) === "ok" && Array.isArray(e.attributes.options) ? e.attributes.options.filter((r) => typeof r == "string") : ["Away", "Low", "Home", "High"]).filter((r) => r.toLowerCase() !== "boost");
@@ -2796,18 +2836,18 @@ const F = "hiper-mvhr-card", C = [
    */
   _dashboardStatus(e) {
     var a, o;
-    for (const i of ne) {
-      if (It.has(i))
+    for (const i of he) {
+      if (Gt.has(i))
         continue;
       const n = e[i];
       if ((n == null ? void 0 : n.status) === "entity_missing" || (n == null ? void 0 : n.status) === "unavailable")
         return { tone: "warning", label: "Communication issue" };
     }
     const t = e.fault_active;
-    if ((t == null ? void 0 : t.status) === "ok" && Ft.has(t.value.toLowerCase()))
+    if ((t == null ? void 0 : t.status) === "ok" && Wt.has(t.value.toLowerCase()))
       return { tone: "warning", label: "Fault detected" };
     const r = ((a = e.calibration_status) == null ? void 0 : a.status) === "ok" ? e.calibration_status.value.toLowerCase() : "";
-    return r && !Vt.has(r) ? { tone: "muted", label: "Calibrating…" } : ((o = e.calibration_result) == null ? void 0 : o.status) === "ok" && e.calibration_result.value === "not_calibrated" ? { tone: "warning", label: "Calibration required" } : { tone: "success", label: "System OK" };
+    return r && !Zt.has(r) ? { tone: "muted", label: "Calibrating…" } : ((o = e.calibration_result) == null ? void 0 : o.status) === "ok" && e.calibration_result.value === "not_calibrated" ? { tone: "warning", label: "Calibration required" } : { tone: "success", label: "System OK" };
   }
   _press(e, t) {
     t && this._call(e, "button", "press", { entity_id: t });
@@ -2817,7 +2857,7 @@ const F = "hiper-mvhr-card", C = [
     await ((o = e.callService) == null ? void 0 : o.call(e, t, r, a));
   }
 };
-ce.styles = Oe`
+fe.styles = Ue`
     :host {
       display: block;
       width: 100%;
@@ -3717,6 +3757,9 @@ ce.styles = Oe`
     .system-visual-panel .unit {
       min-height: 360px;
       border-radius: 26px;
+      background: transparent;
+      border-color: transparent;
+      box-shadow: none;
     }
     .airflow-schematic {
       position: absolute;
@@ -3727,41 +3770,139 @@ ce.styles = Oe`
     }
     .airflow-path {
       fill: none;
-      stroke-width: 13;
+      stroke-width: 40;
       stroke-linecap: round;
-      opacity: 0.86;
-      vector-effect: non-scaling-stroke;
+      stroke-linejoin: round;
+      opacity: 0.96;
     }
     .duct-shells path {
       fill: none;
-      stroke: color-mix(in srgb, var(--divider-color), var(--primary-text-color) 12%);
-      stroke-width: 17;
-      stroke-linecap: butt;
-      vector-effect: non-scaling-stroke;
+      stroke: color-mix(in srgb, var(--primary-text-color), #05080b 72%);
+      stroke-width: 54;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      filter: drop-shadow(0 5px 5px rgba(0, 0, 0, 0.35));
+    }
+    .duct-highlights path {
+      fill: none;
+      stroke: rgba(255, 255, 255, 0.24);
+      stroke-width: 6;
+      stroke-linecap: round;
+      opacity: 0.75;
+      pointer-events: none;
+    }
+    .cabinet-outer {
+      fill: url(#cabinet-edge);
+      stroke: color-mix(in srgb, var(--primary-text-color), #101419 54%);
+      stroke-width: 4;
     }
     .cutaway-shell {
-      fill: color-mix(in srgb, var(--primary-text-color), transparent 94%);
-      stroke: color-mix(in srgb, var(--divider-color), var(--primary-text-color) 32%);
-      stroke-width: 1.5;
+      fill: url(#inner-chamber);
+      stroke: color-mix(in srgb, var(--primary-text-color), #090c10 70%);
+      stroke-width: 8;
+    }
+    .cabinet-seam {
+      fill: none;
+      stroke: rgba(255, 255, 255, 0.18);
+      stroke-width: 2;
+    }
+    .cabinet-lip {
+      fill: none;
+      stroke: rgba(255, 255, 255, 0.28);
+      stroke-width: 3;
+      stroke-linecap: round;
+    }
+    .metal-light {
+      stop-color: #d9dde0;
+    }
+    .metal-mid {
+      stop-color: #8c949a;
+    }
+    .metal-dark {
+      stop-color: #343a3f;
+    }
+    .chamber-top {
+      stop-color: #24282c;
+    }
+    .chamber-bottom {
+      stop-color: #0f1215;
+    }
+    .blower-light {
+      stop-color: #5b6268;
+    }
+    .blower-dark {
+      stop-color: #15191c;
     }
     .cutaway-compartments path {
       fill: none;
-      stroke: color-mix(in srgb, var(--divider-color), var(--primary-text-color) 18%);
-      stroke-width: 0.8;
+      stroke: #5f676d;
+      stroke-width: 7;
+      filter: drop-shadow(2px 0 2px rgba(0, 0, 0, 0.5));
+    }
+    .cutaway-compartments .support-rail {
+      stroke-width: 3;
+      stroke: #9ba1a5;
+      opacity: 0.62;
+    }
+    .mounting-brackets path,
+    .mounting-brackets rect {
+      fill: #71787e;
+      stroke: #1b1f22;
+      stroke-width: 2;
     }
     .casing-bolts circle {
-      fill: var(--secondary-text-color);
-      opacity: 0.7;
+      fill: #b8bdc1;
+      stroke: #30363a;
+      stroke-width: 1.5;
     }
-    .filters rect {
+    .casing-bolts path {
+      stroke: #454b50;
+      stroke-width: 1.2;
+    }
+    .filter-depth {
+      fill: #555c61;
+      stroke: #c2c6c9;
+      stroke-width: 3;
+    }
+    .filter-media {
+      fill: #c2b79d;
+      stroke: #312e29;
+      stroke-width: 2;
+    }
+    .filter-pleat {
+      fill: none;
+      stroke: #716956;
+      stroke-width: 2.2;
+    }
+    .filter-status-edge {
+      fill: #687078;
+    }
+    .filter-cartridge.known .filter-status-edge {
       fill: var(--success-color);
-      stroke: color-mix(in srgb, var(--success-color), var(--primary-text-color) 28%);
-      stroke-width: 0.7;
     }
-    .port-collars rect {
-      fill: var(--collar-color);
-      stroke: var(--divider-color);
-      stroke-width: 0.8;
+    .filter-cartridge.unavailable {
+      opacity: 0.68;
+    }
+    .port-collar rect {
+      fill: url(#collar-metal);
+      stroke: #252b2f;
+      stroke-width: 3;
+    }
+    .port-collar ellipse {
+      fill: #1a1f23;
+      stroke: #aeb4b8;
+      stroke-width: 3;
+    }
+    .collar-highlight {
+      fill: none;
+      stroke: rgba(255, 255, 255, 0.48);
+      stroke-width: 3;
+    }
+    .collar-accent {
+      fill: none;
+      stroke: var(--collar-color);
+      stroke-width: 5;
+      opacity: 0.9;
     }
     .extract-flow {
       stroke: url(#extract-gradient);
@@ -3776,19 +3917,28 @@ ce.styles = Oe`
       stroke: url(#supply-gradient);
     }
     .exchanger-outline {
-      fill: color-mix(
-        in srgb,
-        var(--ha-card-background, var(--card-background-color)),
-        transparent 4%
-      );
-      stroke: var(--divider-color);
-      stroke-width: 2;
+      fill: #677077;
+      stroke: url(#exchanger-frame);
+      stroke-width: 18;
+      stroke-linejoin: round;
+    }
+    .exchanger-shadow {
+      fill: rgba(0, 0, 0, 0.45);
+    }
+    .exchanger-warm-face {
+      fill: url(#warm-exchanger-gradient);
+      opacity: 0.56;
+    }
+    .exchanger-cool-face {
+      fill: url(#cool-exchanger-gradient);
+      opacity: 0.58;
     }
     .warm-channels path,
     .cool-channels path {
       fill: none;
-      stroke-width: 1.5;
+      stroke-width: 2.4;
       stroke-linecap: round;
+      opacity: 0.86;
     }
     .warm-channels path {
       stroke: url(#warm-exchanger-gradient);
@@ -3797,39 +3947,63 @@ ce.styles = Oe`
       stroke: url(#cool-exchanger-gradient);
     }
     .passage-separator {
-      fill: var(--ha-card-background, var(--card-background-color));
-      stroke: var(--divider-color);
-      stroke-width: 1.6;
-    }
-    .fan-housing {
-      fill: color-mix(in srgb, var(--primary-text-color), transparent 68%);
-      stroke: color-mix(in srgb, var(--primary-text-color), var(--divider-color) 28%);
-      stroke-width: 1.1;
-    }
-    .fan-volute {
       fill: none;
-      stroke: var(--secondary-text-color);
-      stroke-width: 1;
-      opacity: 0.75;
+      stroke: #d2d6d8;
+      stroke-width: 6;
+      opacity: 0.9;
+    }
+    .exchanger-frame-detail {
+      fill: none;
+      stroke: rgba(255, 255, 255, 0.48);
+      stroke-width: 3;
+      stroke-linejoin: round;
+    }
+    .fan-scroll {
+      fill: url(#blower-metal);
+      stroke: #0a0d0f;
+      stroke-width: 4;
     }
     .fan-ring {
-      fill: color-mix(
-        in srgb,
-        var(--ha-card-background, var(--card-background-color)),
-        var(--primary-text-color) 14%
-      );
-      stroke: var(--primary-text-color);
-      stroke-width: 1.1;
+      fill: #090c0e;
+      stroke: #9ca2a6;
+      stroke-width: 5;
+    }
+    .fan-motor {
+      fill: url(#blower-metal);
+      stroke: #090b0d;
+      stroke-width: 4;
+    }
+    .motor-ribs {
+      fill: none;
+      stroke: #171b1e;
+      stroke-width: 4;
+    }
+    .fan-feet {
+      fill: none;
+      stroke: #9ca2a6;
+      stroke-width: 6;
+      stroke-linejoin: round;
     }
     .fan-rotor {
       transform-box: fill-box;
       transform-origin: center;
     }
     .fan-blade {
-      fill: var(--secondary-text-color);
+      fill: #868e94;
+      stroke: #1a1e21;
+      stroke-width: 1.2;
     }
     .fan-hub {
-      fill: var(--primary-text-color);
+      fill: #c3c8cb;
+      stroke: #24292d;
+      stroke-width: 3;
+    }
+    .fan-assembly.unavailable {
+      opacity: 0.58;
+      filter: grayscale(1);
+    }
+    .system-visual-panel .unit.active .fan-assembly.unavailable .fan-rotor {
+      animation: none;
     }
     .airflow-particle {
       opacity: 0;
@@ -3837,22 +4011,26 @@ ce.styles = Oe`
     }
     .extract-particles .airflow-particle {
       fill: var(--air-extract);
-      offset-path: path('M140 22 C110 22 97 24 82 38');
+      offset-path: path('M700 82 H566 C512 82 488 111 433 154');
     }
     .exhaust-particles .airflow-particle {
       fill: var(--air-exhaust);
-      offset-path: path('M58 42 C43 56 30 58 0 58');
+      offset-path: path('M267 206 C212 249 188 278 134 278 H0');
     }
     .outdoor-particles .airflow-particle {
       fill: var(--air-outdoor);
-      offset-path: path('M0 22 C30 22 43 24 58 38');
+      offset-path: path('M0 82 H134 C188 82 212 111 267 154');
     }
     .supply-particles .airflow-particle {
       fill: var(--air-supply);
-      offset-path: path('M82 42 C97 56 110 58 140 58');
+      offset-path: path('M433 206 C488 249 512 278 566 278 H700');
     }
     .system-visual-panel .unit.active .airflow-particle {
       animation: schematic-particle 2.4s linear infinite;
+    }
+    .system-visual-panel .unit.active .airflow-particles.unavailable .airflow-particle {
+      animation: none;
+      opacity: 0;
     }
     .system-visual-panel .unit.active .fan-rotor {
       animation: spin 2.8s linear infinite;
@@ -4595,28 +4773,35 @@ ce.styles = Oe`
         min-height: 66px;
         padding: 10px;
       }
+      .system-visual-panel .duct-highlights,
+      .system-visual-panel .mounting-brackets {
+        opacity: 0.45;
+      }
+      .system-visual-panel .particle-3 {
+        display: none;
+      }
       .system-lower-grid {
         grid-template-columns: minmax(0, 1fr);
       }
     }
   `;
-let E = ce;
-Z([
-  se({ attribute: !1 })
-], E.prototype, "hass");
-Z([
-  G()
-], E.prototype, "_config");
-Z([
-  G()
-], E.prototype, "_configError");
-Z([
-  G()
-], E.prototype, "_advancedOpen");
-customElements.get(F) || customElements.define(F, E);
+let R = fe;
+X([
+  ue({ attribute: !1 })
+], R.prototype, "hass");
+X([
+  K()
+], R.prototype, "_config");
+X([
+  K()
+], R.prototype, "_configError");
+X([
+  K()
+], R.prototype, "_advancedOpen");
+customElements.get(Y) || customElements.define(Y, R);
 window.customCards = window.customCards ?? [];
-window.customCards.some((s) => s.type === F) || window.customCards.push({
-  type: F,
+window.customCards.some((s) => s.type === Y) || window.customCards.push({
+  type: Y,
   name: "HiPer MVHR Card",
   description: "Universal MVHR dashboard card for Home Assistant"
 });

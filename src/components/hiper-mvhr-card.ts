@@ -1,4 +1,4 @@
-import { LitElement, html, css, nothing, type TemplateResult } from 'lit';
+import { LitElement, html, svg, css, nothing, type TemplateResult } from 'lit';
 import { property, state } from 'lit/decorators.js';
 import type { HomeAssistant, LovelaceCard } from '../types/hass';
 import type { HiperMvhrCardConfig } from '../types/config';
@@ -1753,31 +1753,11 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
   }
 
   /**
-   * Phase 5-7 (system mode variant), enlarged and recoloured for the
-   * visual-redesign brief: the same four-air-path-around-a-unit concept as
-   * `_heroVisual`, but a distinct method — `display_mode: detailed` keeps
-   * its own left/right (inbound-left/outbound-right) arrangement and colour
-   * scheme untouched, while system mode uses the top/bottom
-   * (outbound-top/inbound-bottom) arrangement its spec calls for: Exhaust
-   * (top-left) and Supply (top-right) both flow away from the unit; Extract
-   * (bottom-left) and Outdoor (bottom-right) both flow toward it. Each path
-   * also gets a small directional arrow icon (redesign requirement:
-   * "directional arrows", without relying on colour alone) and a colour
-   * family scoped to `.system-visual-panel` only — supply/outdoor cool
-   * blue, extract warm orange, exhaust neutral grey — that never touches
-   * `_heroVisual`'s own `.supply`/`.extract`/etc. base colours. Per the
-   * visual-polish follow-up, the heat-recovery figure now lives inside the
-   * unit itself (a large circular badge centred over the exchanger graphic,
-   * `.recovery-badge-circular`) rather than as a small pill in the panel
-   * heading — "make the heat exchanger the hero" / "move the heat recovery
-   * number into the centre of the HRV" — so this method takes a `recovery`
-   * argument again. Per the round-3 micro-animation follow-up ("I wouldn't
-   * make the exchanger itself any more complicated — instead spend time on
-   * micro-animations"), `boostActive` doesn't add any new visual element:
-   * it just shortens the existing particle/fan animation durations via a
-   * `.boost-active` class, and the recovery badge plays a one-shot pulse
-   * (`_recoveryPulseClass`) when the figure actually changes, tracked via
-   * `_prevRecoveryLabel`.
+   * System mode's equipment cutaway. Outdoor intake/exhaust occupy the left
+   * side and indoor extract/supply the right. The static cabinet, chamber,
+   * filters, blower housings, exchanger cassette and collars provide the
+   * appliance structure; temperature gradients, particles and impellers are
+   * reactive overlays. The two physical streams remain separate throughout.
    */
   private _systemHeroVisual(
     snapshot: Partial<Record<EntityRoleId, RoleValue>>,
@@ -1810,6 +1790,9 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       temperatures.outdoor !== null && temperatures.supply !== null
         ? this._temperatureColour((temperatures.outdoor + temperatures.supply) / 2)
         : this._temperatureColour(null);
+    const filterKnown = this._number(snapshot.filter_remaining) !== undefined;
+    const supplyFanKnown = this._number(snapshot.supply_fan_speed) !== undefined;
+    const extractFanKnown = this._number(snapshot.extract_fan_speed) !== undefined;
     // "Heat recovery badge gently pulses when efficiency changes" — a
     // one-shot animation, not a permanently-looping one, so it only plays
     // when this render's figure actually differs from the previous one.
@@ -1891,22 +1874,52 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
           </div>
           <svg
             class="airflow-schematic"
-            viewBox="0 0 140 80"
+            viewBox="0 0 700 360"
             role="img"
-            aria-label="Two separate air streams cross through the heat exchanger"
+            aria-label="Cutaway MVHR unit with two separate air streams crossing through a plate heat exchanger"
             style=${`--air-extract:${colours.extract};--air-exhaust:${colours.exhaust};--air-outdoor:${colours.outdoor};--air-supply:${colours.supply}`}
           >
             <defs>
               <clipPath id="system-exchanger-clip">
-                <path d="M70 13 L97 40 L70 67 L43 40 Z"></path>
+                <path d="M350 62 L470 180 L350 298 L230 180 Z"></path>
               </clipPath>
+              <linearGradient id="cabinet-edge" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" class="metal-light"></stop>
+                <stop offset="0.42" class="metal-mid"></stop>
+                <stop offset="1" class="metal-dark"></stop>
+              </linearGradient>
+              <linearGradient id="inner-chamber" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" class="chamber-top"></stop>
+                <stop offset="1" class="chamber-bottom"></stop>
+              </linearGradient>
+              <linearGradient id="collar-metal" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0" class="metal-dark"></stop>
+                <stop offset="0.3" class="metal-light"></stop>
+                <stop offset="0.72" class="metal-mid"></stop>
+                <stop offset="1" class="metal-dark"></stop>
+              </linearGradient>
+              <linearGradient id="blower-metal" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" class="blower-light"></stop>
+                <stop offset="1" class="blower-dark"></stop>
+              </linearGradient>
+              <linearGradient id="exchanger-frame" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" class="metal-light"></stop>
+                <stop offset="0.5" class="metal-dark"></stop>
+                <stop offset="1" class="metal-mid"></stop>
+              </linearGradient>
+              <filter id="equipment-shadow" x="-20%" y="-30%" width="140%" height="170%">
+                <feDropShadow dx="0" dy="8" stdDeviation="8" flood-opacity="0.28"></feDropShadow>
+              </filter>
+              <filter id="component-shadow" x="-25%" y="-25%" width="150%" height="160%">
+                <feDropShadow dx="0" dy="3" stdDeviation="3" flood-opacity="0.4"></feDropShadow>
+              </filter>
               <linearGradient
                 id="extract-gradient"
                 gradientUnits="userSpaceOnUse"
-                x1="140"
-                y1="22"
-                x2="82"
-                y2="38"
+                x1="700"
+                y1="82"
+                x2="433"
+                y2="154"
               >
                 <stop offset="0" stop-color=${colours.extract}></stop>
                 <stop offset="1" stop-color=${warmMidpoint}></stop>
@@ -1914,10 +1927,10 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
               <linearGradient
                 id="exhaust-gradient"
                 gradientUnits="userSpaceOnUse"
-                x1="58"
-                y1="42"
+                x1="267"
+                y1="206"
                 x2="0"
-                y2="58"
+                y2="278"
               >
                 <stop offset="0" stop-color=${warmMidpoint}></stop>
                 <stop offset="1" stop-color=${colours.exhaust}></stop>
@@ -1926,9 +1939,9 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
                 id="outdoor-gradient"
                 gradientUnits="userSpaceOnUse"
                 x1="0"
-                y1="22"
-                x2="58"
-                y2="38"
+                y1="82"
+                x2="267"
+                y2="154"
               >
                 <stop offset="0" stop-color=${colours.outdoor}></stop>
                 <stop offset="1" stop-color=${coolMidpoint}></stop>
@@ -1936,10 +1949,10 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
               <linearGradient
                 id="supply-gradient"
                 gradientUnits="userSpaceOnUse"
-                x1="82"
-                y1="42"
-                x2="140"
-                y2="58"
+                x1="433"
+                y1="206"
+                x2="700"
+                y2="278"
               >
                 <stop offset="0" stop-color=${coolMidpoint}></stop>
                 <stop offset="1" stop-color=${colours.supply}></stop>
@@ -1947,10 +1960,10 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
               <linearGradient
                 id="warm-exchanger-gradient"
                 gradientUnits="userSpaceOnUse"
-                x1="90"
-                y1="25"
-                x2="50"
-                y2="55"
+                x1="430"
+                y1="135"
+                x2="270"
+                y2="225"
               >
                 <stop offset="0" stop-color=${colours.extract}></stop>
                 <stop offset="1" stop-color=${colours.exhaust}></stop>
@@ -1958,156 +1971,186 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
               <linearGradient
                 id="cool-exchanger-gradient"
                 gradientUnits="userSpaceOnUse"
-                x1="50"
-                y1="25"
-                x2="90"
-                y2="55"
+                x1="270"
+                y1="135"
+                x2="430"
+                y2="225"
               >
                 <stop offset="0" stop-color=${colours.outdoor}></stop>
                 <stop offset="1" stop-color=${colours.supply}></stop>
               </linearGradient>
             </defs>
-            <rect class="cutaway-shell" x="2" y="4" width="136" height="72" rx="5"></rect>
+            <g class="cabinet" filter="url(#equipment-shadow)" aria-hidden="true">
+              <rect class="cabinet-outer" x="14" y="16" width="672" height="328" rx="18"></rect>
+              <rect class="cutaway-shell" x="27" y="29" width="646" height="302" rx="11"></rect>
+              <rect class="cabinet-seam" x="36" y="38" width="628" height="284" rx="7"></rect>
+              <path class="cabinet-lip" d="M37 45 H663 M37 315 H663"></path>
+            </g>
             <g class="cutaway-compartments" aria-hidden="true">
-              <path d="M38 7 V73"></path>
-              <path d="M102 7 V73"></path>
-              <path d="M5 40 H135"></path>
+              <path d="M186 42 V318"></path>
+              <path d="M514 42 V318"></path>
+              <path d="M39 180 H661"></path>
+              <path class="support-rail" d="M205 52 V307 M495 52 V307"></path>
+            </g>
+            <g class="mounting-brackets" aria-hidden="true">
+              <path d="M208 83 h28 v9 h-18 v27 h-10 Z"></path>
+              <path d="M492 83 h-28 v9 h18 v27 h10 Z"></path>
+              <path d="M208 277 h28 v-9 h-18 v-27 h-10 Z"></path>
+              <path d="M492 277 h-28 v-9 h18 v-27 h10 Z"></path>
+              <rect x="114" y="305" width="72" height="9" rx="3"></rect>
+              <rect x="514" y="305" width="72" height="9" rx="3"></rect>
             </g>
             <g class="casing-bolts" aria-hidden="true">
               ${[
-                [7, 9],
-                [133, 9],
-                [7, 71],
-                [133, 71],
-                [38, 9],
-                [102, 9],
-              ].map(([cx, cy]) => html`<circle cx=${cx} cy=${cy} r="0.8"></circle>`)}
+                [31, 33],
+                [669, 33],
+                [31, 327],
+                [669, 327],
+                [187, 33],
+                [513, 33],
+                [187, 327],
+                [513, 327],
+              ].map(
+                ([cx, cy]) => svg`<g transform=${`translate(${cx} ${cy})`}><circle r="5"></circle><path d="M-2.2 0 H2.2"></path></g>`,
+              )}
             </g>
             <g class="duct-shells" aria-hidden="true">
-              <path d="M140 22 C110 22 97 24 82 38"></path>
-              <path d="M58 42 C43 56 30 58 0 58"></path>
-              <path d="M0 22 C30 22 43 24 58 38"></path>
-              <path d="M82 42 C97 56 110 58 140 58"></path>
+              <path d="M700 82 H566 C512 82 488 111 433 154"></path>
+              <path d="M267 206 C212 249 188 278 134 278 H0"></path>
+              <path d="M0 82 H134 C188 82 212 111 267 154"></path>
+              <path d="M433 206 C488 249 512 278 566 278 H700"></path>
+            </g>
+            <g class="duct-highlights" aria-hidden="true">
+              <path d="M700 76 H566 C512 76 488 105 433 148"></path>
+              <path d="M267 200 C212 243 188 272 134 272 H0"></path>
+              <path d="M0 76 H134 C188 76 212 105 267 148"></path>
+              <path d="M433 200 C488 243 512 272 566 272 H700"></path>
             </g>
             <path
               class="airflow-path extract-flow"
               data-flow="inward"
-              d="M140 22 C110 22 97 24 82 38"
+              d="M700 82 H566 C512 82 488 111 433 154"
             ></path>
             <path
               class="airflow-path exhaust-flow"
               data-flow="outward"
-              d="M58 42 C43 56 30 58 0 58"
+              d="M267 206 C212 249 188 278 134 278 H0"
             ></path>
             <path
               class="airflow-path outdoor-flow"
               data-flow="inward"
-              d="M0 22 C30 22 43 24 58 38"
+              d="M0 82 H134 C188 82 212 111 267 154"
             ></path>
             <path
               class="airflow-path supply-flow"
               data-flow="outward"
-              d="M82 42 C97 56 110 58 140 58"
+              d="M433 206 C488 249 512 278 566 278 H700"
             ></path>
             <g class="filters" aria-hidden="true">
-              <rect class="outdoor-filter" x="17" y="12" width="4" height="20" rx="1"></rect>
-              <rect class="extract-filter" x="119" y="12" width="4" height="20" rx="1"></rect>
-            </g>
-            <g class="port-collars" aria-hidden="true">
-              <rect
-                class="outdoor-collar"
-                x="0"
-                y="14"
-                width="5"
-                height="16"
-                rx="2"
-                style=${`--collar-color:${colours.outdoor}`}
-              ></rect>
-              <rect
-                class="exhaust-collar"
-                x="0"
-                y="50"
-                width="5"
-                height="16"
-                rx="2"
-                style=${`--collar-color:${colours.exhaust}`}
-              ></rect>
-              <rect
-                class="extract-collar"
-                x="135"
-                y="14"
-                width="5"
-                height="16"
-                rx="2"
-                style=${`--collar-color:${colours.extract}`}
-              ></rect>
-              <rect
-                class="supply-collar"
-                x="135"
-                y="50"
-                width="5"
-                height="16"
-                rx="2"
-                style=${`--collar-color:${colours.supply}`}
-              ></rect>
-            </g>
-            <g class="fan-assemblies" aria-hidden="true">
               ${[
-                ['exhaust-fan', 27, 58],
-                ['supply-fan', 113, 58],
+                ['outdoor-filter', 134],
+                ['extract-filter', 566],
               ].map(
-                ([fanClass, x, y]) => html`
-                  <g class="fan-assembly ${fanClass}" transform=${`translate(${x} ${y})`}>
-                    <rect class="fan-housing" x="-12" y="-9" width="24" height="18" rx="3"></rect>
-                    <path class="fan-volute" d="M-10 6 C-5 10 5 10 10 6"></path>
-                    <circle class="fan-ring" r="7.5"></circle>
-                    <g class="fan-rotor">
-                      <path class="fan-blade" d="M0 -1 C1 -7 5 -7 5 -3 C5 0 2 1 0 1 Z"></path>
-                      <path
-                        class="fan-blade"
-                        d="M0 -1 C1 -7 5 -7 5 -3 C5 0 2 1 0 1 Z"
-                        transform="rotate(90)"
-                      ></path>
-                      <path
-                        class="fan-blade"
-                        d="M0 -1 C1 -7 5 -7 5 -3 C5 0 2 1 0 1 Z"
-                        transform="rotate(180)"
-                      ></path>
-                      <path
-                        class="fan-blade"
-                        d="M0 -1 C1 -7 5 -7 5 -3 C5 0 2 1 0 1 Z"
-                        transform="rotate(270)"
-                      ></path>
-                      <circle class="fan-hub" r="1.4"></circle>
-                    </g>
+                ([filterClass, x]) => svg`
+                  <g
+                    class="filter-cartridge ${filterClass} ${filterKnown ? 'known' : 'unavailable'}"
+                    data-path="incoming"
+                    transform=${`translate(${x} 82)`}
+                    filter="url(#component-shadow)"
+                  >
+                    <rect class="filter-depth" x="-17" y="-50" width="34" height="100" rx="4"></rect>
+                    <rect class="filter-media" x="-12" y="-45" width="24" height="90" rx="2"></rect>
+                    ${[-38, -26, -14, -2, 10, 22, 34].map(
+                      (y) => svg`<path class="filter-pleat" d=${`M-10 ${y} L10 ${y + 8}`}></path>`,
+                    )}
+                    <rect class="filter-status-edge" x="-17" y="-50" width="5" height="100" rx="2"></rect>
                   </g>
                 `,
               )}
             </g>
-            <g class="exchanger-plate" aria-hidden="true">
-              <path class="exchanger-outline" d="M70 13 L97 40 L70 67 L43 40 Z"></path>
+            <g class="fan-assemblies" aria-hidden="true">
+              ${[
+                ['exhaust-fan', 148, 273, extractFanKnown],
+                ['supply-fan', 552, 273, supplyFanKnown],
+              ].map(
+                ([fanClass, x, y, fanKnown]) => svg`
+                  <g
+                    class="fan-assembly ${fanClass} ${fanKnown ? 'known' : 'unavailable'}"
+                    data-location="internal"
+                    transform=${`translate(${x} ${y})`}
+                    filter="url(#component-shadow)"
+                  >
+                    <path class="fan-scroll" d="M-58 -43 H30 Q55 -43 58 -18 V34 H33 V13 Q33 -4 15 -4 H-58 Z"></path>
+                    <rect class="fan-motor" x="24" y="-23" width="42" height="45" rx="8"></rect>
+                    <path class="motor-ribs" d="M32 -18 V17 M41 -18 V17 M50 -18 V17 M59 -15 V14"></path>
+                    <circle class="fan-ring" cx="-20" r="34"></circle>
+                    <g class="fan-rotor">
+                      ${[0, 45, 90, 135, 180, 225, 270, 315].map(
+                        (rotation) => svg`<path
+                          class="fan-blade"
+                          d="M-20 -4 C-12 -31 1 -31 4 -20 C5 -9 -8 -3 -20 4 Z"
+                          transform=${`rotate(${rotation} -20 0)`}
+                        ></path>`,
+                      )}
+                      <circle class="fan-hub" cx="-20" r="8"></circle>
+                    </g>
+                    <path class="fan-feet" d="M-45 39 v9 h18 v-9 M26 39 v9 h18 v-9"></path>
+                  </g>
+                `,
+              )}
+            </g>
+            <g class="exchanger-plate" filter="url(#component-shadow)" aria-hidden="true">
+              <path class="exchanger-shadow" d="M350 52 L480 180 L350 308 L220 180 Z"></path>
+              <path class="exchanger-outline" d="M350 62 L470 180 L350 298 L230 180 Z"></path>
+              <path class="exchanger-warm-face" d="M350 70 L462 180 L350 180 L238 180 Z"></path>
+              <path class="exchanger-cool-face" d="M238 180 H350 V290 Z M350 180 H462 L350 290 Z"></path>
               <g class="warm-channels" clip-path="url(#system-exchanger-clip)">
-                <path d="M40 25 L82 67"></path>
-                <path d="M45 20 L87 62"></path>
-                <path d="M50 15 L92 57"></path>
-                <path d="M55 10 L97 52"></path>
+                ${Array.from(
+                  { length: 15 },
+                  (_, index) => svg`<path d=${`M${220 + index * 11} 75 L${405 + index * 11} 260`}></path>`,
+                )}
               </g>
               <g class="cool-channels" clip-path="url(#system-exchanger-clip)">
-                <path d="M58 10 L100 52"></path>
-                <path d="M53 15 L95 57"></path>
-                <path d="M48 20 L90 62"></path>
-                <path d="M43 25 L85 67"></path>
+                ${Array.from(
+                  { length: 15 },
+                  (_, index) => svg`<path d=${`M${295 + index * 11} 75 L${110 + index * 11} 260`}></path>`,
+                )}
               </g>
-              <path class="passage-separator" d="M59 40 L70 29 L81 40 L70 51 Z"></path>
+              <path class="passage-separator" d="M350 66 V294 M234 180 H466"></path>
+              <path class="exchanger-frame-detail" d="M350 62 L470 180 L350 298 L230 180 Z"></path>
             </g>
             ${['extract', 'exhaust', 'outdoor', 'supply'].map(
               (stream) =>
-                html`<g class="airflow-particles ${stream}-particles" aria-hidden="true">
-                  <circle class="airflow-particle particle-1" r="1.1"></circle
-                  ><circle class="airflow-particle particle-2" r="1.1"></circle
-                  ><circle class="airflow-particle particle-3" r="1.1"></circle>
+                svg`<g
+                  class="airflow-particles ${stream}-particles ${temperatures[stream as keyof typeof temperatures] === null ? 'unavailable' : ''}"
+                  aria-hidden="true"
+                >
+                  <circle class="airflow-particle particle-1" r="5"></circle
+                  ><circle class="airflow-particle particle-2" r="5"></circle
+                  ><circle class="airflow-particle particle-3" r="5"></circle>
                 </g>`,
             )}
+            <g class="port-collars" aria-hidden="true">
+              ${[
+                ['outdoor-collar', 24, 82, colours.outdoor],
+                ['exhaust-collar', 24, 278, colours.exhaust],
+                ['extract-collar', 676, 82, colours.extract],
+                ['supply-collar', 676, 278, colours.supply],
+              ].map(
+                ([collarClass, x, y, collarColour]) => svg`
+                  <g
+                    class="port-collar ${collarClass}"
+                    transform=${`translate(${x} ${y})`}
+                    style=${`--collar-color:${collarColour}`}
+                  >
+                    <rect x="-26" y="-31" width="52" height="62" rx="8"></rect>
+                    <ellipse cx="0" cy="0" rx="14" ry="31"></ellipse>
+                    <path class="collar-highlight" d="M-13 -23 C-5 -29 5 -29 13 -23"></path>
+                    <path class="collar-accent" d="M-18 -26 V26"></path>
+                  </g>
+                `,
+              )}
+            </g>
           </svg>
           ${
             recovery.status === 'ok'
@@ -3246,6 +3289,9 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     .system-visual-panel .unit {
       min-height: 360px;
       border-radius: 26px;
+      background: transparent;
+      border-color: transparent;
+      box-shadow: none;
     }
     .airflow-schematic {
       position: absolute;
@@ -3256,41 +3302,139 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     }
     .airflow-path {
       fill: none;
-      stroke-width: 13;
+      stroke-width: 40;
       stroke-linecap: round;
-      opacity: 0.86;
-      vector-effect: non-scaling-stroke;
+      stroke-linejoin: round;
+      opacity: 0.96;
     }
     .duct-shells path {
       fill: none;
-      stroke: color-mix(in srgb, var(--divider-color), var(--primary-text-color) 12%);
-      stroke-width: 17;
-      stroke-linecap: butt;
-      vector-effect: non-scaling-stroke;
+      stroke: color-mix(in srgb, var(--primary-text-color), #05080b 72%);
+      stroke-width: 54;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      filter: drop-shadow(0 5px 5px rgba(0, 0, 0, 0.35));
+    }
+    .duct-highlights path {
+      fill: none;
+      stroke: rgba(255, 255, 255, 0.24);
+      stroke-width: 6;
+      stroke-linecap: round;
+      opacity: 0.75;
+      pointer-events: none;
+    }
+    .cabinet-outer {
+      fill: url(#cabinet-edge);
+      stroke: color-mix(in srgb, var(--primary-text-color), #101419 54%);
+      stroke-width: 4;
     }
     .cutaway-shell {
-      fill: color-mix(in srgb, var(--primary-text-color), transparent 94%);
-      stroke: color-mix(in srgb, var(--divider-color), var(--primary-text-color) 32%);
-      stroke-width: 1.5;
+      fill: url(#inner-chamber);
+      stroke: color-mix(in srgb, var(--primary-text-color), #090c10 70%);
+      stroke-width: 8;
+    }
+    .cabinet-seam {
+      fill: none;
+      stroke: rgba(255, 255, 255, 0.18);
+      stroke-width: 2;
+    }
+    .cabinet-lip {
+      fill: none;
+      stroke: rgba(255, 255, 255, 0.28);
+      stroke-width: 3;
+      stroke-linecap: round;
+    }
+    .metal-light {
+      stop-color: #d9dde0;
+    }
+    .metal-mid {
+      stop-color: #8c949a;
+    }
+    .metal-dark {
+      stop-color: #343a3f;
+    }
+    .chamber-top {
+      stop-color: #24282c;
+    }
+    .chamber-bottom {
+      stop-color: #0f1215;
+    }
+    .blower-light {
+      stop-color: #5b6268;
+    }
+    .blower-dark {
+      stop-color: #15191c;
     }
     .cutaway-compartments path {
       fill: none;
-      stroke: color-mix(in srgb, var(--divider-color), var(--primary-text-color) 18%);
-      stroke-width: 0.8;
+      stroke: #5f676d;
+      stroke-width: 7;
+      filter: drop-shadow(2px 0 2px rgba(0, 0, 0, 0.5));
+    }
+    .cutaway-compartments .support-rail {
+      stroke-width: 3;
+      stroke: #9ba1a5;
+      opacity: 0.62;
+    }
+    .mounting-brackets path,
+    .mounting-brackets rect {
+      fill: #71787e;
+      stroke: #1b1f22;
+      stroke-width: 2;
     }
     .casing-bolts circle {
-      fill: var(--secondary-text-color);
-      opacity: 0.7;
+      fill: #b8bdc1;
+      stroke: #30363a;
+      stroke-width: 1.5;
     }
-    .filters rect {
+    .casing-bolts path {
+      stroke: #454b50;
+      stroke-width: 1.2;
+    }
+    .filter-depth {
+      fill: #555c61;
+      stroke: #c2c6c9;
+      stroke-width: 3;
+    }
+    .filter-media {
+      fill: #c2b79d;
+      stroke: #312e29;
+      stroke-width: 2;
+    }
+    .filter-pleat {
+      fill: none;
+      stroke: #716956;
+      stroke-width: 2.2;
+    }
+    .filter-status-edge {
+      fill: #687078;
+    }
+    .filter-cartridge.known .filter-status-edge {
       fill: var(--success-color);
-      stroke: color-mix(in srgb, var(--success-color), var(--primary-text-color) 28%);
-      stroke-width: 0.7;
     }
-    .port-collars rect {
-      fill: var(--collar-color);
-      stroke: var(--divider-color);
-      stroke-width: 0.8;
+    .filter-cartridge.unavailable {
+      opacity: 0.68;
+    }
+    .port-collar rect {
+      fill: url(#collar-metal);
+      stroke: #252b2f;
+      stroke-width: 3;
+    }
+    .port-collar ellipse {
+      fill: #1a1f23;
+      stroke: #aeb4b8;
+      stroke-width: 3;
+    }
+    .collar-highlight {
+      fill: none;
+      stroke: rgba(255, 255, 255, 0.48);
+      stroke-width: 3;
+    }
+    .collar-accent {
+      fill: none;
+      stroke: var(--collar-color);
+      stroke-width: 5;
+      opacity: 0.9;
     }
     .extract-flow {
       stroke: url(#extract-gradient);
@@ -3305,19 +3449,28 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       stroke: url(#supply-gradient);
     }
     .exchanger-outline {
-      fill: color-mix(
-        in srgb,
-        var(--ha-card-background, var(--card-background-color)),
-        transparent 4%
-      );
-      stroke: var(--divider-color);
-      stroke-width: 2;
+      fill: #677077;
+      stroke: url(#exchanger-frame);
+      stroke-width: 18;
+      stroke-linejoin: round;
+    }
+    .exchanger-shadow {
+      fill: rgba(0, 0, 0, 0.45);
+    }
+    .exchanger-warm-face {
+      fill: url(#warm-exchanger-gradient);
+      opacity: 0.56;
+    }
+    .exchanger-cool-face {
+      fill: url(#cool-exchanger-gradient);
+      opacity: 0.58;
     }
     .warm-channels path,
     .cool-channels path {
       fill: none;
-      stroke-width: 1.5;
+      stroke-width: 2.4;
       stroke-linecap: round;
+      opacity: 0.86;
     }
     .warm-channels path {
       stroke: url(#warm-exchanger-gradient);
@@ -3326,39 +3479,63 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       stroke: url(#cool-exchanger-gradient);
     }
     .passage-separator {
-      fill: var(--ha-card-background, var(--card-background-color));
-      stroke: var(--divider-color);
-      stroke-width: 1.6;
-    }
-    .fan-housing {
-      fill: color-mix(in srgb, var(--primary-text-color), transparent 68%);
-      stroke: color-mix(in srgb, var(--primary-text-color), var(--divider-color) 28%);
-      stroke-width: 1.1;
-    }
-    .fan-volute {
       fill: none;
-      stroke: var(--secondary-text-color);
-      stroke-width: 1;
-      opacity: 0.75;
+      stroke: #d2d6d8;
+      stroke-width: 6;
+      opacity: 0.9;
+    }
+    .exchanger-frame-detail {
+      fill: none;
+      stroke: rgba(255, 255, 255, 0.48);
+      stroke-width: 3;
+      stroke-linejoin: round;
+    }
+    .fan-scroll {
+      fill: url(#blower-metal);
+      stroke: #0a0d0f;
+      stroke-width: 4;
     }
     .fan-ring {
-      fill: color-mix(
-        in srgb,
-        var(--ha-card-background, var(--card-background-color)),
-        var(--primary-text-color) 14%
-      );
-      stroke: var(--primary-text-color);
-      stroke-width: 1.1;
+      fill: #090c0e;
+      stroke: #9ca2a6;
+      stroke-width: 5;
+    }
+    .fan-motor {
+      fill: url(#blower-metal);
+      stroke: #090b0d;
+      stroke-width: 4;
+    }
+    .motor-ribs {
+      fill: none;
+      stroke: #171b1e;
+      stroke-width: 4;
+    }
+    .fan-feet {
+      fill: none;
+      stroke: #9ca2a6;
+      stroke-width: 6;
+      stroke-linejoin: round;
     }
     .fan-rotor {
       transform-box: fill-box;
       transform-origin: center;
     }
     .fan-blade {
-      fill: var(--secondary-text-color);
+      fill: #868e94;
+      stroke: #1a1e21;
+      stroke-width: 1.2;
     }
     .fan-hub {
-      fill: var(--primary-text-color);
+      fill: #c3c8cb;
+      stroke: #24292d;
+      stroke-width: 3;
+    }
+    .fan-assembly.unavailable {
+      opacity: 0.58;
+      filter: grayscale(1);
+    }
+    .system-visual-panel .unit.active .fan-assembly.unavailable .fan-rotor {
+      animation: none;
     }
     .airflow-particle {
       opacity: 0;
@@ -3366,22 +3543,26 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     }
     .extract-particles .airflow-particle {
       fill: var(--air-extract);
-      offset-path: path('M140 22 C110 22 97 24 82 38');
+      offset-path: path('M700 82 H566 C512 82 488 111 433 154');
     }
     .exhaust-particles .airflow-particle {
       fill: var(--air-exhaust);
-      offset-path: path('M58 42 C43 56 30 58 0 58');
+      offset-path: path('M267 206 C212 249 188 278 134 278 H0');
     }
     .outdoor-particles .airflow-particle {
       fill: var(--air-outdoor);
-      offset-path: path('M0 22 C30 22 43 24 58 38');
+      offset-path: path('M0 82 H134 C188 82 212 111 267 154');
     }
     .supply-particles .airflow-particle {
       fill: var(--air-supply);
-      offset-path: path('M82 42 C97 56 110 58 140 58');
+      offset-path: path('M433 206 C488 249 512 278 566 278 H700');
     }
     .system-visual-panel .unit.active .airflow-particle {
       animation: schematic-particle 2.4s linear infinite;
+    }
+    .system-visual-panel .unit.active .airflow-particles.unavailable .airflow-particle {
+      animation: none;
+      opacity: 0;
     }
     .system-visual-panel .unit.active .fan-rotor {
       animation: spin 2.8s linear infinite;
@@ -4123,6 +4304,13 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       .system-visual-panel .air-path {
         min-height: 66px;
         padding: 10px;
+      }
+      .system-visual-panel .duct-highlights,
+      .system-visual-panel .mounting-brackets {
+        opacity: 0.45;
+      }
+      .system-visual-panel .particle-3 {
+        display: none;
       }
       .system-lower-grid {
         grid-template-columns: minmax(0, 1fr);
