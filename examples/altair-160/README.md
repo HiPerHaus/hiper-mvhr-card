@@ -19,13 +19,13 @@ entities:
 
 Note there is no `bypass_state` entry — the `altair` profile doesn't declare that role at all, so there's nothing to map, and no bypass row can ever appear for this manufacturer regardless of config. Entity IDs above are illustrative; replace with whatever your integration actually exposes.
 
-**Implemented today (Phase 2):** every role in this example (`mode`, all four temperatures, both airflows, `filter_remaining`, `fault_active`, `frost_protection_active`). `mode_control` (writable) and `fault_code`/`fault_description` (detail text) are specified in `SPECIFICATION.md` §2 but not implemented yet.
+**Implemented today:** every role in this example (`mode`, all four temperatures, both airflows, `filter_remaining`, `fault_active`, `frost_protection_active`) plus the system-mode Altair controller roles shown below. `mode_control` (writable) and `fault_code`/`fault_description` (detail text) are specified in `SPECIFICATION.md` §2 but not implemented yet.
 
 Try `display_mode: homeowner` instead to see the same config with unconfigured/optional rows omitted rather than shown.
 
 ## System mode with optional controls
 
-`display_mode: system` uses the same generic roles. `Off` appears in the operating-mode selector only if the real `select` entity exposes an off option in `attributes.options`; the card does not create one locally.
+`display_mode: system` uses the same generic roles. `Off` appears in the operating-mode selector when either the real `select` entity exposes an off option in `attributes.options` or the Altair backend stop switch is mapped as `stop_control`. For the ha-altair-mvhr backend, `switch.altair_mvhr_stop_unit` maps Coil 00004: off = running, on = stopped.
 
 ```yaml
 type: custom:hiper-mvhr-card
@@ -33,16 +33,13 @@ manufacturer: altair
 display_mode: system
 name: Altair MVHR
 max_airflow: 120
-feature_flags:
-  away_airflow: true
-  low_airflow: true
-  home_airflow: true
-  high_airflow: true
-  calibration_start_control: true
 entities:
   mode: select.altair_mvhr_mode
+  effective_mode: sensor.altair_mvhr_effective_mode
+  stop_control: switch.altair_mvhr_stop_unit
   airflow: sensor.altair_mvhr_airflow
   target_airflow: sensor.altair_mvhr_target_airflow
+  maximum_airflow: sensor.altair_mvhr_maximum_airflow
   outdoor_air_temp: sensor.altair_mvhr_outdoor_air_temperature
   supply_air_temp: sensor.altair_mvhr_supply_air_temperature
   extract_air_temp: sensor.altair_mvhr_extract_air_temperature
@@ -56,10 +53,16 @@ entities:
   low_airflow: number.altair_mvhr_low_airflow
   home_airflow: number.altair_mvhr_home_airflow
   high_airflow: number.altair_mvhr_high_airflow
-  calibration: button.altair_mvhr_calibrate
+  calibration_available: binary_sensor.altair_mvhr_airflow_calibration_available
+  calibration_start_control: button.altair_mvhr_start_airflow_calibration
+  calibration_cancel_control: button.altair_mvhr_cancel_airflow_calibration
+  calibration_status: sensor.altair_mvhr_airflow_calibration_status
+  calibration_progress: sensor.altair_mvhr_airflow_calibration_progress
+  calibration_result: sensor.altair_mvhr_airflow_calibration_result
+  last_calibration: sensor.altair_mvhr_last_airflow_calibration
   shower_detected: binary_sensor.altair_shower_detected
   shower_trigger_temperature: sensor.altair_shower_trigger_temperature
   shower_pipe_temperature: sensor.shower_pipe_temperature
 ```
 
-`calibration` is accepted as a shortcut for the canonical `calibration_start_control` role. The preset airflow rows only render for real configured number/input_number entities; if none are configured, More controls shows a short empty-state explanation.
+`calibration` and `start_calibration` are accepted as shortcuts for the canonical `calibration_start_control` role; `cancel_calibration` maps to `calibration_cancel_control`. The preset airflow rows only render for real configured number/input_number entities; if none are configured, More controls shows a short empty-state explanation.

@@ -27,13 +27,13 @@ The card shows the same data three ways today, chosen with `display_mode` in you
 
 - **Homeowner** — clean and minimal; unconfigured optional roles are omitted entirely; no raw entity IDs.
 - **Detailed** — a full installer dashboard: a large airflow visual and controls side by side, a metrics grid, and a status strip, plus "not configured" indicators and explicit warnings when a mapped entity doesn't exist in Home Assistant, so an installer can see exactly what's left to wire up.
-- **System** — the flagship, polished dashboard for homeowners who want to *see* their ventilation system rather than read a list: a compact header with an at-a-glance mode select and boost pill, a large System Overview visual next to a shower-detection panel (when configured), three information cards (Airflow/Temperatures/System Status), and a "More controls" disclosure for everything else (override, mapped level, calibration internals, individual fan RPM) collapsed out of the way by default.
+- **System** — the flagship, polished dashboard for homeowners who want to *see* their ventilation system rather than read a list: a compact header with an at-a-glance mode select, Off/run support and boost pill, a large System Overview visual next to a shower-detection panel (when configured), three information cards (Airflow/Temperatures/System Status), and a "More controls" disclosure for everything else (airflow presets, calibration, override, mapped level, individual fan RPM) collapsed out of the way by default.
 
 A **Commissioning** mode (raw entity/register inspection) is planned but not built yet.
 
 ### System mode
 
-`display_mode: system` is aimed at someone who wants to glance at the card and immediately answer: is it working, where's the air coming from and going to, how much heat is being recovered, is boost on, is someone in the shower right now, does the filter need attention? It deliberately doesn't lead with diagnostics — override, calibration internals, and raw entity availability all live behind the "More controls" disclosure instead of competing for attention with the airflow visual.
+`display_mode: system` is aimed at someone who wants to glance at the card and immediately answer: is it working, where's the air coming from and going to, how much heat is being recovered, is boost on, is someone in the shower right now, does the filter need attention? It deliberately doesn't lead with diagnostics — airflow presets, calibration, override, and raw entity availability all live behind the "More controls" disclosure instead of competing for attention with the airflow visual.
 
 Minimal configuration:
 
@@ -67,17 +67,10 @@ max_airflow: 120
 
 show_airflow_animation: true
 show_advanced_controls: true
-feature_flags:
-  maximum_airflow: true
-  away_airflow: true
-  low_airflow: true
-  home_airflow: true
-  high_airflow: true
-  calibration_start_control: true
-
 entities:
   mode: select.altair_mvhr_mode
   effective_mode: sensor.altair_mvhr_effective_mode
+  stop_control: switch.altair_mvhr_stop_unit
   airflow: sensor.altair_mvhr_airflow
   target_airflow: sensor.altair_mvhr_target_airflow
   maximum_airflow: sensor.altair_mvhr_maximum_airflow
@@ -103,9 +96,12 @@ entities:
   low_airflow: number.altair_mvhr_low_airflow
   home_airflow: number.altair_mvhr_home_airflow
   high_airflow: number.altair_mvhr_high_airflow
-  calibration_start_control: button.altair_mvhr_run_calibration
+  calibration_available: binary_sensor.altair_mvhr_airflow_calibration_available
+  calibration_start_control: button.altair_mvhr_start_airflow_calibration
+  calibration_cancel_control: button.altair_mvhr_cancel_airflow_calibration
   calibration_result: sensor.altair_mvhr_airflow_calibration_result
   calibration_status: sensor.altair_mvhr_airflow_calibration_status
+  calibration_progress: sensor.altair_mvhr_airflow_calibration_progress
   last_calibration: sensor.altair_mvhr_last_airflow_calibration
 
   indoor_humidity: sensor.altair_mvhr_indoor_humidity
@@ -124,9 +120,9 @@ show_calibration: true
 heat_recovery_method: automatic
 ```
 
-**Compact header controls.** Mode and Boost sit together inside one bordered "control panel" strip in the header, not floating loose in the corner. Mode is a small select and Boost a status/toggle pill, not full-width form fields — the fuller boost-duration input, Start/Cancel Boost buttons, and the override control still exist, just inside "More controls." If the mapped mode select exposes `Off` (any casing, such as `off`, `Off`, or `OFF`), it appears as the first mode option and is sent back using the exact option value Home Assistant exposed; if the integration does not expose it, the card does not invent a non-working Off command.
+**Compact header controls.** Mode and Boost sit together inside one bordered "control panel" strip in the header, not floating loose in the corner. Mode is a small select and Boost a status/toggle pill, not full-width form fields — the fuller boost-duration input, Start/Cancel Boost buttons, and the override control still exist, just inside "More controls." If the mapped mode select exposes `Off` (any casing, such as `off`, `Off`, or `OFF`), it appears as the first mode option and is sent back using the exact option value Home Assistant exposed. For the Altair backend, `stop_control` maps Coil 00004 (`switch.altair_mvhr_stop_unit`): choosing Off turns that switch on, and choosing a running mode turns it off before sending the selected Away/Low/Home/High mode. When stopped, the card clearly reports "Stopped", mutes the airflow state, disables particles and fan rotation, and retains any live temperature readings that remain available. Manufacturers without an Off mode or supported stop control simply do not show the Off option.
 
-**System Overview.** This is the hero of the card and always gets the card's full width — no side column competes with it. The visual shows a cutaway unit with outdoor air on the left, indoor air on the right, internal filters, two internal blowers, and a visible plate exchanger. Air colours are temperature-driven, not permanently assigned by air type: each stream uses live endpoint temperatures and gradients through the exchanger, with neutral styling when readings are unavailable. Extract and Supply show both temperature and the shared measured airflow reading by default; Extract also shows valid `indoor_humidity` as "Indoor humidity" beneath its temperature. Exhaust and Outdoor show temperature only, since most integrations — Altair included — report one measured airflow value for the whole system, not one per duct. Set `show_airflow_on_all_paths: true` to show that shared reading on all four. When `show_airflow_animation` is on, the measured airflow is genuinely positive, and the required temperature entities are available, the fans spin, the duct stubs on the unit show a small travelling particle animation in the correct direction, and the air-path panels animate too — all of it disabled under `prefers-reduced-motion`. While boost is active, those same animations run a little faster (a real boost mode raises fan speed noticeably) rather than adding anything new to the graphic itself. The heat-recovery percentage sits in a compact plate above the unit, with the exchanger left readable, and gently pulses for a moment whenever the figure actually changes between updates (never on load, never if it's unchanged).
+**System Overview.** This is the hero of the card and always gets the card's full width — no side column competes with it. The visual shows a polished cutaway unit with outdoor air on the left, indoor air on the right, internal filters, cleaner centrifugal blower graphics, formed duct passages, cabinet seams/collars, and a visible plate exchanger. Air colours are temperature-driven, not permanently assigned by air type: each stream uses live endpoint temperatures and gradients through the exchanger, with neutral styling when readings are unavailable. Extract and Supply show both temperature and the shared measured airflow reading by default; Extract also shows valid `indoor_humidity` as "Indoor humidity" beneath its temperature. Exhaust and Outdoor show temperature only, since most integrations — Altair included — report one measured airflow value for the whole system, not one per duct. Set `show_airflow_on_all_paths: true` to show that shared reading on all four. When `show_airflow_animation` is on, the measured airflow is genuinely positive, the unit is not stopped, and the required temperature entities are available, the fans spin, the duct stubs on the unit show a small travelling particle animation in the correct direction, and the air-path panels animate too — all of it disabled under `prefers-reduced-motion`. While boost is active, those same animations run a little faster (a real boost mode raises fan speed noticeably) rather than adding anything new to the graphic itself. The heat-recovery percentage sits in a compact plate just above the exchanger, with the exchanger left readable, and gently pulses for a moment whenever the figure actually changes between updates (never on load, never if it's unchanged).
 
 **Shower detection.** Entirely optional, and driven by the same entity-role/availability model as everything else in the card — map none, some, or all three of `shower_detected` / `shower_trigger_temperature` / `shower_pipe_temperature` and the card adapts:
 
@@ -137,13 +133,11 @@ heat_recovery_method: automatic
 
 **Lower cards.** Airflow (a semicircular SVG/CSS gauge, no charting library — the number and its unit stack on separate lines — plus target airflow/fan speed/current profile) now scales measured airflow against the best available capacity: `max_airflow`, then `maximum_airflow`, then `high_airflow`, then a profile default, with mapped level retained only as a final fallback. It also shows a quiet scale hint such as `70 of 120 m³/h` and briefly brightens whenever the current-airflow reading increases from the previous update (never on load, never on a decrease). Temperatures (the same four readings as the visual, plus heat recovery), and System Status (coloured badges for boost/filter/overall state, plus a prominent countdown callout when boost is actually active — never a stray "0 min" when it isn't) — each row only renders when its role is actually configured or supported.
 
-**More controls.** Airflow preset number entities (`away_airflow`, `low_airflow`, `home_airflow`, `high_airflow`) render as native number inputs when mapped and supported, using the entity's min/max/step/unit attributes, debounced writes, pending state, service-error feedback, and Away ≤ Low ≤ Home ≤ High validation. If no preset number entities are configured, the drawer says so instead of silently hiding the section. `calibration_start_control` renders a confirmed "Calibrate airflow" action only when a real button/input_button backend is configured and supported. `calibration` is accepted as a config alias for `calibration_start_control`.
+**More controls.** Airflow preset number entities (`away_airflow`, `low_airflow`, `home_airflow`, `high_airflow`) render as native number inputs when mapped and supported, using the entity's min/max/step/unit attributes, debounced writes, pending state, service-error feedback, and Away ≤ Low ≤ Home ≤ High validation. If no preset number entities are configured, the drawer says so instead of silently hiding the section. Airflow calibration renders as its own compact panel when any supported calibration backend is configured: `calibration_available`, `calibration_start_control`, `calibration_cancel_control`, `calibration_status`, `calibration_progress`, `calibration_result`, and `last_calibration`. It shows Start Calibration, Cancel Calibration while running, a progress bar, status, percentage, last timestamp, and result. `calibration` and `start_calibration` are accepted as config aliases for `calibration_start_control`; `cancel_calibration` is accepted for `calibration_cancel_control`.
 
 **Apparent heat-recovery limitation.** Same caveat as detailed mode below: it's `(supply − outdoor) / (extract − outdoor) × 100`, a dashboard-friendly estimate, not a certified efficiency figure, and it correctly reports "Not applicable" for temperature combinations that aren't physically consistent with straightforward recovery (for example a supply temperature above the extract temperature).
 
 **Altair has no bypass**, so system mode never shows a bypass row for it — for Zehnder and Aerofresh, where the profile does support and map it, it appears inside "More controls," never in the main visual, lower cards, or header, and never via a manufacturer check in the rendering code (see [`CLAUDE.md`](CLAUDE.md)'s one rule).
-
-**Optional calibration button.** Map `calibration_start_control` (or the `calibration` alias) to a `button`/`input_button` entity and set `feature_flags: { calibration_start_control: true }` to add a "Calibrate airflow" button inside "More controls," next to the compact calibration/fan-speed tiles. Off by default for every manufacturer profile — whether Altair/Zehnder/Aerofresh actually expose a manual calibration trigger is unverified (`SPECIFICATION.md` §3), so it's opt-in per installation rather than assumed.
 
 **Responsive behaviour.** The card and its host always take the full width Lovelace gives them (no fixed or max card width), and it stays usable in both light and dark Home Assistant themes (every colour is a theme CSS variable or a `color-mix()` tint against it — nothing is a hard-coded dark surface). The layout reacts to the card's own rendered width (via a CSS container query), not just the browser viewport, since a Home Assistant dashboard often gives a card less room than the window itself would allow. The three lower cards form one row on desktop, wrap to two around ~900px of card width, and stack to one below ~600px, where the shower banner and header controls also drop to a single column and every touch target stays at least 40-44px with no horizontal scrolling.
 
@@ -156,7 +150,7 @@ npm install
 npm run dev
 ```
 
-This opens `dev/preview.html`, which renders the card against realistic mock Home Assistant states, including Altair detailed/homeowner/system layouts, boost active, override active, calibration running/required, an unavailable required entity, a Zehnder system-mode scenario with bypass mapped, light/dark themes, and desktop/tablet/430px/375px widths.
+This opens `dev/preview.html`, which renders the card against realistic mock Home Assistant states, including Altair detailed/homeowner/system layouts, running and Off modes, boost active, override active, calibration running/required controls, editable airflow presets, configured-maximum gauge scaling, an unavailable required entity, a Zehnder system-mode scenario with bypass mapped, light/dark themes, and desktop/tablet/430px/375px widths.
 
 ## Installation
 
@@ -173,8 +167,10 @@ display_mode: detailed
 entities:
   mode: select.altair_mvhr_mode
   effective_mode: sensor.altair_mvhr_effective_mode
+  stop_control: switch.altair_mvhr_stop_unit
   airflow: sensor.altair_mvhr_airflow
   target_airflow: sensor.altair_mvhr_target_airflow
+  maximum_airflow: sensor.altair_mvhr_maximum_airflow
   mapped_level: sensor.altair_mvhr_mapped_airflow_level
   supply_temperature: sensor.altair_mvhr_supply_air_temperature
   extract_temperature: sensor.altair_mvhr_extract_air_temperature
@@ -192,6 +188,13 @@ entities:
   override_duration: select.altair_mvhr_override_duration
   override_remaining: sensor.altair_mvhr_override_remaining
   clear_override: button.altair_mvhr_clear_override
+  away_airflow: number.altair_mvhr_away_airflow
+  low_airflow: number.altair_mvhr_low_airflow
+  home_airflow: number.altair_mvhr_home_airflow
+  high_airflow: number.altair_mvhr_high_airflow
+  calibration_available: binary_sensor.altair_mvhr_airflow_calibration_available
+  calibration_start_control: button.altair_mvhr_start_airflow_calibration
+  calibration_cancel_control: button.altair_mvhr_cancel_airflow_calibration
   calibration_result: sensor.altair_mvhr_airflow_calibration_result
   calibration_status: sensor.altair_mvhr_airflow_calibration_status
   calibration_progress: sensor.altair_mvhr_airflow_calibration_progress

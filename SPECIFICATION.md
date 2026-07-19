@@ -24,37 +24,61 @@ Roles are grouped by category. `views` lists which audience views show the role 
 | Role ID | Category | Value type | Views | Notes |
 |---|---|---|---|---|
 | `mode` | core | enum | H, I | current operating mode |
+| `effective_mode` | core | enum | H, I | resolved/runtime mode when different from requested mode |
+| `stop_control` | core | binary/action (writable) | H, I | stop/start control; for Altair Coil 00004, `0`/off = running and `1`/on = stopped |
 | `mode_control` | core | enum (writable) | H, I | entity used to change mode |
 | `supply_airflow` | core | numeric | I | m³/h or % of capacity |
 | `extract_airflow` | core | numeric | I | m³/h or % of capacity |
+| `airflow` | core | numeric | H, I | single measured airflow value when a system reports shared airflow rather than per-duct readings |
+| `target_airflow` | core | numeric | I | current target airflow, if exposed |
 | `maximum_airflow` | core | numeric | I | configured/installed maximum airflow, used to scale the system-mode gauge |
 | `away_airflow` | core | numeric (writable) | I | user-adjustable Away preset airflow, if exposed as a number entity |
 | `low_airflow` | core | numeric (writable) | I | user-adjustable Low preset airflow, if exposed as a number entity |
 | `home_airflow` | core | numeric (writable) | I | user-adjustable Home preset airflow, if exposed as a number entity |
 | `high_airflow` | core | numeric (writable) | I | user-adjustable High preset airflow, also a fallback gauge maximum |
+| `mapped_level` | core | numeric | I | legacy/configured speed level, retained as final gauge fallback |
+| `selected_speed` | core | numeric | I | alternate selected speed-level source, feature-flaggable |
 | `supply_air_temp` | core | numeric | H, I | °C |
 | `extract_air_temp` | core | numeric | I | °C |
 | `outdoor_air_temp` | core | numeric | H, I | °C |
 | `exhaust_air_temp` | core | numeric | I | °C |
 | `heat_recovery_efficiency` | core | numeric | H, I | % |
+| `supply_fan_speed` | diagnostic | numeric | I | supply fan rpm, if exposed |
+| `extract_fan_speed` | diagnostic | numeric | I | extract fan rpm, if exposed |
 | `bypass_state` | core | binary | H, I | omitted entirely for profiles without bypass (e.g. Altair) |
 | `bypass_control` | core | binary (writable) | I | manual override, only if profile allows manual control |
 | `filter_remaining` | core | numeric | H, I | unit defined per profile (days / % / hours) |
 | `filter_alarm` | core | binary | H, I | |
 | `filter_reset_control` | core | action | I | |
+| `calibration_available` | core | binary | I | airflow calibration is available/supported right now |
+| `calibration_status` | core | text | I | airflow calibration state text |
+| `calibration_progress` | core | numeric | I | airflow calibration progress percentage |
+| `calibration_result` | core | text | I | latest airflow calibration result |
+| `last_calibration` | core | timestamp/text | I | last completed airflow calibration timestamp |
 | `calibration_start_control` | core | action | I | manual airflow-calibration trigger |
+| `calibration_cancel_control` | core | action | I | cancel an in-progress airflow calibration |
+| `boost_active` | core | binary | H, I | boost is currently active |
 | `frost_protection_active` | diagnostic | binary | I | |
 | `fault_active` | core | binary | H, I | |
 | `fault_code` | diagnostic | text | I, C | |
 | `fault_description` | diagnostic | text | I, C | |
+| `boost_duration` | core | numeric (writable) | H, I | boost duration control, usually minutes |
+| `start_boost` | core | action | H, I | start boost |
+| `cancel_boost` | core | action | H, I | cancel boost |
 | `boost_remaining` | core | numeric | H, I | minutes remaining, if boost has a timer |
+| `override_duration` | core | enum/numeric (writable) | I | temporary override duration |
+| `override_remaining` | core | numeric | I | minutes remaining on override |
+| `clear_override` | core | action | I | clear temporary override |
 | `indoor_humidity` | optional | numeric | H, I | not all systems expose this |
+| `shower_detected` | optional | binary | H, I | optional shower detector status |
+| `shower_trigger_temperature` | optional | numeric | H, I | detector trigger temperature |
+| `shower_pipe_temperature` | optional | numeric | H, I | live pipe temperature feeding shower detector |
 | `co2_level` | optional | numeric | H, I | not all systems expose this |
 | `commissioning_diagnostics` | commissioning | text/table | C | raw register/entity inspector |
 
 This table is the initial set, not a closed one — new roles are additive (see architecture §4) and don't require a schema version bump for `MvhrSnapshot`/`CapabilityProfile`, only a role-registry entry.
 
-**Implemented so far** (`src/types/entity-roles.ts`): `mode`, `outdoor_air_temp`, `supply_air_temp`, `extract_air_temp`, `exhaust_air_temp`, `supply_airflow`, `extract_airflow`, `maximum_airflow`, `away_airflow`, `low_airflow`, `home_airflow`, `high_airflow`, `indoor_humidity`, `bypass_state` (Phase 1), `filter_remaining`, `fault_active`, `frost_protection_active` (Phase 2), `filter_reset_control` (Phase 3A — the first interactive/action role), plus `calibration_start_control` (system-mode visual-polish follow-up — a second action role, same generic/feature-flaggable pattern as filter reset). The airflow preset and maximum roles are generic and only appear when mapped/supported; no manufacturer default assumes a fixed installed capacity. Everything else in the table above (`mode_control`, `heat_recovery_efficiency`, `bypass_control`, `filter_alarm`, `fault_code`, `fault_description`, `boost_remaining`, `co2_level`, `commissioning_diagnostics`) is specified but not yet implemented; `mode_control` and `bypass_control` are Phase 3B/3C respectively (`ROADMAP.md`).
+**Implemented so far** (`src/types/entity-roles.ts`): every role in the table above except `mode_control`, `heat_recovery_efficiency`, `bypass_control`, `filter_alarm`, `fault_code`, `fault_description`, `co2_level`, and `commissioning_diagnostics`. The airflow preset and maximum roles are generic and only appear when mapped/supported; no manufacturer default assumes a fixed installed capacity. `stop_control` is implemented generically but declared supported for Altair now that the backend exposes the stop coil. `mode_control` and `bypass_control` are Phase 3B/3C respectively (`ROADMAP.md`).
 
 ## 3. Capability matrix (launch set)
 
@@ -65,7 +89,9 @@ This table is the initial set, not a closed one — new roles are additive (see 
 | Frost protection | Role implemented, assumed supported (TBD method) | Role implemented, assumed supported (TBD method) | Role implemented, assumed supported (TBD method) | Off by default |
 | Filter monitoring | Role implemented, assumed supported, unit TBD | Role implemented, assumed supported, unit TBD | Role implemented, assumed supported, unit TBD | Off by default |
 | Filter reset (manual) | TBD (resettable?) — not declared supported | TBD (resettable?) — not declared supported | TBD (resettable?) — not declared supported | Role implemented (Phase 3A), feature-flaggable |
-| Manual calibration trigger | TBD (does the integration expose a start-calibration service/button?) — not declared supported | TBD — not declared supported | TBD — not declared supported | Role implemented, feature-flaggable |
+| Stop/start control | Role implemented and declared supported via backend Coil 00004 (`stop_control`) | TBD — not declared supported | TBD — not declared supported | Role implemented, feature-flaggable |
+| Airflow preset numbers | Role implemented and declared supported (`away_airflow`, `low_airflow`, `home_airflow`, `high_airflow`) | TBD — not declared supported | TBD — not declared supported | Role implemented, feature-flaggable |
+| Airflow calibration controls | Role implemented and declared supported (`calibration_available`, start/cancel/status/progress/result/last) | TBD — not declared supported | TBD — not declared supported | Role implemented, feature-flaggable |
 | Fault indication | Role implemented, assumed supported | Role implemented, assumed supported | Role implemented, assumed supported | Off by default |
 | Boost timer | Not implemented | Not implemented | Not implemented | Not implemented |
 | Humidity sensor | Not implemented | Not implemented | Not implemented | Not implemented |
@@ -96,7 +122,7 @@ Validation rules:
 
 - `manufacturer` must match a registered profile ID; unknown values fail config validation with a clear error (this is a config-time error, not a runtime "unavailable" state).
 - `max_airflow`, when provided, must be a positive number. In system mode it is the first-priority maximum for the Airflow gauge; if omitted, the card falls back to a `maximum_airflow` entity, then `high_airflow`, then any manufacturer-profile default, and only finally to the legacy mapped-level gauge behaviour.
-- `calibration` is accepted as a config alias for the canonical `calibration_start_control` role.
+- `calibration` and `start_calibration` are accepted as config aliases for the canonical `calibration_start_control` role; `cancel_calibration` maps to `calibration_cancel_control`; `stop_unit` and `off_control` map to `stop_control`.
 - Keys under `entities` that aren't roles supported by the active profile are ignored with a non-fatal warning (surfaced in the editor, not thrown at runtime).
 - Roles supported by the profile but absent from `entities` are valid — they render as "not configured" (see §6).
 

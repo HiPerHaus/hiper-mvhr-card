@@ -27,6 +27,10 @@ const ENTITY_ROLE_ALIASES: Record<string, EntityRoleId> = {
   supply_fan: 'supply_fan_speed',
   extract_fan: 'extract_fan_speed',
   calibration: 'calibration_start_control',
+  start_calibration: 'calibration_start_control',
+  cancel_calibration: 'calibration_cancel_control',
+  stop_unit: 'stop_control',
+  off_control: 'stop_control',
   last_airflow_calibration: 'last_calibration',
 };
 

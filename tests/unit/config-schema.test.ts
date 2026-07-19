@@ -87,6 +87,8 @@ describe('parseConfig', () => {
         exhaust_temperature: 'sensor.altair_mvhr_exhaust_air_temperature',
         filter_days: 'sensor.altair_mvhr_filter_days_remaining',
         calibration: 'button.altair_mvhr_calibrate',
+        cancel_calibration: 'button.altair_mvhr_cancel_airflow_calibration',
+        off_control: 'switch.altair_mvhr_stop_unit',
         last_airflow_calibration: 'sensor.altair_mvhr_last_airflow_calibration',
       },
     });
@@ -98,6 +100,8 @@ describe('parseConfig', () => {
       exhaust_air_temp: 'sensor.altair_mvhr_exhaust_air_temperature',
       filter_remaining: 'sensor.altair_mvhr_filter_days_remaining',
       calibration_start_control: 'button.altair_mvhr_calibrate',
+      calibration_cancel_control: 'button.altair_mvhr_cancel_airflow_calibration',
+      stop_control: 'switch.altair_mvhr_stop_unit',
       last_calibration: 'sensor.altair_mvhr_last_airflow_calibration',
     });
   });

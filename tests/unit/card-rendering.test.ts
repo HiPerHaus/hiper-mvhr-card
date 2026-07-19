@@ -937,6 +937,7 @@ describe('hiper-mvhr-card', () => {
   describe('system mode (flagship visual panel)', () => {
     const systemEntities = {
       mode: 'select.altair_mvhr_mode',
+      stop_control: 'switch.altair_mvhr_stop_unit',
       airflow: 'sensor.altair_mvhr_airflow',
       target_airflow: 'sensor.altair_mvhr_target_airflow',
       mapped_level: 'sensor.altair_mvhr_mapped_airflow_level',
@@ -956,8 +957,16 @@ describe('hiper-mvhr-card', () => {
       override_duration: 'select.altair_mvhr_override_duration',
       clear_override: 'button.altair_mvhr_clear_override',
       calibration_result: 'sensor.altair_mvhr_airflow_calibration_result',
+      calibration_available: 'binary_sensor.altair_mvhr_airflow_calibration_available',
       calibration_status: 'sensor.altair_mvhr_airflow_calibration_status',
+      calibration_progress: 'sensor.altair_mvhr_airflow_calibration_progress',
       last_calibration: 'sensor.altair_mvhr_last_airflow_calibration',
+      calibration_start_control: 'button.altair_mvhr_start_airflow_calibration',
+      calibration_cancel_control: 'button.altair_mvhr_cancel_airflow_calibration',
+      away_airflow: 'number.altair_mvhr_away_airflow',
+      low_airflow: 'number.altair_mvhr_low_airflow',
+      home_airflow: 'number.altair_mvhr_home_airflow',
+      high_airflow: 'number.altair_mvhr_high_airflow',
     };
 
     const systemStates: HomeAssistant['states'] = {
@@ -1652,10 +1661,10 @@ describe('hiper-mvhr-card', () => {
       }
 
       it.each([
-        ['0', 0],
-        ['4', 0.4],
-        ['6', 0.6],
-        ['10', 1],
+        ['0', 70 / 120],
+        ['4', 70 / 120],
+        ['6', 70 / 120],
+        ['10', 70 / 120],
       ])('reads mapped_level %s as %s of the arc', async (level, expected) => {
         const el = mountWithLevel(level);
         await el.updateComplete;
@@ -1663,15 +1672,14 @@ describe('hiper-mvhr-card', () => {
         expect(gaugeFraction(el)).toBeCloseTo(expected, 5);
       });
 
-      it('ignores current airflow and target airflow entirely for the arc fraction', async () => {
-        // Default fixture airflow=70, target_airflow=95 (~0.74 under the old
-        // "airflow / target" math) but mapped_level is 4 -> the arc must
-        // read 0.4, not ~0.74, and the big number must still be the real
-        // measured airflow.
+      it('scales the arc from measured airflow over the configured high preset', async () => {
+        // Default fixture airflow=70 and high_airflow=120, so the v1.0 gauge
+        // reads measured airflow over configured maximum while the big number
+        // remains the real measured airflow.
         const el = mountSystem();
         await el.updateComplete;
 
-        expect(gaugeFraction(el)).toBeCloseTo(0.4, 5);
+        expect(gaugeFraction(el)).toBeCloseTo(70 / 120, 5);
         const gaugeValue = el.shadowRoot?.querySelector('.gauge .gauge-value strong');
         expect(gaugeValue?.textContent?.trim()).toBe('70');
       });
@@ -1714,7 +1722,7 @@ describe('hiper-mvhr-card', () => {
         expect(gaugeFraction(el)).toBeCloseTo(0, 5);
       });
 
-      it('reads an empty arc (fraction 0) when neither mapped_level nor selected_speed is available', async () => {
+      it('ignores mapped-level availability when measured airflow and high preset are available', async () => {
         const el = mountSystem({
           ...altairHass,
           states: {
@@ -1729,7 +1737,7 @@ describe('hiper-mvhr-card', () => {
         });
         await el.updateComplete;
 
-        expect(gaugeFraction(el)).toBeCloseTo(0, 5);
+        expect(gaugeFraction(el)).toBeCloseTo(70 / 120, 5);
         // Still shows the real measured airflow, never a synthesized one.
         const gaugeValue = el.shadowRoot?.querySelector('.gauge .gauge-value strong');
         expect(gaugeValue?.textContent?.trim()).toBe('70');
@@ -1751,7 +1759,22 @@ describe('hiper-mvhr-card', () => {
         ].map((option) => (option as HTMLOptionElement).value);
         expect(supportedOptions[0]).toBe('off');
 
-        const withoutOff = mountSystem();
+        const withoutOff = mount();
+        set(withoutOff, {
+          manufacturer: 'generic',
+          display_mode: 'system',
+          entities: { mode: 'select.mvhr_mode' },
+          feature_flags: { mode: true },
+        });
+        withoutOff.hass = {
+          states: {
+            'select.mvhr_mode': {
+              entity_id: 'select.mvhr_mode',
+              state: 'Home',
+              attributes: { options: ['Away', 'Low', 'Home', 'High'] },
+            },
+          },
+        };
         await withoutOff.updateComplete;
         const unsupportedOptions = [
           ...(withoutOff.shadowRoot?.querySelectorAll('select[aria-label="Operating mode"] option') ?? []),
@@ -1792,6 +1815,79 @@ describe('hiper-mvhr-card', () => {
         expect(callService).toHaveBeenCalledWith('select', 'select_option', {
           entity_id: 'select.mvhr_mode',
           option: 'OFF',
+        });
+      });
+
+      it('adds Off from a configured stop control and calls the stop switch service', async () => {
+        const callService = vi.fn().mockResolvedValue(undefined);
+        const el = mountSystem({
+          ...altairHass,
+          states: {
+            ...altairHass.states,
+            ...systemStates,
+            'switch.altair_mvhr_stop_unit': {
+              entity_id: 'switch.altair_mvhr_stop_unit',
+              state: 'off',
+              attributes: {},
+            },
+          },
+          callService,
+        });
+        await el.updateComplete;
+
+        const select = el.shadowRoot?.querySelector(
+          'select[aria-label="Operating mode"]',
+        ) as HTMLSelectElement;
+        expect([...select.options].map((option) => option.value)[0]).toBe('Off');
+
+        select.value = 'Off';
+        select.dispatchEvent(new Event('change'));
+        expect(callService).toHaveBeenCalledWith('switch', 'turn_on', {
+          entity_id: 'switch.altair_mvhr_stop_unit',
+        });
+      });
+
+      it('starts the unit before selecting a running mode when currently stopped', async () => {
+        const callService = vi.fn().mockResolvedValue(undefined);
+        const el = mountSystem({
+          ...altairHass,
+          states: {
+            ...altairHass.states,
+            ...systemStates,
+            'switch.altair_mvhr_stop_unit': {
+              entity_id: 'switch.altair_mvhr_stop_unit',
+              state: 'on',
+              attributes: {},
+            },
+            'sensor.altair_mvhr_airflow': {
+              entity_id: 'sensor.altair_mvhr_airflow',
+              state: '0',
+              attributes: { unit_of_measurement: 'm³/h' },
+            },
+          },
+          callService,
+        });
+        await el.updateComplete;
+
+        const select = el.shadowRoot?.querySelector(
+          'select[aria-label="Operating mode"]',
+        ) as HTMLSelectElement;
+        expect(select.value).toBe('Off');
+        expect(el.shadowRoot?.textContent).toContain('Stopped');
+        expect(el.shadowRoot?.querySelector('.unit.active')).toBeNull();
+
+        select.value = 'medium';
+        select.dispatchEvent(new Event('change'));
+        await Promise.resolve();
+        await Promise.resolve();
+        await el.updateComplete;
+
+        expect(callService).toHaveBeenNthCalledWith(1, 'switch', 'turn_off', {
+          entity_id: 'switch.altair_mvhr_stop_unit',
+        });
+        expect(callService).toHaveBeenNthCalledWith(2, 'select', 'select_option', {
+          entity_id: 'select.altair_mvhr_mode',
+          option: 'medium',
         });
       });
 
@@ -1919,7 +2015,13 @@ describe('hiper-mvhr-card', () => {
       });
 
       it('shows a preset-airflow empty state when no preset entities are configured', async () => {
-        const el = mountSystem();
+        const el = mount();
+        set(el, {
+          manufacturer: 'generic',
+          display_mode: 'system',
+          entities: {},
+        });
+        el.hass = { states: {} };
         await el.updateComplete;
         (el.shadowRoot?.querySelector('.disclosure-toggle') as HTMLButtonElement).click();
         await el.updateComplete;
@@ -2274,10 +2376,11 @@ describe('hiper-mvhr-card', () => {
 
         const stats = el.shadowRoot?.querySelector('.compact-stats-card');
         expect(stats).toBeTruthy();
-        expect(stats?.textContent).toContain('Calibration');
-        expect(stats?.textContent).toContain('Progress');
         expect(stats?.textContent).toContain('Supply fan');
         expect(stats?.textContent).toContain('Extract fan');
+        const calibration = el.shadowRoot?.querySelector('.calibration-panel');
+        expect(calibration?.textContent).toContain('Airflow calibration');
+        expect(calibration?.textContent).toContain('Complete');
       });
 
       it('shows System Status as coloured badges rather than label/value rows', async () => {
@@ -2442,7 +2545,7 @@ describe('hiper-mvhr-card', () => {
           'button.calibration-button',
         ) as HTMLButtonElement;
         expect(button).toBeTruthy();
-        expect(button.textContent).toContain('Calibrate airflow');
+        expect(button.textContent).toContain('Start Calibration');
         button.click();
         await el.updateComplete;
 
@@ -2454,12 +2557,59 @@ describe('hiper-mvhr-card', () => {
       });
 
       it('does not show a calibration button for a profile that has not declared it supported', async () => {
-        const el = mountSystem();
+        const el = mount();
+        set(el, {
+          type: 'custom:hiper-mvhr-card',
+          manufacturer: 'generic',
+          display_mode: 'system',
+          entities: {},
+        });
+        el.hass = { states: {} };
         await el.updateComplete;
         (el.shadowRoot?.querySelector('.disclosure-toggle') as HTMLButtonElement)?.click();
         await el.updateComplete;
 
         expect(el.shadowRoot?.querySelector('button.calibration-button')).toBeNull();
+      });
+
+      it('shows calibration progress and cancel while calibration is running', async () => {
+        const callService = vi.fn().mockResolvedValue(undefined);
+        const el = mountSystem({
+          ...altairHass,
+          states: {
+            ...altairHass.states,
+            ...systemStates,
+            'sensor.altair_mvhr_airflow_calibration_status': {
+              entity_id: 'sensor.altair_mvhr_airflow_calibration_status',
+              state: 'sampling',
+              attributes: {},
+            },
+            'sensor.altair_mvhr_airflow_calibration_progress': {
+              entity_id: 'sensor.altair_mvhr_airflow_calibration_progress',
+              state: '42',
+              attributes: { unit_of_measurement: '%' },
+            },
+          },
+          callService,
+        });
+        await el.updateComplete;
+        (el.shadowRoot?.querySelector('.disclosure-toggle') as HTMLButtonElement)?.click();
+        await el.updateComplete;
+
+        const panel = el.shadowRoot?.querySelector('.calibration-panel');
+        expect(panel?.textContent).toContain('Airflow calibration');
+        expect(panel?.textContent).toContain('sampling');
+        expect(panel?.textContent).toContain('42 %');
+        expect(panel?.querySelector('.calibration-progress span')?.getAttribute('style')).toContain(
+          'width:42%',
+        );
+
+        const cancel = panel?.querySelector('.calibration-cancel-button') as HTMLButtonElement;
+        expect(cancel?.textContent).toContain('Cancel Calibration');
+        cancel.click();
+        expect(callService).toHaveBeenCalledWith('button', 'press', {
+          entity_id: 'button.altair_mvhr_cancel_airflow_calibration',
+        });
       });
 
       it('shows calibration as unavailable when the configured action entity is unavailable', async () => {

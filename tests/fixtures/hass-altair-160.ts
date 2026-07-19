@@ -12,6 +12,11 @@ export const altairHass: HomeAssistant = {
       state: 'medium',
       attributes: { options: ['away', 'low', 'medium', 'high'] },
     },
+    'switch.altair_mvhr_stop_unit': {
+      entity_id: 'switch.altair_mvhr_stop_unit',
+      state: 'off',
+      attributes: {},
+    },
     'select.altair_mvhr_override_duration': {
       entity_id: 'select.altair_mvhr_override_duration',
       state: 'until_next_schedule_change',
@@ -107,6 +112,11 @@ export const altairHass: HomeAssistant = {
       state: 'calibrated',
       attributes: {},
     },
+    'binary_sensor.altair_mvhr_airflow_calibration_available': {
+      entity_id: 'binary_sensor.altair_mvhr_airflow_calibration_available',
+      state: 'on',
+      attributes: {},
+    },
     'sensor.altair_mvhr_airflow_calibration_status': {
       entity_id: 'sensor.altair_mvhr_airflow_calibration_status',
       state: 'idle',
@@ -121,6 +131,36 @@ export const altairHass: HomeAssistant = {
       entity_id: 'sensor.altair_mvhr_last_airflow_calibration',
       state: '2026-07-16 08:30',
       attributes: {},
+    },
+    'button.altair_mvhr_start_airflow_calibration': {
+      entity_id: 'button.altair_mvhr_start_airflow_calibration',
+      state: 'unknown',
+      attributes: {},
+    },
+    'button.altair_mvhr_cancel_airflow_calibration': {
+      entity_id: 'button.altair_mvhr_cancel_airflow_calibration',
+      state: 'unknown',
+      attributes: {},
+    },
+    'number.altair_mvhr_away_airflow': {
+      entity_id: 'number.altair_mvhr_away_airflow',
+      state: '45',
+      attributes: { min: 20, max: 140, step: 5, unit_of_measurement: 'm³/h' },
+    },
+    'number.altair_mvhr_low_airflow': {
+      entity_id: 'number.altair_mvhr_low_airflow',
+      state: '70',
+      attributes: { min: 20, max: 140, step: 5, unit_of_measurement: 'm³/h' },
+    },
+    'number.altair_mvhr_home_airflow': {
+      entity_id: 'number.altair_mvhr_home_airflow',
+      state: '95',
+      attributes: { min: 20, max: 140, step: 5, unit_of_measurement: 'm³/h' },
+    },
+    'number.altair_mvhr_high_airflow': {
+      entity_id: 'number.altair_mvhr_high_airflow',
+      state: '120',
+      attributes: { min: 20, max: 140, step: 5, unit_of_measurement: 'm³/h' },
     },
     'sensor.altair_mvhr_mapped_airflow_level': {
       entity_id: 'sensor.altair_mvhr_mapped_airflow_level',

@@ -7,6 +7,7 @@
 export const ENTITY_ROLES = [
   'mode',
   'effective_mode',
+  'stop_control',
   'outdoor_air_temp',
   'supply_air_temp',
   'extract_air_temp',
@@ -39,6 +40,7 @@ export const ENTITY_ROLES = [
   'override_remaining',
   'clear_override',
   'calibration_result',
+  'calibration_available',
   'calibration_status',
   'calibration_progress',
   'last_calibration',
@@ -59,15 +61,13 @@ export const ENTITY_ROLES = [
   // but deliberately NOT added here yet — Phase 3B/3C, once mode/bypass
   // optimistic-value reconciliation exists to support them meaningfully.
   'filter_reset_control',
-  // Added in the system-mode visual-polish follow-up (round 2): a second
-  // action role, same shape as `filter_reset_control` above — a
-  // fire-and-forget "press" to kick off an airflow calibration run. Only
-  // `generic` declares it supported by default (opt-in via feature_flags);
-  // whether Altair/Zehnder/Aerofresh actually expose a manual calibration
-  // trigger (vs. calibration only running automatically/via the
-  // manufacturer's own app) is TBD per their docs/manufacturers/*.md — see
-  // SPECIFICATION.md §3.
+  // Added in the system-mode visual-polish follow-up (round 2): action roles,
+  // same shape as `filter_reset_control` above — fire-and-forget "press"
+  // controls for airflow calibration. Altair now declares these supported
+  // because ha-altair-mvhr exposes start/cancel controls; other profiles can
+  // opt in via feature_flags when their integrations expose equivalents.
   'calibration_start_control',
+  'calibration_cancel_control',
   // Added for the system-mode visual redesign's shower-detection panel: a
   // generic "was a shower just detected, and what temperature triggered/will
   // rearm it" concept, not an Altair-only idea — any manufacturer profile

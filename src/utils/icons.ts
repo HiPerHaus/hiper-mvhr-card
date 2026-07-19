@@ -8,6 +8,7 @@ import type { EntityRoleId } from '../types/entity-roles';
  */
 const ROLE_ICONS: Partial<Record<EntityRoleId, string>> = {
   mode: 'mdi:fan',
+  stop_control: 'mdi:power',
   outdoor_air_temp: 'mdi:thermometer',
   supply_air_temp: 'mdi:thermometer',
   extract_air_temp: 'mdi:thermometer',
@@ -25,7 +26,9 @@ const ROLE_ICONS: Partial<Record<EntityRoleId, string>> = {
   frost_protection_active: 'mdi:snowflake-alert',
   filter_reset_control: 'mdi:restart',
   selected_speed: 'mdi:tune-variant',
+  calibration_available: 'mdi:check-decagram',
   calibration_start_control: 'mdi:progress-wrench',
+  calibration_cancel_control: 'mdi:cancel',
   shower_detected: 'mdi:shower-head',
   shower_trigger_temperature: 'mdi:thermometer-water',
   shower_pipe_temperature: 'mdi:thermometer-water',

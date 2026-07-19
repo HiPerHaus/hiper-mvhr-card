@@ -5,10 +5,12 @@ Capability profile ID: `altair`
 ## Confirmed facts
 
 - **No summer bypass.** The Altair 160 does not have a bypass mechanism. The card must never render a bypass control or bypass status for this profile — `bypass_state` and `bypass_control` are omitted entirely from `supportedRoles`, not just hidden conditionally.
+- **Stop/start control.** The ha-altair-mvhr backend exposes the stop coil as a Home Assistant control for Coil 00004: `0`/off means the unit is enabled/running, and `1`/on stops the unit. The card maps this through the generic `stop_control` role, not through manufacturer-specific rendering code.
+- **Airflow presets and calibration controls.** The backend exposes editable Away/Low/Home/High airflow number entities and airflow calibration availability, start, cancel, status, progress, result, and last-calibration entities. These are declared in the Altair capability profile and hidden automatically when an installation does not map the corresponding entities.
 
-## Implemented (Phase 2)
+## Implemented
 
-`filter_remaining`, `fault_active`, and `frost_protection_active` are declared supported and render in the system status section when configured — this means the *role* exists and the card can show it, not that the facts below are confirmed. Correct the TBD items below the moment real documentation exists; the profile's declared support doesn't need to change either way.
+`filter_remaining`, `fault_active`, `frost_protection_active`, `stop_control`, airflow preset numbers, and airflow calibration roles are declared supported and render when configured — this means the *role* exists and the card can show/use it, not that every optional entity must be present in every installation. Correct the TBD items below the moment real documentation exists; the profile's declared support doesn't need to change either way unless a capability itself is disproven.
 
 ## TBD (needs verification)
 
@@ -17,7 +19,7 @@ Capability profile ID: `altair`
 - Full operating mode list
 - Boost timer support
 - Humidity/CO₂ sensor availability
-- Known Home Assistant integration path(s) for this unit (native integration, Modbus, ESPHome?) and typical entity naming
+- Known third-party Home Assistant integration path(s) beyond ha-altair-mvhr and typical entity naming
 
 ## Notes
 

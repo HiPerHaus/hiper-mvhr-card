@@ -14,6 +14,7 @@ import type { HomeAssistant } from '../src/types/hass';
 const altairEntities = {
   mode: 'select.altair_mvhr_mode',
   effective_mode: 'sensor.altair_mvhr_effective_mode',
+  stop_control: 'switch.altair_mvhr_stop_unit',
   airflow: 'sensor.altair_mvhr_airflow',
   target_airflow: 'sensor.altair_mvhr_target_airflow',
   mapped_level: 'sensor.altair_mvhr_mapped_airflow_level',
@@ -34,9 +35,16 @@ const altairEntities = {
   override_remaining: 'sensor.altair_mvhr_override_remaining',
   clear_override: 'button.altair_mvhr_clear_override',
   calibration_result: 'sensor.altair_mvhr_airflow_calibration_result',
+  calibration_available: 'binary_sensor.altair_mvhr_airflow_calibration_available',
   calibration_status: 'sensor.altair_mvhr_airflow_calibration_status',
   calibration_progress: 'sensor.altair_mvhr_airflow_calibration_progress',
   last_calibration: 'sensor.altair_mvhr_last_airflow_calibration',
+  calibration_start_control: 'button.altair_mvhr_start_airflow_calibration',
+  calibration_cancel_control: 'button.altair_mvhr_cancel_airflow_calibration',
+  away_airflow: 'number.altair_mvhr_away_airflow',
+  low_airflow: 'number.altair_mvhr_low_airflow',
+  home_airflow: 'number.altair_mvhr_home_airflow',
+  high_airflow: 'number.altair_mvhr_high_airflow',
 };
 
 const altairConfig = {
@@ -113,10 +121,50 @@ const liveAltairStates: HomeAssistant['states'] = {
     state: 'medium',
     attributes: { options: ['away', 'low', 'medium', 'high'] },
   },
+  'switch.altair_mvhr_stop_unit': {
+    entity_id: 'switch.altair_mvhr_stop_unit',
+    state: 'off',
+    attributes: {},
+  },
   'sensor.altair_mvhr_airflow_calibration_result': {
     entity_id: 'sensor.altair_mvhr_airflow_calibration_result',
     state: 'calibrated',
     attributes: {},
+  },
+  'binary_sensor.altair_mvhr_airflow_calibration_available': {
+    entity_id: 'binary_sensor.altair_mvhr_airflow_calibration_available',
+    state: 'on',
+    attributes: {},
+  },
+  'button.altair_mvhr_start_airflow_calibration': {
+    entity_id: 'button.altair_mvhr_start_airflow_calibration',
+    state: 'unknown',
+    attributes: {},
+  },
+  'button.altair_mvhr_cancel_airflow_calibration': {
+    entity_id: 'button.altair_mvhr_cancel_airflow_calibration',
+    state: 'unknown',
+    attributes: {},
+  },
+  'number.altair_mvhr_away_airflow': {
+    entity_id: 'number.altair_mvhr_away_airflow',
+    state: '45',
+    attributes: { min: 20, max: 140, step: 5, unit_of_measurement: 'm³/h' },
+  },
+  'number.altair_mvhr_low_airflow': {
+    entity_id: 'number.altair_mvhr_low_airflow',
+    state: '70',
+    attributes: { min: 20, max: 140, step: 5, unit_of_measurement: 'm³/h' },
+  },
+  'number.altair_mvhr_home_airflow': {
+    entity_id: 'number.altair_mvhr_home_airflow',
+    state: '95',
+    attributes: { min: 20, max: 140, step: 5, unit_of_measurement: 'm³/h' },
+  },
+  'number.altair_mvhr_high_airflow': {
+    entity_id: 'number.altair_mvhr_high_airflow',
+    state: '120',
+    attributes: { min: 20, max: 140, step: 5, unit_of_measurement: 'm³/h' },
   },
 };
 
@@ -379,6 +427,40 @@ const scenarios = [
   {
     title: 'System mode — desktop (light)',
     hass: systemAltairHass,
+    className: 'desktop',
+    config: systemAltairConfig,
+  },
+  {
+    title: 'System mode — Off / stopped unit',
+    hass: withSystemStates({
+      'switch.altair_mvhr_stop_unit': {
+        entity_id: 'switch.altair_mvhr_stop_unit',
+        state: 'on',
+        attributes: {},
+      },
+      'sensor.altair_mvhr_airflow': {
+        entity_id: 'sensor.altair_mvhr_airflow',
+        state: '0',
+        attributes: { unit_of_measurement: 'm³/h' },
+      },
+    }),
+    className: 'desktop dark',
+    config: systemAltairConfig,
+  },
+  {
+    title: 'System mode — calibration controls running',
+    hass: withSystemStates({
+      'sensor.altair_mvhr_airflow_calibration_status': {
+        entity_id: 'sensor.altair_mvhr_airflow_calibration_status',
+        state: 'sampling',
+        attributes: {},
+      },
+      'sensor.altair_mvhr_airflow_calibration_progress': {
+        entity_id: 'sensor.altair_mvhr_airflow_calibration_progress',
+        state: '42',
+        attributes: { unit_of_measurement: '%' },
+      },
+    }),
     className: 'desktop',
     config: systemAltairConfig,
   },

@@ -90,6 +90,7 @@ const TONE_ICONS: Record<AvailabilitySummary['tone'], string> = {
  */
 const OPTIONAL_AVAILABILITY_ROLES: EntityRoleId[] = [
   'effective_mode',
+  'stop_control',
   'fault_active',
   'frost_protection_active',
   'bypass_state',
@@ -102,9 +103,11 @@ const OPTIONAL_AVAILABILITY_ROLES: EntityRoleId[] = [
   'override_remaining',
   'clear_override',
   'calibration_status',
+  'calibration_available',
   'calibration_progress',
   'last_calibration',
   'calibration_start_control',
+  'calibration_cancel_control',
   'filter_reset_control',
   'maximum_airflow',
   'away_airflow',
@@ -262,6 +265,7 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       modePresentation?.text ?? this._text(snapshot.effective_mode),
     );
     const unitBrand = config.title ?? displayProfile.name;
+    const stopped = this._isStopped(snapshot);
 
     return html`
       <ha-card class=${system ? 'card-system' : ''}>
@@ -278,7 +282,7 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
                 hass,
                 recovery,
                 modeLabel,
-                active,
+                active && !stopped,
                 displayProfile,
               )
             : detailed
@@ -742,9 +746,10 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     const modeEntity = config.entities.mode;
     const durationEntity = config.entities.boost_duration;
     const overrideEntity = config.entities.override_duration;
-    const modeOptions = this._modeOptions(snapshot.mode);
+    const stopped = this._isStopped(snapshot);
+    const modeOptions = this._modeOptions(snapshot.mode, snapshot, config);
     const overrideOptions = this._selectOptions(snapshot.override_duration);
-    const currentModeRaw = this._state(snapshot.mode)?.toLowerCase();
+    const currentModeRaw = stopped ? 'off' : this._state(snapshot.mode)?.toLowerCase();
     const boostActive = this._state(snapshot.boost_active) === 'on';
     // Boost/override "remaining" is a nice-to-have, not a required reading —
     // shown only when there's a genuine value, never as a prominent
@@ -770,10 +775,10 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
                 <button
                   type="button"
                   class="chip ${isActive ? 'active' : ''} ${option.toLowerCase() === 'off' ? 'mode-off' : ''}"
-                  ?disabled=${!modeEntity || Boolean(this._pendingMode)}
+                  ?disabled=${(option.toLowerCase() !== 'off' && !modeEntity) || Boolean(this._pendingMode)}
                   aria-pressed=${isActive}
                   aria-label=${`Set mode ${this._modeLabel(option)}`}
-                  @click=${() => modeEntity && this._setMode(hass, modeEntity, option)}
+                  @click=${() => void this._setOperatingMode(hass, config, snapshot, option)}
                 >
                   ${this._modeLabel(option)}
                 </button>
@@ -892,8 +897,8 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
    * used to live below the visual (see `_systemAdvancedToggle` for where
    * boost duration/Start/Cancel and override now live, for anyone who wants
    * the fuller controls). `Off` is only shown when the real mode select
-   * advertises it as a supported option; no separate pretend power action is
-   * invented by the card.
+   * advertises it as a supported option or a supported `stop_control` is
+   * mapped; the card never invents a manufacturer-specific power action.
    * A separate method from `_header` on purpose — `display_mode: detailed`
    * is not touched by the system-mode build.
    */
@@ -948,10 +953,13 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     modeLabel: string,
   ): TemplateResult {
     const modeEntity = config.entities.mode;
-    const modeOptions = this._modeOptions(snapshot.mode);
-    const currentModeRaw = this._state(snapshot.mode)?.toLowerCase();
+    const stopped = this._isStopped(snapshot);
+    const modeOptions = this._modeOptions(snapshot.mode, snapshot, config);
+    const currentModeRaw = stopped ? 'off' : this._state(snapshot.mode)?.toLowerCase();
     const canEditMode =
-      config.show_controls && Boolean(modeEntity) && snapshot.mode?.status === 'ok';
+      config.show_controls &&
+      ((Boolean(modeEntity) && snapshot.mode?.status === 'ok') ||
+        this._canUseStopControl(snapshot, config));
     const hasBoost =
       config.show_controls &&
       [snapshot.boost_duration, snapshot.start_boost, snapshot.cancel_boost].some(
@@ -984,9 +992,7 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
                     ?disabled=${Boolean(this._pendingMode)}
                     @change=${(event: Event) => {
                       const option = (event.currentTarget as HTMLSelectElement).value;
-                      if (modeEntity) {
-                        void this._setMode(hass, modeEntity, option);
-                      }
+                      void this._setOperatingMode(hass, config, snapshot, option);
                     }}
                   >
                     ${modeOptions.map(
@@ -1074,6 +1080,7 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     // adding new elements to the exchanger graphic itself ("particles
     // accelerate slightly during Boost", visual-polish follow-up round 3).
     const boostActive = this._state(snapshot.boost_active) === 'on';
+    const stopped = this._isStopped(snapshot);
 
     return html`
       <div class="mvhr-system">
@@ -1085,7 +1092,7 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
             <div class="panel-heading-row">
               <h3>System Overview</h3>
             </div>
-            ${this._systemHeroVisual(snapshot, config, animated, recovery, boostActive)}
+            ${this._systemHeroVisual(snapshot, config, animated && !stopped, recovery, boostActive)}
           </section>
         </section>
 
@@ -1497,6 +1504,7 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     config: HiperMvhrCardConfig,
   ): TemplateResult {
     const status = this._dashboardStatus(snapshot);
+    const stopped = this._isStopped(snapshot);
     const boostActive = this._state(snapshot.boost_active) === 'on';
     const hasBoostRole = [
       snapshot.boost_active,
@@ -1524,6 +1532,9 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
           : 'success';
 
     const badges: TemplateResult[] = [];
+    if (snapshot.stop_control && snapshot.stop_control.status !== 'unsupported') {
+      badges.push(this._statusBadge(stopped ? 'Stopped' : 'Running', stopped ? 'muted' : 'success'));
+    }
     if (hasBoostRole) {
       badges.push(
         this._statusBadge(
@@ -1928,52 +1939,137 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     config: HiperMvhrCardConfig,
     hass: HomeAssistant,
   ): TemplateResult {
-    const role: EntityRoleId = 'calibration_start_control';
-    const value = snapshot[role];
-    const entityId = config.entities[role];
-    if (!value || value.status === 'unsupported' || value.status === 'not_configured') {
+    if (!config.show_calibration) {
       return html``;
     }
-    const dispatcher = this._getDispatcher(role);
-    const pending = dispatcher.state.status === 'pending';
-    const unavailable = value.status !== 'ok' || !entityId;
-    const error = dispatcher.state.status === 'error' ? dispatcher.state.message : null;
+    const roles: EntityRoleId[] = [
+      'calibration_available',
+      'calibration_start_control',
+      'calibration_cancel_control',
+      'calibration_status',
+      'calibration_progress',
+      'calibration_result',
+      'last_calibration',
+    ];
+    const hasCalibration = roles.some((role) => {
+      const value = snapshot[role];
+      return value && value.status !== 'unsupported' && value.status !== 'not_configured';
+    });
+    if (!hasCalibration) {
+      return html``;
+    }
+
+    const startRole: EntityRoleId = 'calibration_start_control';
+    const cancelRole: EntityRoleId = 'calibration_cancel_control';
+    const startValue = snapshot[startRole];
+    const cancelValue = snapshot[cancelRole];
+    const startEntityId = config.entities[startRole];
+    const cancelEntityId = config.entities[cancelRole];
+    const startDispatcher = this._getDispatcher(startRole);
+    const cancelDispatcher = this._getDispatcher(cancelRole);
+    const startPending = startDispatcher.state.status === 'pending';
+    const cancelPending = cancelDispatcher.state.status === 'pending';
+    const startUnavailable = startValue?.status !== 'ok' || !startEntityId;
+    const cancelUnavailable = cancelValue?.status !== 'ok' || !cancelEntityId;
+    const statusRaw = this._state(snapshot.calibration_status)?.toLowerCase();
+    const running = Boolean(statusRaw && !CALIBRATION_QUIET_STATES.has(statusRaw));
+    const progress = this._number(snapshot.calibration_progress);
+    const progressLabel = this._value(snapshot.calibration_progress, true);
+    const available =
+      snapshot.calibration_available?.status === 'ok'
+        ? this._state(snapshot.calibration_available)?.toLowerCase() === 'on'
+        : null;
+    const lastCalibration =
+      snapshot.last_calibration?.status === 'ok'
+        ? formatTimestampMaybe(snapshot.last_calibration.value)
+        : this._value(snapshot.last_calibration, true);
+    const startError =
+      startDispatcher.state.status === 'error' ? startDispatcher.state.message : null;
+    const cancelError =
+      cancelDispatcher.state.status === 'error' ? cancelDispatcher.state.message : null;
     return html`
-      <section class="calibration-control" aria-label="Calibration">
-        <div>
-          <strong>Calibration</strong>
-          <small>The unit may change fan speeds during calibration.</small>
+      <section class="calibration-panel" aria-label="Airflow calibration">
+        <div class="calibration-panel-head">
+          <div>
+            <strong>Airflow calibration</strong>
+            <small>The unit may change fan speeds during calibration.</small>
+          </div>
+          ${
+            available !== null
+              ? html`<span class="state-pill ${available ? 'is-active' : ''}"
+                  >${available ? 'Available' : 'Not calibrated'}</span
+                >`
+              : ''
+          }
         </div>
-        <button
-          type="button"
-          class="cta calibration-button"
-          ?disabled=${unavailable || pending}
-          aria-busy=${pending}
-          @click=${async () => {
-            const confirmed = globalThis.confirm?.(
-              'Start airflow calibration?\nThe unit may change fan speeds during calibration.',
-            );
-            if (!confirmed || !entityId) {
-              return;
-            }
-            this._calibrationFeedback = undefined;
-            await dispatcher.dispatchAction(hass, entityId);
-            this._calibrationFeedback =
-              dispatcher.state.status === 'idle' ? 'Calibration started' : undefined;
-          }}
-        >
-          ${pending ? 'Starting…' : 'Calibrate airflow'}
-        </button>
+        <div class="calibration-actions">
+          <button
+            type="button"
+            class="cta calibration-button"
+            ?disabled=${startUnavailable || startPending || running}
+            aria-busy=${startPending}
+            @click=${async () => {
+              const confirmed = globalThis.confirm?.(
+                'Start airflow calibration?\nThe unit may change fan speeds during calibration.',
+              );
+              if (!confirmed || !startEntityId) {
+                return;
+              }
+              this._calibrationFeedback = undefined;
+              await startDispatcher.dispatchAction(hass, startEntityId);
+              this._calibrationFeedback =
+                startDispatcher.state.status === 'idle' ? 'Calibration started' : undefined;
+            }}
+          >
+            ${startPending ? 'Starting…' : 'Start Calibration'}
+          </button>
+          ${
+            running
+              ? html`
+                  <button
+                    type="button"
+                    class="cta ghost calibration-cancel-button"
+                    ?disabled=${cancelUnavailable || cancelPending}
+                    aria-busy=${cancelPending}
+                    @click=${async () => {
+                      if (cancelEntityId) {
+                        await cancelDispatcher.dispatchAction(hass, cancelEntityId);
+                      }
+                    }}
+                  >
+                    ${cancelPending ? 'Cancelling…' : 'Cancel Calibration'}
+                  </button>
+                `
+              : ''
+          }
+        </div>
         ${
-          unavailable
+          progress !== undefined
+            ? html`
+                <div class="calibration-progress" aria-label="Calibration progress">
+                  <span style=${`width:${Math.max(0, Math.min(100, progress))}%`}></span>
+                </div>
+              `
+            : ''
+        }
+        <div class="calibration-details">
+          ${this._compactStat('Status', this._value(snapshot.calibration_status, true))}
+          ${this._compactStat('Complete', progressLabel)}
+          ${this._compactStat('Last calibration', lastCalibration)}
+          ${this._compactStat('Result', this._value(snapshot.calibration_result, true))}
+        </div>
+        ${
+          startUnavailable && startValue && startValue.status !== 'not_configured'
             ? html`<small class="control-error">Calibration unavailable</small>`
-            : error
-              ? html`<small class="control-error" role="alert">${error}</small>`
-              : this._calibrationFeedback
-                ? html`<small class="control-success" role="status"
-                    >${this._calibrationFeedback}</small
-                  >`
-                : ''
+            : startError
+              ? html`<small class="control-error" role="alert">${startError}</small>`
+              : cancelError
+                ? html`<small class="control-error" role="alert">${cancelError}</small>`
+                : this._calibrationFeedback
+                  ? html`<small class="control-success" role="status"
+                      >${this._calibrationFeedback}</small
+                    >`
+                  : ''
         }
       </section>
     `;
@@ -1992,10 +2088,6 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     config: HiperMvhrCardConfig,
   ): TemplateResult {
     const stats: TemplateResult[] = [];
-    if (config.show_calibration) {
-      stats.push(this._compactStat('Calibration', this._value(snapshot.calibration_status, true)));
-      stats.push(this._compactStat('Progress', this._value(snapshot.calibration_progress, true)));
-    }
     if (config.show_fan_speeds) {
       stats.push(this._compactStat('Supply fan', this._value(snapshot.supply_fan_speed, true)));
       stats.push(this._compactStat('Extract fan', this._value(snapshot.extract_fan_speed, true)));
@@ -2556,6 +2648,23 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     return value?.status === 'ok' ? value.numericValue : undefined;
   }
 
+  private _canUseStopControl(
+    snapshot: Partial<Record<EntityRoleId, RoleValue>>,
+    config: HiperMvhrCardConfig,
+  ): boolean {
+    return Boolean(config.entities.stop_control) && snapshot.stop_control?.status === 'ok';
+  }
+
+  private _isStopped(snapshot: Partial<Record<EntityRoleId, RoleValue>>): boolean {
+    const stopState = this._state(snapshot.stop_control)?.toLowerCase();
+    if (stopState && ['on', 'true', '1', 'stop', 'stopped'].includes(stopState)) {
+      return true;
+    }
+    const mode = this._state(snapshot.mode)?.toLowerCase();
+    const effectiveMode = this._state(snapshot.effective_mode)?.toLowerCase();
+    return mode === 'off' || effectiveMode === 'off' || effectiveMode === 'stopped';
+  }
+
   private _temperatureColour(temperature: number | null, alpha = 1): string {
     const opacity = Math.max(0, Math.min(1, alpha));
     if (temperature === null || !Number.isFinite(temperature)) {
@@ -2591,12 +2700,20 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     return value ? capitalize(value) : '';
   }
 
-  private _modeOptions(value: RoleValue | undefined): string[] {
+  private _modeOptions(
+    value: RoleValue | undefined,
+    snapshot?: Partial<Record<EntityRoleId, RoleValue>>,
+    config?: HiperMvhrCardConfig,
+  ): string[] {
     const options =
       value?.status === 'ok' && Array.isArray(value.attributes.options)
         ? value.attributes.options.filter((option): option is string => typeof option === 'string')
         : ['Away', 'Low', 'Home', 'High'];
-    return options
+    const withStop =
+      snapshot && config && this._canUseStopControl(snapshot, config)
+        ? ['Off', ...options]
+        : options;
+    return [...new Map(withStop.map((option) => [option.toLowerCase(), option])).values()]
       .filter((option) => option.toLowerCase() !== 'boost')
       .sort((a, b) => Number(b.toLowerCase() === 'off') - Number(a.toLowerCase() === 'off'));
   }
@@ -2622,6 +2739,55 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       await this._call(hass, 'select', 'select_option', { entity_id: entityId, option });
     } catch {
       this._modeError = `Couldn't set ${this._modeLabel(option)} mode`;
+    } finally {
+      this._pendingMode = undefined;
+    }
+  }
+
+  private async _setOperatingMode(
+    hass: HomeAssistant,
+    config: HiperMvhrCardConfig,
+    snapshot: Partial<Record<EntityRoleId, RoleValue>>,
+    option: string,
+  ): Promise<void> {
+    const optionIsOff = option.toLowerCase() === 'off';
+    const modeEntity = config.entities.mode;
+    if (optionIsOff && this._canUseStopControl(snapshot, config)) {
+      await this._setStopControl(hass, config, true);
+      return;
+    }
+
+    if (!modeEntity) {
+      return;
+    }
+    if (this._isStopped(snapshot) && this._canUseStopControl(snapshot, config)) {
+      await this._setStopControl(hass, config, false);
+    }
+    await this._setMode(hass, modeEntity, option);
+  }
+
+  private async _setStopControl(
+    hass: HomeAssistant,
+    config: HiperMvhrCardConfig,
+    stopped: boolean,
+  ): Promise<void> {
+    const entityId = config.entities.stop_control;
+    if (!entityId || this._pendingMode) {
+      return;
+    }
+    this._pendingMode = stopped ? 'Off' : 'Run';
+    this._modeError = undefined;
+    try {
+      const domain = this._domain(entityId);
+      if (domain === 'switch' || domain === 'input_boolean') {
+        await this._call(hass, domain, stopped ? 'turn_on' : 'turn_off', { entity_id: entityId });
+      } else if (domain === 'button' || domain === 'input_button') {
+        await this._call(hass, domain, 'press', { entity_id: entityId });
+      } else {
+        await this._call(hass, domain, stopped ? 'turn_on' : 'turn_off', { entity_id: entityId });
+      }
+    } catch {
+      this._modeError = stopped ? "Couldn't stop the unit" : "Couldn't start the unit";
     } finally {
       this._pendingMode = undefined;
     }
@@ -2683,6 +2849,9 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       snapshot.calibration_result.value === 'not_calibrated'
     ) {
       return { tone: 'warning', label: 'Calibration required' };
+    }
+    if (this._isStopped(snapshot)) {
+      return { tone: 'muted', label: 'Stopped' };
     }
 
     return { tone: 'success', label: 'System OK' };
@@ -3662,8 +3831,9 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     }
     .cabinet-seam {
       fill: none;
-      stroke: rgba(255, 255, 255, 0.18);
-      stroke-width: 2;
+      stroke: rgba(255, 255, 255, 0.24);
+      stroke-width: 1.8;
+      stroke-dasharray: 20 8;
     }
     .cabinet-lip {
       fill: none;
@@ -3694,8 +3864,8 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     }
     .cutaway-compartments path {
       fill: none;
-      stroke: #5f676d;
-      stroke-width: 7;
+      stroke: #535b61;
+      stroke-width: 6;
       filter: drop-shadow(2px 0 2px rgba(0, 0, 0, 0.5));
     }
     .cutaway-compartments .support-rail {
@@ -3746,6 +3916,7 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       fill: url(#collar-metal);
       stroke: #252b2f;
       stroke-width: 3;
+      filter: drop-shadow(0 3px 2px rgba(0, 0, 0, 0.36));
     }
     .port-collar ellipse {
       fill: #1a1f23;
@@ -3778,7 +3949,7 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     .exchanger-outline {
       fill: #677077;
       stroke: url(#exchanger-frame);
-      stroke-width: 18;
+      stroke-width: 16;
       stroke-linejoin: round;
     }
     .exchanger-shadow {
@@ -3786,18 +3957,18 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     }
     .exchanger-warm-face {
       fill: url(#warm-exchanger-gradient);
-      opacity: 0.56;
+      opacity: 0.48;
     }
     .exchanger-cool-face {
       fill: url(#cool-exchanger-gradient);
-      opacity: 0.58;
+      opacity: 0.5;
     }
     .warm-channels path,
     .cool-channels path {
       fill: none;
-      stroke-width: 2.4;
+      stroke-width: 1.8;
       stroke-linecap: round;
-      opacity: 0.86;
+      opacity: 0.92;
     }
     .warm-channels path {
       stroke: url(#warm-exchanger-gradient);
@@ -3808,8 +3979,8 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     .passage-separator {
       fill: none;
       stroke: #d2d6d8;
-      stroke-width: 6;
-      opacity: 0.9;
+      stroke-width: 5;
+      opacity: 0.82;
     }
     .exchanger-frame-detail {
       fill: none;
@@ -3820,12 +3991,12 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     .fan-scroll {
       fill: url(#blower-metal);
       stroke: #0a0d0f;
-      stroke-width: 4;
+      stroke-width: 3.2;
     }
     .fan-drum-back {
       fill: #080b0d;
       stroke: #c0c5c8;
-      stroke-width: 5;
+      stroke-width: 4;
     }
     .fan-drum-depth {
       fill: url(#blower-metal);
@@ -3835,7 +4006,7 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     .fan-ring {
       fill: #101417;
       stroke: #9ca2a6;
-      stroke-width: 3;
+      stroke-width: 2.6;
     }
     .fan-motor {
       fill: url(#blower-metal);
@@ -3853,9 +4024,10 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       transform-origin: center;
     }
     .fan-vane {
-      fill: #697279;
+      fill: #7b858d;
       stroke: #1a1e21;
-      stroke-width: 1;
+      stroke-width: 0.8;
+      opacity: 0.88;
     }
     .fan-shroud {
       fill: none;
@@ -3936,6 +4108,7 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       z-index: 3;
       width: 176px;
       height: 88px;
+      transform: translateY(-12px);
       border-radius: 12px;
       display: flex;
       flex-direction: column;
@@ -4417,7 +4590,7 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       gap: 14px;
     }
     .preset-controls,
-    .calibration-control {
+    .calibration-panel {
       border: 1px solid var(--divider-color);
       border-radius: 12px;
       padding: 14px;
@@ -4466,23 +4639,48 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       color: var(--secondary-text-color);
       font-size: 0.88em;
     }
-    .calibration-control {
+    .calibration-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .calibration-panel-head,
+    .calibration-actions {
       display: flex;
       align-items: center;
+      justify-content: space-between;
       gap: 12px;
       flex-wrap: wrap;
     }
-    .calibration-control > div {
+    .calibration-panel-head > div {
       display: flex;
-      flex: 1 1 220px;
       flex-direction: column;
       gap: 3px;
     }
-    .calibration-control small {
+    .calibration-panel small {
       color: var(--secondary-text-color);
     }
     .calibration-button {
       flex: 0 0 auto;
+    }
+    .calibration-progress {
+      width: 100%;
+      height: 9px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: var(--divider-color);
+    }
+    .calibration-progress span {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      background: var(--primary-color);
+      transition: width 0.4s ease;
+    }
+    .calibration-details {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
     }
     /* Calibration + fan-speed diagnostics as compact tiles rather than
        full-width rows (visual-polish follow-up). */
@@ -4692,6 +4890,9 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       }
       .preset-grid {
         grid-template-columns: minmax(0, 1fr);
+      }
+      .calibration-details {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
       }
       .calibration-button {
         width: 100%;
