@@ -1463,22 +1463,22 @@ describe('hiper-mvhr-card', () => {
         await el.updateComplete;
 
         expect(el.shadowRoot?.querySelector('.air-path.extract')?.getAttribute('style')).toContain(
-          '--stream-color:rgba(231, 192, 118, 1)',
+          '--stream-color:rgba(243, 211, 148, 1)',
         );
         expect(el.shadowRoot?.querySelector('.air-path.supply')?.getAttribute('style')).toContain(
-          '--stream-color:rgba(191, 200, 190, 1)',
+          '--stream-color:rgba(223, 225, 220, 1)',
         );
         expect(el.shadowRoot?.querySelector('.air-path.outdoor')?.getAttribute('style')).toContain(
-          '--stream-color:rgba(45, 123, 222, 1)',
+          '--stream-color:rgba(54, 123, 216, 1)',
         );
         expect(el.shadowRoot?.querySelector('.air-path.exhaust')?.getAttribute('style')).toContain(
-          '--stream-color:rgba(55, 144, 230, 1)',
+          '--stream-color:rgba(69, 144, 220, 1)',
         );
         expect(
           el.shadowRoot
             ?.querySelector('#supply-gradient stop:last-child')
             ?.getAttribute('stop-color'),
-        ).toBe('rgba(191, 200, 190, 1)');
+        ).toBe('rgba(223, 225, 220, 1)');
       });
 
       it('automatically makes hot summer outdoor air warmer than cooled supply air', async () => {
@@ -1487,9 +1487,27 @@ describe('hiper-mvhr-card', () => {
 
         const outdoor = el.shadowRoot?.querySelector('.air-path.outdoor')?.getAttribute('style');
         const supply = el.shadowRoot?.querySelector('.air-path.supply')?.getAttribute('style');
-        expect(outdoor).toContain('--stream-color:rgba(214, 68, 45, 1)');
-        expect(supply).toContain('--stream-color:rgba(237, 162, 81, 1)');
+        expect(outdoor).toContain('--stream-color:rgba(214, 69, 47, 1)');
+        expect(supply).toContain('--stream-color:rgba(241, 174, 102, 1)');
         expect(outdoor).not.toBe(supply);
+      });
+
+      it('keeps 15-17°C air nearly neutral and introduces warm cream at 18°C', async () => {
+        const el = mountTemperatures({ extract: '18', supply: '17', outdoor: '15', exhaust: '16' });
+        await el.updateComplete;
+
+        expect(el.shadowRoot?.querySelector('.air-path.outdoor')?.getAttribute('style')).toContain(
+          '--stream-color:rgba(198, 211, 220, 1)',
+        );
+        expect(el.shadowRoot?.querySelector('.air-path.exhaust')?.getAttribute('style')).toContain(
+          '--stream-color:rgba(208, 217, 220, 1)',
+        );
+        expect(el.shadowRoot?.querySelector('.air-path.supply')?.getAttribute('style')).toContain(
+          '--stream-color:rgba(219, 223, 220, 1)',
+        );
+        expect(el.shadowRoot?.querySelector('.air-path.extract')?.getAttribute('style')).toContain(
+          '--stream-color:rgba(239, 226, 194, 1)',
+        );
       });
 
       it('uses the same interpolated colour when all four temperatures are equal', async () => {
@@ -1500,6 +1518,7 @@ describe('hiper-mvhr-card', () => {
           el.shadowRoot?.querySelector(`.air-path.${key}`)?.getAttribute('style'),
         );
         expect(new Set(styles).size).toBe(1);
+        expect(styles[0]).toContain('--stream-color:rgba(239, 226, 194, 1)');
       });
 
       it('uses a neutral theme colour for an unavailable endpoint', async () => {

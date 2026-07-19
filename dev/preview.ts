@@ -383,6 +383,33 @@ const scenarios = [
     config: systemAltairConfig,
   },
   {
+    title: 'System mode — temperature colour threshold (15–18°C neutral to cream)',
+    hass: withSystemStates({
+      'sensor.altair_mvhr_outdoor_air_temperature': {
+        entity_id: 'sensor.altair_mvhr_outdoor_air_temperature',
+        state: '15.0',
+        attributes: { unit_of_measurement: '°C' },
+      },
+      'sensor.altair_mvhr_exhaust_air_temperature': {
+        entity_id: 'sensor.altair_mvhr_exhaust_air_temperature',
+        state: '16.0',
+        attributes: { unit_of_measurement: '°C' },
+      },
+      'sensor.altair_mvhr_supply_air_temperature': {
+        entity_id: 'sensor.altair_mvhr_supply_air_temperature',
+        state: '17.0',
+        attributes: { unit_of_measurement: '°C' },
+      },
+      'sensor.altair_mvhr_extract_air_temperature': {
+        entity_id: 'sensor.altair_mvhr_extract_air_temperature',
+        state: '18.0',
+        attributes: { unit_of_measurement: '°C' },
+      },
+    }),
+    className: 'desktop',
+    config: systemAltairConfig,
+  },
+  {
     title: 'System mode — tablet (~760px)',
     hass: systemAltairHass,
     className: 'tablet',
