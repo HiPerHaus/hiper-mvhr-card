@@ -73,6 +73,8 @@ Roles are grouped by category. `views` lists which audience views show the role 
 | `shower_detected` | optional | binary | H, I | optional shower detector status |
 | `shower_trigger_temperature` | optional | numeric | H, I | detector trigger temperature |
 | `shower_pipe_temperature` | optional | numeric | H, I | live pipe temperature feeding shower detector |
+| `shower_temperature_rise` | optional | numeric control | H, I | editable shower detector rise threshold |
+| `shower_detection_window` | optional | numeric control | H, I | editable shower detector rolling window |
 | `co2_level` | optional | numeric | H, I | not all systems expose this |
 | `commissioning_diagnostics` | commissioning | text/table | C | raw register/entity inspector |
 

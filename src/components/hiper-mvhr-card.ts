@@ -48,6 +48,11 @@ const PRESET_AIRFLOW_ROLES: Array<[EntityRoleId, string]> = [
   ['high_airflow', 'High'],
 ];
 
+const SHOWER_SETTING_ROLES: Array<[EntityRoleId, string, string]> = [
+  ['shower_temperature_rise', 'Shower temperature rise', '°C'],
+  ['shower_detection_window', 'Detection window', 'min'],
+];
+
 const FAN_ROLES: Array<[EntityRoleId, string]> = [
   ['supply_fan_speed', 'Supply fan'],
   ['extract_fan_speed', 'Extract fan'],
@@ -117,6 +122,8 @@ const OPTIONAL_AVAILABILITY_ROLES: EntityRoleId[] = [
   'shower_detected',
   'shower_trigger_temperature',
   'shower_pipe_temperature',
+  'shower_temperature_rise',
+  'shower_detection_window',
 ];
 const OPTIONAL_AVAILABILITY_ROLE_SET = new Set(OPTIONAL_AVAILABILITY_ROLES);
 
@@ -1102,7 +1109,7 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
           ${this._systemStatusCard(snapshot, config)}
         </section>
 
-        ${shower.render ? this._systemShowerBanner(shower) : ''}
+        ${shower.render ? this._systemShowerBanner(shower, snapshot, config, hass) : ''}
         ${config.show_advanced_controls ? this._systemAdvancedToggle() : ''}
         ${config.show_advanced_controls ? this._advancedDrawer(snapshot, config, hass) : ''}
       </div>
@@ -1163,10 +1170,16 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     boostRemaining: string | null;
   } {
     const detected = snapshot.shower_detected;
-    const configured =
-      Boolean(detected) &&
-      detected?.status !== 'unsupported' &&
-      detected?.status !== 'not_configured';
+    const configured = [
+      'shower_detected',
+      'shower_trigger_temperature',
+      'shower_pipe_temperature',
+      'shower_temperature_rise',
+      'shower_detection_window',
+    ].some((role) => {
+      const value = snapshot[role as EntityRoleId];
+      return value && value.status !== 'unsupported' && value.status !== 'not_configured';
+    });
     const active = detected?.status === 'ok' && detected.value.toLowerCase() === 'on';
     const unavailable =
       configured && (detected?.status === 'unavailable' || detected?.status === 'entity_missing');
@@ -1215,7 +1228,12 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
    * lightweight CSS effect — but `prefers-reduced-motion` always does (see
    * the reduced-motion media query in `static styles`).
    */
-  private _systemShowerBanner(shower: ReturnType<HiperMvhrCard['_shower']>): TemplateResult {
+  private _systemShowerBanner(
+    shower: ReturnType<HiperMvhrCard['_shower']>,
+    snapshot: Partial<Record<EntityRoleId, RoleValue>>,
+    config: HiperMvhrCardConfig,
+    hass: HomeAssistant,
+  ): TemplateResult {
     const stateClass = shower.active
       ? 'shower-active'
       : shower.unavailable
@@ -1289,7 +1307,74 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
               : ''
           }
         </dl>
+        ${this._showerSettingControls(snapshot, config, hass)}
       </section>
+    `;
+  }
+
+  private _showerSettingControls(
+    snapshot: Partial<Record<EntityRoleId, RoleValue>>,
+    config: HiperMvhrCardConfig,
+    hass: HomeAssistant,
+  ): TemplateResult {
+    const visible = SHOWER_SETTING_ROLES.filter(([role]) => {
+      const value = snapshot[role];
+      return value?.status === 'ok' || value?.status === 'unavailable';
+    });
+    if (visible.length === 0) {
+      return html``;
+    }
+
+    return html`
+      <div class="shower-settings" aria-label="Shower detection settings">
+        ${visible.map(([role, label, fallbackUnit]) => {
+          const value = snapshot[role];
+          const entityId = config.entities[role];
+          const minimum = this._attributeNumber(value, 'min');
+          const maximum = this._attributeNumber(value, 'max');
+          const step = this._attributeNumber(value, 'step') ?? 1;
+          const displayed = this._presetDrafts.get(role) ?? this._number(value);
+          const disabled = value?.status !== 'ok' || !entityId || this._presetPending.has(role);
+          return html`
+            <label class="preset-field shower-setting-field">
+              <span>${label}</span>
+              <span class="preset-input-wrap">
+                <input
+                  type="number"
+                  .value=${displayed === undefined ? '' : String(displayed)}
+                  min=${minimum ?? nothing}
+                  max=${maximum ?? nothing}
+                  step=${step}
+                  ?disabled=${disabled}
+                  aria-label=${label}
+                  aria-busy=${this._presetPending.has(role)}
+                  @input=${(event: Event) => {
+                    const next = Number((event.currentTarget as HTMLInputElement).value);
+                    if (Number.isFinite(next)) {
+                      this._presetDrafts.set(role, next);
+                      this.requestUpdate();
+                    }
+                  }}
+                  @change=${(event: Event) => {
+                    const next = Number((event.currentTarget as HTMLInputElement).value);
+                    if (entityId && Number.isFinite(next)) {
+                      this._scheduleSettingUpdate(role, entityId, next, value, hass);
+                    }
+                  }}
+                />
+                <small>${value?.status === 'ok' ? value.unit ?? fallbackUnit : 'Unavailable'}</small>
+              </span>
+              ${
+                this._presetErrors.has(role)
+                  ? html`<small class="control-error" role="alert"
+                      >${this._presetErrors.get(role)}</small
+                    >`
+                  : ''
+              }
+            </label>
+          `;
+        })}
+      </div>
     `;
   }
 
@@ -1905,6 +1990,45 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
           value,
         })
           .catch(() => this._presetErrors.set(role, "Couldn't save preset"))
+          .finally(() => {
+            this._presetPending.delete(role);
+            this.requestUpdate();
+          });
+      }, 300),
+    );
+    this.requestUpdate();
+  }
+
+  private _scheduleSettingUpdate(
+    role: EntityRoleId,
+    entityId: string,
+    value: number,
+    currentValue: RoleValue | undefined,
+    hass: HomeAssistant,
+  ): void {
+    this._presetDrafts.set(role, value);
+    this._presetErrors.delete(role);
+    const rangeError = this._presetRangeValidation(value, currentValue);
+    if (rangeError) {
+      this._presetErrors.set(role, rangeError);
+      this.requestUpdate();
+      return;
+    }
+    const existing = this._presetTimers.get(role);
+    if (existing) {
+      clearTimeout(existing);
+    }
+    this._presetTimers.set(
+      role,
+      setTimeout(() => {
+        this._presetTimers.delete(role);
+        this._presetPending.add(role);
+        this.requestUpdate();
+        void this._call(hass, 'number', 'set_value', {
+          entity_id: entityId,
+          value,
+        })
+          .catch(() => this._presetErrors.set(role, "Couldn't save setting"))
           .finally(() => {
             this._presetPending.delete(role);
             this.requestUpdate();
@@ -4346,6 +4470,22 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       color: var(--secondary-text-color);
       font-size: 0.6em;
       font-weight: 500;
+    }
+    .shower-settings {
+      flex: 1 1 260px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 10px;
+      min-width: 260px;
+    }
+    .shower-setting-field {
+      min-width: 0;
+      background: color-mix(in srgb, var(--ha-card-background, var(--card-background-color)), transparent 6%);
+      border-color: color-mix(in srgb, var(--shower-color), transparent 78%);
+    }
+    .shower-setting-field > span:first-child {
+      color: var(--secondary-text-color);
+      font-weight: 700;
     }
 
     @keyframes shower-fall {

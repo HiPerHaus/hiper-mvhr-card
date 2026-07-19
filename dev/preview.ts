@@ -287,6 +287,8 @@ const systemShowerConfig = {
     shower_detected: 'binary_sensor.altair_shower_detected',
     shower_trigger_temperature: 'sensor.altair_shower_trigger_temperature',
     shower_pipe_temperature: 'sensor.shower_pipe_temperature',
+    shower_temperature_rise: 'number.altair_mvhr_shower_temperature_rise',
+    shower_detection_window: 'number.altair_mvhr_shower_detection_window',
   },
 };
 
@@ -318,6 +320,16 @@ const showerActiveStates: HomeAssistant['states'] = {
     entity_id: 'sensor.altair_mvhr_boost_remaining',
     state: '25',
     attributes: { unit_of_measurement: 'min' },
+  },
+  'number.altair_mvhr_shower_temperature_rise': {
+    entity_id: 'number.altair_mvhr_shower_temperature_rise',
+    state: '8.0',
+    attributes: { min: 2, max: 20, step: 0.5, unit_of_measurement: '°C' },
+  },
+  'number.altair_mvhr_shower_detection_window': {
+    entity_id: 'number.altair_mvhr_shower_detection_window',
+    state: '2',
+    attributes: { min: 1, max: 10, step: 1, unit_of_measurement: 'min' },
   },
 };
 
@@ -561,6 +573,16 @@ const scenarios = [
           entity_id: 'binary_sensor.altair_shower_detected',
           state: 'off',
           attributes: {},
+        },
+        'number.altair_mvhr_shower_temperature_rise': {
+          entity_id: 'number.altair_mvhr_shower_temperature_rise',
+          state: '8.0',
+          attributes: { min: 2, max: 20, step: 0.5, unit_of_measurement: '°C' },
+        },
+        'number.altair_mvhr_shower_detection_window': {
+          entity_id: 'number.altair_mvhr_shower_detection_window',
+          state: '2',
+          attributes: { min: 1, max: 10, step: 1, unit_of_measurement: 'min' },
         },
       },
     },

@@ -32,6 +32,8 @@ const ROLE_ICONS: Partial<Record<EntityRoleId, string>> = {
   shower_detected: 'mdi:shower-head',
   shower_trigger_temperature: 'mdi:thermometer-water',
   shower_pipe_temperature: 'mdi:thermometer-water',
+  shower_temperature_rise: 'mdi:thermometer-chevron-up',
+  shower_detection_window: 'mdi:timer-outline',
 };
 
 export function getRoleIcon(role: EntityRoleId): string | undefined {

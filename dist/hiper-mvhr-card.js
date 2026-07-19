@@ -3,7 +3,7 @@
  * Copyright 2019 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const it = globalThis, bt = it.ShadowRoot && (it.ShadyCSS === void 0 || it.ShadyCSS.nativeShadow) && "adoptedStyleSheets" in Document.prototype && "replace" in CSSStyleSheet.prototype, _t = Symbol(), At = /* @__PURE__ */ new WeakMap();
+const it = globalThis, bt = it.ShadowRoot && (it.ShadyCSS === void 0 || it.ShadyCSS.nativeShadow) && "adoptedStyleSheets" in Document.prototype && "replace" in CSSStyleSheet.prototype, _t = Symbol(), St = /* @__PURE__ */ new WeakMap();
 let Zt = class {
   constructor(t, e, r) {
     if (this._$cssResult$ = !0, r !== _t) throw Error("CSSResult is not constructable. Use `unsafeCSS` or `css` instead.");
@@ -14,7 +14,7 @@ let Zt = class {
     const e = this.t;
     if (bt && t === void 0) {
       const r = e !== void 0 && e.length === 1;
-      r && (t = At.get(e)), t === void 0 && ((this.o = t = new CSSStyleSheet()).replaceSync(this.cssText), r && At.set(e, t));
+      r && (t = St.get(e)), t === void 0 && ((this.o = t = new CSSStyleSheet()).replaceSync(this.cssText), r && St.set(e, t));
     }
     return t;
   }
@@ -35,7 +35,7 @@ const ae = (s) => new Zt(typeof s == "string" ? s : s + "", void 0, _t), Wt = (s
     const r = document.createElement("style"), a = it.litNonce;
     a !== void 0 && r.setAttribute("nonce", a), r.textContent = e.cssText, s.appendChild(r);
   }
-}, St = bt ? (s) => s : (s) => s instanceof CSSStyleSheet ? ((t) => {
+}, At = bt ? (s) => s : (s) => s instanceof CSSStyleSheet ? ((t) => {
   let e = "";
   for (const r of t.cssRules) e += r.cssText;
   return ae(e);
@@ -129,8 +129,8 @@ let D = class extends HTMLElement {
     const e = [];
     if (Array.isArray(t)) {
       const r = new Set(t.flat(1 / 0).reverse());
-      for (const a of r) e.unshift(St(a));
-    } else t !== void 0 && e.push(St(t));
+      for (const a of r) e.unshift(At(a));
+    } else t !== void 0 && e.push(At(t));
     return e;
   }
   static _$Eu(t, e) {
@@ -286,7 +286,7 @@ D.elementStyles = [], D.shadowRootOptions = { mode: "open" }, D[G("elementProper
  */
 const Z = globalThis, Mt = (s) => s, st = Z.trustedTypes, Tt = st ? st.createPolicy("lit-html", { createHTML: (s) => s }) : void 0, Yt = "$lit$", C = `lit$${Math.random().toFixed(9).slice(2)}$`, Qt = "?" + C, ue = `<${Qt}>`, L = document, W = () => L.createComment(""), Y = (s) => s === null || typeof s != "object" && typeof s != "function", wt = Array.isArray, he = (s) => wt(s) || typeof (s == null ? void 0 : s[Symbol.iterator]) == "function", pt = `[ 	
 \f\r]`, q = /<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g, Rt = /-->/g, Ot = />/g, T = RegExp(`>|${pt}(?:([^\\s"'>=/]+)(${pt}*=${pt}*(?:[^ 	
-\f\r"'\`<>=]|("|')|))|$)`, "g"), Lt = /'/g, zt = /"/g, Kt = /^(?:script|style|textarea|title)$/i, Xt = (s) => (t, ...e) => ({ _$litType$: s, strings: t, values: e }), d = Xt(1), A = Xt(2), I = Symbol.for("lit-noChange"), v = Symbol.for("lit-nothing"), Ht = /* @__PURE__ */ new WeakMap(), R = L.createTreeWalker(L, 129);
+\f\r"'\`<>=]|("|')|))|$)`, "g"), Lt = /'/g, zt = /"/g, Kt = /^(?:script|style|textarea|title)$/i, Xt = (s) => (t, ...e) => ({ _$litType$: s, strings: t, values: e }), d = Xt(1), S = Xt(2), I = Symbol.for("lit-noChange"), v = Symbol.for("lit-nothing"), Ht = /* @__PURE__ */ new WeakMap(), R = L.createTreeWalker(L, 129);
 function Jt(s, t) {
   if (!wt(s) || !s.hasOwnProperty("raw")) throw Error("invalid template strings array");
   return Tt !== void 0 ? Tt.createHTML(t) : t;
@@ -316,8 +316,8 @@ class Q {
     for (; (a = R.nextNode()) !== null && l.length < n; ) {
       if (a.nodeType === 1) {
         if (a.hasAttributes()) for (const p of a.getAttributeNames()) if (p.endsWith(Yt)) {
-          const u = h[o++], m = a.getAttribute(p).split(C), g = /([.?@])?(.*)/.exec(u);
-          l.push({ type: 1, index: i, name: g[2], strings: m, ctor: g[1] === "." ? ge : g[1] === "?" ? be : g[1] === "@" ? _e : lt }), a.removeAttribute(p);
+          const u = h[o++], m = a.getAttribute(p).split(C), b = /([.?@])?(.*)/.exec(u);
+          l.push({ type: 1, index: i, name: b[2], strings: m, ctor: b[1] === "." ? ge : b[1] === "?" ? be : b[1] === "@" ? _e : lt }), a.removeAttribute(p);
         } else p.startsWith(C) && (l.push({ type: 6, index: i }), a.removeAttribute(p));
         if (Kt.test(a.tagName)) {
           const p = a.textContent.split(C), u = p.length - 1;
@@ -641,7 +641,9 @@ const $e = {
     // a user wires in themselves — see ha-altair-mvhr's shower_detector.py.
     shower_detected: {},
     shower_trigger_temperature: {},
-    shower_pipe_temperature: {}
+    shower_pipe_temperature: {},
+    shower_temperature_rise: {},
+    shower_detection_window: {}
     // bypass_state is intentionally absent — see unsupportedRoles below.
   },
   // Confirmed product fact, not a "not configured yet" default: the Altair
@@ -668,7 +670,7 @@ const $e = {
     fault_active: {},
     frost_protection_active: {}
   }
-}, Ae = {
+}, Se = {
   id: "vent_axia_sentinel_econiq",
   name: "Aerofresh",
   vendor: "Aerofresh",
@@ -686,7 +688,7 @@ const $e = {
     fault_active: {},
     frost_protection_active: {}
   }
-}, Se = {
+}, Ae = {
   id: "generic",
   name: "Generic MVHR",
   vendor: "Generic",
@@ -699,8 +701,8 @@ const $e = {
 ], Ce = {
   altair: $e,
   "zehnder-comfoair-q": ke,
-  vent_axia_sentinel_econiq: Ae,
-  generic: Se
+  vent_axia_sentinel_econiq: Se,
+  generic: Ae
 };
 function te(s) {
   return Ce[s];
@@ -710,7 +712,7 @@ var Ee = Object.defineProperty, ee = (s, t, e, r) => {
     (o = s[i]) && (a = o(t, e, a) || a);
   return a && Ee(t, e, a), a;
 };
-const Pt = "hiper-mvhr-card-editor", $t = class $t extends B {
+const Ut = "hiper-mvhr-card-editor", $t = class $t extends B {
   setConfig(t) {
     this._config = { ...t };
   }
@@ -863,7 +865,7 @@ ee([
 ee([
   z()
 ], K.prototype, "_config");
-customElements.get(Pt) || customElements.define(Pt, K);
+customElements.get(Ut) || customElements.define(Ut, K);
 const yt = [
   "mode",
   "effective_mode",
@@ -942,14 +944,21 @@ const yt = [
   // mean together, not a manufacturer conditional.
   "shower_detected",
   "shower_trigger_temperature",
-  "shower_pipe_temperature"
+  "shower_pipe_temperature",
+  // Editable shower-detector settings exposed by backend integrations that
+  // support configurable auto-boost detection. These are number/input_number
+  // roles, not diagnostics: they tune the configured temperature rise and
+  // rolling detection window while preserving the trigger-temperature role's
+  // meaning as the actual temperature at the most recent trigger.
+  "shower_temperature_rise",
+  "shower_detection_window"
 ];
 class x extends Error {
   constructor(t) {
     super(t), this.name = "ConfigValidationError";
   }
 }
-const Me = "homeowner", Ut = ["homeowner", "detailed", "system"], Nt = ["automatic", "supply_temperature", "disabled"];
+const Me = "homeowner", Nt = ["homeowner", "detailed", "system"], Pt = ["automatic", "supply_temperature", "disabled"];
 function Dt(s) {
   return yt.includes(s);
 }
@@ -980,9 +989,9 @@ function Re(s) {
       `hiper-mvhr-card: unknown manufacturer "${t.manufacturer}". Supported: ${gt.join(", ")}`
     );
   const e = t.manufacturer, r = t.display_mode ?? Me;
-  if (!Ut.includes(r))
+  if (!Nt.includes(r))
     throw new x(
-      `hiper-mvhr-card: invalid "display_mode" value "${String(t.display_mode)}". Expected one of: ${Ut.join(", ")}`
+      `hiper-mvhr-card: invalid "display_mode" value "${String(t.display_mode)}". Expected one of: ${Nt.join(", ")}`
     );
   if (t.name !== void 0 && typeof t.name != "string")
     throw new x('hiper-mvhr-card: "name" must be a string if provided');
@@ -991,9 +1000,9 @@ function Re(s) {
   if (t.subtitle !== void 0 && typeof t.subtitle != "string")
     throw new x('hiper-mvhr-card: "subtitle" must be a string if provided');
   const a = t.heat_recovery_method ?? "automatic";
-  if (!Nt.includes(a))
+  if (!Pt.includes(a))
     throw new x(
-      `hiper-mvhr-card: invalid "heat_recovery_method" value "${String(t.heat_recovery_method)}". Expected one of: ${Nt.join(", ")}`
+      `hiper-mvhr-card: invalid "heat_recovery_method" value "${String(t.heat_recovery_method)}". Expected one of: ${Pt.join(", ")}`
     );
   const i = t.filter_max_days ?? 365;
   if (typeof i != "number" || !Number.isFinite(i) || i <= 0)
@@ -1071,7 +1080,7 @@ function He(s) {
   const [t] = s.split(".");
   return t ?? "";
 }
-function Pe(s, t, e) {
+function Ue(s, t, e) {
   var a;
   const r = {};
   for (const i of yt) {
@@ -1105,7 +1114,7 @@ function Pe(s, t, e) {
   }
   return r;
 }
-function Ue(s, t, e = {}) {
+function Ne(s, t, e = {}) {
   const r = new Set(e.ignoreRoles ?? []);
   let a = 0, i = 0, o = 0;
   for (const n of Object.keys(t.supportedRoles)) {
@@ -1122,14 +1131,14 @@ function Ue(s, t, e = {}) {
     label: i === 1 ? "1 sensor unavailable" : `${i} sensors unavailable`
   } : a > 0 ? { tone: "success", label: "All sensors reporting" } : { tone: "muted", label: "Not configured" };
 }
-const Ne = 1e4, De = "press";
+const Pe = 1e4, De = "press";
 function Be(s) {
   const [t] = s.split(".");
   return t ?? "";
 }
 class Ie {
   constructor(t = {}) {
-    this._state = { status: "idle" }, this._listeners = /* @__PURE__ */ new Set(), this._timeoutMs = t.timeoutMs ?? Ne;
+    this._state = { status: "idle" }, this._listeners = /* @__PURE__ */ new Set(), this._timeoutMs = t.timeoutMs ?? Pe;
   }
   get state() {
     return this._state;
@@ -1227,7 +1236,9 @@ const qe = {
   calibration_cancel_control: "mdi:cancel",
   shower_detected: "mdi:shower-head",
   shower_trigger_temperature: "mdi:thermometer-water",
-  shower_pipe_temperature: "mdi:thermometer-water"
+  shower_pipe_temperature: "mdi:thermometer-water",
+  shower_temperature_rise: "mdi:thermometer-chevron-up",
+  shower_detection_window: "mdi:timer-outline"
 };
 function mt(s) {
   return qe[s];
@@ -1273,7 +1284,7 @@ var We = Object.defineProperty, H = (s, t, e, r) => {
     (o = s[i]) && (a = o(t, e, a) || a);
   return a && We(t, e, a), a;
 };
-const nt = "hiper-mvhr-card", N = [
+const nt = "hiper-mvhr-card", P = [
   [0, 30, 90, 210],
   [10, 70, 145, 220],
   [15, 198, 211, 220],
@@ -1295,10 +1306,13 @@ const nt = "hiper-mvhr-card", N = [
   ["low_airflow", "Low"],
   ["home_airflow", "Home"],
   ["high_airflow", "High"]
+], Ke = [
+  ["shower_temperature_rise", "Shower temperature rise", "°C"],
+  ["shower_detection_window", "Detection window", "min"]
 ], jt = [
   ["supply_fan_speed", "Supply fan"],
   ["extract_fan_speed", "Extract fan"]
-], Ke = [
+], Xe = [
   ["bypass_state", "Summer bypass"],
   ["filter_remaining", "Filter"],
   ["calibration_result", "Calibration"],
@@ -1339,8 +1353,10 @@ const nt = "hiper-mvhr-card", N = [
   "high_airflow",
   "shower_detected",
   "shower_trigger_temperature",
-  "shower_pipe_temperature"
-], Xe = new Set(re), Vt = 10, Je = [
+  "shower_pipe_temperature",
+  "shower_temperature_rise",
+  "shower_detection_window"
+], Je = new Set(re), Vt = 10, tr = [
   ["supply_air_temp", "Supply air"],
   ["extract_air_temp", "Extract air"],
   ["outdoor_air_temp", "Outdoor air"],
@@ -1352,7 +1368,7 @@ const nt = "hiper-mvhr-card", N = [
   "idle",
   "none",
   "unknown"
-]), tr = /* @__PURE__ */ new Set(["on", "true", "problem", "active", "detected"]), kt = class kt extends B {
+]), er = /* @__PURE__ */ new Set(["on", "true", "problem", "active", "detected"]), kt = class kt extends B {
   constructor() {
     super(...arguments), this._advancedOpen = !1, this._presetDrafts = /* @__PURE__ */ new Map(), this._presetPending = /* @__PURE__ */ new Set(), this._presetErrors = /* @__PURE__ */ new Map(), this._presetTimers = /* @__PURE__ */ new Map(), this._dispatchers = /* @__PURE__ */ new Map();
   }
@@ -1385,11 +1401,11 @@ const nt = "hiper-mvhr-card", N = [
       return d`<ha-card><div class="error" role="alert">${this._configError}</div></ha-card>`;
     if (!this._config || !this.hass)
       return d``;
-    const t = this._config, e = this.hass, r = t.display_mode === "detailed", a = t.display_mode === "system", i = Oe(t.manufacturer, t.feature_flags), o = te(t.manufacturer), n = Pe(e, i, t.entities), l = Ue(n, i, {
+    const t = this._config, e = this.hass, r = t.display_mode === "detailed", a = t.display_mode === "system", i = Oe(t.manufacturer, t.feature_flags), o = te(t.manufacturer), n = Ue(e, i, t.entities), l = Ne(n, i, {
       ignoreRoles: re
-    }), c = r || l.label !== "Not configured", h = n.mode ? this._present(n.mode, r) : null, p = t.title ?? t.name ?? o.name, u = t.subtitle ?? "Heat Recovery Ventilation System", m = l.tone !== "warning" && l.label !== "Not configured", g = this._heatRecovery(n, t.heat_recovery_method), w = this._modeLabel(
+    }), c = r || l.label !== "Not configured", h = n.mode ? this._present(n.mode, r) : null, p = t.title ?? t.name ?? o.name, u = t.subtitle ?? "Heat Recovery Ventilation System", m = l.tone !== "warning" && l.label !== "Not configured", b = this._heatRecovery(n, t.heat_recovery_method), w = this._modeLabel(
       (h == null ? void 0 : h.text) ?? this._text(n.effective_mode)
-    ), b = t.title ?? o.name, f = this._isStopped(n);
+    ), g = t.title ?? o.name, f = this._isStopped(n);
     return d`
       <ha-card class=${a ? "card-system" : ""}>
         ${a ? this._systemHeader(p, u, w, n, t, e) : this._header(p, u, w, l, c)}
@@ -1397,11 +1413,11 @@ const nt = "hiper-mvhr-card", N = [
       n,
       t,
       e,
-      g,
+      b,
       w,
       m && !f,
       o
-    ) : r ? this._dashboard(n, t, e, g, w, b, m) : this._legacyContent(n, t, e, r)}
+    ) : r ? this._dashboard(n, t, e, b, w, g, m) : this._legacyContent(n, t, e, r)}
       </ha-card>
     `;
   }
@@ -1445,7 +1461,7 @@ const nt = "hiper-mvhr-card", N = [
       <div class="content">
         ${this._metricSection("Temperatures", Ye, t, a)}
         ${this._metricSection("Airflow", Qe, t, a)}
-        ${this._statusSection("System status", Ke, t, a, e, r)}
+        ${this._statusSection("System status", Xe, t, a, e, r)}
       </div>
     `;
   }
@@ -1685,8 +1701,8 @@ const nt = "hiper-mvhr-card", N = [
    * are new.
    */
   _controlsPanel(t, e, r) {
-    var g, w, b;
-    const a = e.entities.mode, i = e.entities.boost_duration, o = e.entities.override_duration, n = this._isStopped(t), l = this._modeOptions(t.mode, t, e), c = this._selectOptions(t.override_duration), h = n ? "off" : (g = this._state(t.mode)) == null ? void 0 : g.toLowerCase(), p = this._state(t.boost_active) === "on", u = ((w = t.boost_remaining) == null ? void 0 : w.status) === "ok" ? this._value(t.boost_remaining) : null, m = ((b = t.override_remaining) == null ? void 0 : b.status) === "ok" ? this._value(t.override_remaining) : null;
+    var b, w, g;
+    const a = e.entities.mode, i = e.entities.boost_duration, o = e.entities.override_duration, n = this._isStopped(t), l = this._modeOptions(t.mode, t, e), c = this._selectOptions(t.override_duration), h = n ? "off" : (b = this._state(t.mode)) == null ? void 0 : b.toLowerCase(), p = this._state(t.boost_active) === "on", u = ((w = t.boost_remaining) == null ? void 0 : w.status) === "ok" ? this._value(t.boost_remaining) : null, m = ((g = t.override_remaining) == null ? void 0 : g.status) === "ok" ? this._value(t.override_remaining) : null;
     return d`
       <aside class="controls-panel" aria-label="MVHR controls">
         <div class="panel-heading">Controls</div>
@@ -1858,9 +1874,9 @@ const nt = "hiper-mvhr-card", N = [
    * matching how boost has always been gated everywhere else in this file.
    */
   _systemHeaderControls(t, e, r, a) {
-    var m, g, w;
-    const i = e.entities.mode, o = this._isStopped(t), n = this._modeOptions(t.mode, t, e), l = o ? "off" : (m = this._state(t.mode)) == null ? void 0 : m.toLowerCase(), c = e.show_controls && (!!i && ((g = t.mode) == null ? void 0 : g.status) === "ok" || this._canUseStopControl(t, e)), h = e.show_controls && [t.boost_duration, t.start_boost, t.cancel_boost].some(
-      (b) => (b == null ? void 0 : b.status) === "ok"
+    var m, b, w;
+    const i = e.entities.mode, o = this._isStopped(t), n = this._modeOptions(t.mode, t, e), l = o ? "off" : (m = this._state(t.mode)) == null ? void 0 : m.toLowerCase(), c = e.show_controls && (!!i && ((b = t.mode) == null ? void 0 : b.status) === "ok" || this._canUseStopControl(t, e)), h = e.show_controls && [t.boost_duration, t.start_boost, t.cancel_boost].some(
+      (g) => (g == null ? void 0 : g.status) === "ok"
     ), p = this._state(t.boost_active) === "on", u = p && ((w = t.boost_remaining) == null ? void 0 : w.status) === "ok" ? this._value(t.boost_remaining) : null;
     return !c && !a && !h ? d`` : d`
       <div class="system-controls header-controls" role="group" aria-label="MVHR quick controls">
@@ -1873,18 +1889,18 @@ const nt = "hiper-mvhr-card", N = [
                     .value=${this._selectedModeOption(n, l) ?? ""}
                     aria-busy=${!!this._pendingMode}
                     ?disabled=${!!this._pendingMode}
-                    @change=${(b) => {
-      const f = b.currentTarget.value;
+                    @change=${(g) => {
+      const f = g.currentTarget.value;
       this._setOperatingMode(r, e, t, f);
     }}
                   >
                     ${n.map(
-      (b) => d`
+      (g) => d`
                         <option
-                          .value=${b}
-                          .selected=${l !== void 0 && b.toLowerCase() === l}
+                          .value=${g}
+                          .selected=${l !== void 0 && g.toLowerCase() === l}
                         >
-                          ${this._modeLabel(b)}
+                          ${this._modeLabel(g)}
                         </option>
                       `
     )}
@@ -1945,7 +1961,7 @@ const nt = "hiper-mvhr-card", N = [
           ${this._systemStatusCard(t, e)}
         </section>
 
-        ${h.render ? this._systemShowerBanner(h) : ""}
+        ${h.render ? this._systemShowerBanner(h, t, e, r) : ""}
         ${e.show_advanced_controls ? this._systemAdvancedToggle() : ""}
         ${e.show_advanced_controls ? this._advancedDrawer(t, e, r) : ""}
       </div>
@@ -1995,7 +2011,16 @@ const nt = "hiper-mvhr-card", N = [
    */
   _shower(t) {
     var c, h;
-    const e = t.shower_detected, r = !!e && (e == null ? void 0 : e.status) !== "unsupported" && (e == null ? void 0 : e.status) !== "not_configured", a = (e == null ? void 0 : e.status) === "ok" && e.value.toLowerCase() === "on", i = r && ((e == null ? void 0 : e.status) === "unavailable" || (e == null ? void 0 : e.status) === "entity_missing"), o = t.shower_trigger_temperature, n = this._number(o), l = n === void 0 ? null : `${(n - Vt).toFixed(1)}${(o == null ? void 0 : o.status) === "ok" && o.unit ? ` ${o.unit}` : ""}`;
+    const e = t.shower_detected, r = [
+      "shower_detected",
+      "shower_trigger_temperature",
+      "shower_pipe_temperature",
+      "shower_temperature_rise",
+      "shower_detection_window"
+    ].some((p) => {
+      const u = t[p];
+      return u && u.status !== "unsupported" && u.status !== "not_configured";
+    }), a = (e == null ? void 0 : e.status) === "ok" && e.value.toLowerCase() === "on", i = r && ((e == null ? void 0 : e.status) === "unavailable" || (e == null ? void 0 : e.status) === "entity_missing"), o = t.shower_trigger_temperature, n = this._number(o), l = n === void 0 ? null : `${(n - Vt).toFixed(1)}${(o == null ? void 0 : o.status) === "ok" && o.unit ? ` ${o.unit}` : ""}`;
     return {
       render: r,
       active: a,
@@ -2024,16 +2049,16 @@ const nt = "hiper-mvhr-card", N = [
    * lightweight CSS effect — but `prefers-reduced-motion` always does (see
    * the reduced-motion media query in `static styles`).
    */
-  _systemShowerBanner(t) {
-    const e = t.active ? "shower-active" : t.unavailable ? "shower-unavailable" : "shower-ready", r = t.active ? "Shower detected" : t.unavailable ? "Shower detection unavailable" : "Shower detection ready", a = t.active ? t.boostActive ? "Boost active" : "Boost not active" : t.unavailable ? "Check the configured shower detector entity" : "Rearmed and watching the pipe sensor";
+  _systemShowerBanner(t, e, r, a) {
+    const i = t.active ? "shower-active" : t.unavailable ? "shower-unavailable" : "shower-ready", o = t.active ? "Shower detected" : t.unavailable ? "Shower detection unavailable" : "Shower detection ready", n = t.active ? t.boostActive ? "Boost active" : "Boost not active" : t.unavailable ? "Check the configured shower detector entity" : "Rearmed and watching the pipe sensor";
     return d`
-      <section class="shower-panel ${e}" aria-label="Shower detection" role="status">
+      <section class="shower-panel ${i}" aria-label="Shower detection" role="status">
         <div class="shower-banner-head">
           <div class="shower-illustration" aria-hidden="true">${this._showerIllustration()}</div>
           <div class="shower-banner-titles">
             <h3 class="shower-heading">Shower Detection</h3>
-            <strong class="shower-title">${r}</strong>
-            <span class="shower-subtitle">${a}</span>
+            <strong class="shower-title">${o}</strong>
+            <span class="shower-subtitle">${n}</span>
           </div>
         </div>
         <dl class="shower-facts">
@@ -2066,7 +2091,50 @@ const nt = "hiper-mvhr-card", N = [
                   </div>
                 ` : ""}
         </dl>
+        ${this._showerSettingControls(e, r, a)}
       </section>
+    `;
+  }
+  _showerSettingControls(t, e, r) {
+    const a = Ke.filter(([i]) => {
+      const o = t[i];
+      return (o == null ? void 0 : o.status) === "ok" || (o == null ? void 0 : o.status) === "unavailable";
+    });
+    return a.length === 0 ? d`` : d`
+      <div class="shower-settings" aria-label="Shower detection settings">
+        ${a.map(([i, o, n]) => {
+      const l = t[i], c = e.entities[i], h = this._attributeNumber(l, "min"), p = this._attributeNumber(l, "max"), u = this._attributeNumber(l, "step") ?? 1, m = this._presetDrafts.get(i) ?? this._number(l), b = (l == null ? void 0 : l.status) !== "ok" || !c || this._presetPending.has(i);
+      return d`
+            <label class="preset-field shower-setting-field">
+              <span>${o}</span>
+              <span class="preset-input-wrap">
+                <input
+                  type="number"
+                  .value=${m === void 0 ? "" : String(m)}
+                  min=${h ?? v}
+                  max=${p ?? v}
+                  step=${u}
+                  ?disabled=${b}
+                  aria-label=${o}
+                  aria-busy=${this._presetPending.has(i)}
+                  @input=${(w) => {
+        const g = Number(w.currentTarget.value);
+        Number.isFinite(g) && (this._presetDrafts.set(i, g), this.requestUpdate());
+      }}
+                  @change=${(w) => {
+        const g = Number(w.currentTarget.value);
+        c && Number.isFinite(g) && this._scheduleSettingUpdate(i, c, g, l, r);
+      }}
+                />
+                <small>${(l == null ? void 0 : l.status) === "ok" ? l.unit ?? n : "Unavailable"}</small>
+              </span>
+              ${this._presetErrors.has(i) ? d`<small class="control-error" role="alert"
+                      >${this._presetErrors.get(i)}</small
+                    >` : ""}
+            </label>
+          `;
+    })}
+      </div>
     `;
   }
   /**
@@ -2192,7 +2260,7 @@ const nt = "hiper-mvhr-card", N = [
    * brief), plus the heat-recovery percentage.
    */
   _systemTemperaturesCard(t, e) {
-    const r = Je.map(([a, i]) => {
+    const r = tr.map(([a, i]) => {
       const o = t[a];
       return o ? this._diagnosticRow("mdi:thermometer", i, this._value(o, !0)) : null;
     }).filter((a) => a !== null);
@@ -2218,7 +2286,7 @@ const nt = "hiper-mvhr-card", N = [
       t.boost_active,
       t.boost_duration,
       t.start_boost
-    ].some((g) => (g == null ? void 0 : g.status) === "ok"), n = ((u = t.override_duration) == null ? void 0 : u.status) === "ok" ? this._modeLabel(t.override_duration.value) : null, l = i && ((m = t.boost_remaining) == null ? void 0 : m.status) === "ok" ? this._value(t.boost_remaining) : null, c = this._number(t.filter_remaining), h = c === void 0 ? "muted" : c / e.filter_max_days <= 0.15 ? "warning" : "success", p = [];
+    ].some((b) => (b == null ? void 0 : b.status) === "ok"), n = ((u = t.override_duration) == null ? void 0 : u.status) === "ok" ? this._modeLabel(t.override_duration.value) : null, l = i && ((m = t.boost_remaining) == null ? void 0 : m.status) === "ok" ? this._value(t.boost_remaining) : null, c = this._number(t.filter_remaining), h = c === void 0 ? "muted" : c / e.filter_max_days <= 0.15 ? "warning" : "success", p = [];
     return t.stop_control && t.stop_control.status !== "unsupported" && p.push(this._statusBadge(a ? "Stopped" : "Running", a ? "muted" : "success")), o && p.push(
       this._statusBadge(
         i ? "Boost Active" : "Boost Ready",
@@ -2412,26 +2480,26 @@ const nt = "hiper-mvhr-card", N = [
               ` : d`
                 <div class="preset-grid">
                   ${i.map(([n, l]) => {
-      const c = t[n], h = e.entities[n], p = this._attributeNumber(c, "min"), u = this._attributeNumber(c, "max"), m = this._attributeNumber(c, "step") ?? 1, g = this._presetDrafts.get(n) ?? this._number(c), w = (c == null ? void 0 : c.status) !== "ok" || !h || this._presetPending.has(n);
+      const c = t[n], h = e.entities[n], p = this._attributeNumber(c, "min"), u = this._attributeNumber(c, "max"), m = this._attributeNumber(c, "step") ?? 1, b = this._presetDrafts.get(n) ?? this._number(c), w = (c == null ? void 0 : c.status) !== "ok" || !h || this._presetPending.has(n);
       return d`
               <label class="preset-field">
                 <span>${l}</span>
                 <span class="preset-input-wrap">
                   <input
                     type="number"
-                    .value=${g === void 0 ? "" : String(g)}
+                    .value=${b === void 0 ? "" : String(b)}
                     min=${p ?? v}
                     max=${u ?? v}
                     step=${m}
                     ?disabled=${w}
                     aria-label=${`${l} airflow`}
                     aria-busy=${this._presetPending.has(n)}
-                    @input=${(b) => {
-        const f = Number(b.currentTarget.value);
+                    @input=${(g) => {
+        const f = Number(g.currentTarget.value);
         Number.isFinite(f) && (this._presetDrafts.set(n, f), this.requestUpdate());
       }}
-                    @change=${(b) => {
-        const f = Number(b.currentTarget.value);
+                    @change=${(g) => {
+        const f = Number(g.currentTarget.value);
         h && Number.isFinite(f) && this._schedulePresetUpdate(n, h, f, c, t, r);
       }}
                   />
@@ -2486,6 +2554,26 @@ const nt = "hiper-mvhr-card", N = [
       }, 300)
     ), this.requestUpdate();
   }
+  _scheduleSettingUpdate(t, e, r, a, i) {
+    this._presetDrafts.set(t, r), this._presetErrors.delete(t);
+    const o = this._presetRangeValidation(r, a);
+    if (o) {
+      this._presetErrors.set(t, o), this.requestUpdate();
+      return;
+    }
+    const n = this._presetTimers.get(t);
+    n && clearTimeout(n), this._presetTimers.set(
+      t,
+      setTimeout(() => {
+        this._presetTimers.delete(t), this._presetPending.add(t), this.requestUpdate(), this._call(i, "number", "set_value", {
+          entity_id: e,
+          value: r
+        }).catch(() => this._presetErrors.set(t, "Couldn't save setting")).finally(() => {
+          this._presetPending.delete(t), this.requestUpdate();
+        });
+      }, 300)
+    ), this.requestUpdate();
+  }
   _presetRangeValidation(t, e) {
     const r = this._attributeNumber(e, "min"), a = this._attributeNumber(e, "max"), i = this._attributeNumber(e, "step");
     if (r !== void 0 && t < r)
@@ -2516,7 +2604,7 @@ const nt = "hiper-mvhr-card", N = [
       return k && k.status !== "unsupported" && k.status !== "not_configured";
     }))
       return d``;
-    const o = "calibration_start_control", n = "calibration_cancel_control", l = t[o], c = t[n], h = e.entities[o], p = e.entities[n], u = this._getDispatcher(o), m = this._getDispatcher(n), g = u.state.status === "pending", w = m.state.status === "pending", b = (l == null ? void 0 : l.status) !== "ok" || !h, f = (c == null ? void 0 : c.status) !== "ok" || !p, _ = (J = this._state(t.calibration_status)) == null ? void 0 : J.toLowerCase(), y = !!(_ && !qt.has(_)), S = this._number(t.calibration_progress), P = this._value(t.calibration_progress, !0), M = ((tt = t.calibration_available) == null ? void 0 : tt.status) === "ok" ? ((et = this._state(t.calibration_available)) == null ? void 0 : et.toLowerCase()) === "on" : null, ct = ((rt = t.last_calibration) == null ? void 0 : rt.status) === "ok" ? Bt(t.last_calibration.value) : this._value(t.last_calibration, !0), F = u.state.status === "error" ? u.state.message : null, U = m.state.status === "error" ? m.state.message : null;
+    const o = "calibration_start_control", n = "calibration_cancel_control", l = t[o], c = t[n], h = e.entities[o], p = e.entities[n], u = this._getDispatcher(o), m = this._getDispatcher(n), b = u.state.status === "pending", w = m.state.status === "pending", g = (l == null ? void 0 : l.status) !== "ok" || !h, f = (c == null ? void 0 : c.status) !== "ok" || !p, _ = (J = this._state(t.calibration_status)) == null ? void 0 : J.toLowerCase(), y = !!(_ && !qt.has(_)), A = this._number(t.calibration_progress), U = this._value(t.calibration_progress, !0), M = ((tt = t.calibration_available) == null ? void 0 : tt.status) === "ok" ? ((et = this._state(t.calibration_available)) == null ? void 0 : et.toLowerCase()) === "on" : null, ct = ((rt = t.last_calibration) == null ? void 0 : rt.status) === "ok" ? Bt(t.last_calibration.value) : this._value(t.last_calibration, !0), F = u.state.status === "error" ? u.state.message : null, N = m.state.status === "error" ? m.state.message : null;
     return d`
       <section class="calibration-panel" aria-label="Airflow calibration">
         <div class="calibration-panel-head">
@@ -2532,8 +2620,8 @@ const nt = "hiper-mvhr-card", N = [
           <button
             type="button"
             class="cta calibration-button"
-            ?disabled=${b || g || y}
-            aria-busy=${g}
+            ?disabled=${g || b || y}
+            aria-busy=${b}
             @click=${async () => {
       var k;
       !((k = globalThis.confirm) != null && k.call(
@@ -2543,7 +2631,7 @@ The unit may change fan speeds during calibration.`
       )) || !h || (this._calibrationFeedback = void 0, await u.dispatchAction(r, h), this._calibrationFeedback = u.state.status === "idle" ? "Calibration started" : void 0);
     }}
           >
-            ${g ? "Starting…" : "Start Calibration"}
+            ${b ? "Starting…" : "Start Calibration"}
           </button>
           ${y ? d`
                   <button
@@ -2559,18 +2647,18 @@ The unit may change fan speeds during calibration.`
                   </button>
                 ` : ""}
         </div>
-        ${S !== void 0 ? d`
+        ${A !== void 0 ? d`
                 <div class="calibration-progress" aria-label="Calibration progress">
-                  <span style=${`width:${Math.max(0, Math.min(100, S))}%`}></span>
+                  <span style=${`width:${Math.max(0, Math.min(100, A))}%`}></span>
                 </div>
               ` : ""}
         <div class="calibration-details">
           ${this._compactStat("Status", this._value(t.calibration_status, !0))}
-          ${this._compactStat("Complete", P)}
+          ${this._compactStat("Complete", U)}
           ${this._compactStat("Last calibration", ct)}
           ${this._compactStat("Result", this._value(t.calibration_result, !0))}
         </div>
-        ${b && l && l.status !== "not_configured" ? d`<small class="control-error">Calibration unavailable</small>` : F ? d`<small class="control-error" role="alert">${F}</small>` : U ? d`<small class="control-error" role="alert">${U}</small>` : this._calibrationFeedback ? d`<small class="control-success" role="status"
+        ${g && l && l.status !== "not_configured" ? d`<small class="control-error">Calibration unavailable</small>` : F ? d`<small class="control-error" role="alert">${F}</small>` : N ? d`<small class="control-error" role="alert">${N}</small>` : this._calibrationFeedback ? d`<small class="control-success" role="status"
                       >${this._calibrationFeedback}</small
                     >` : ""}
       </section>
@@ -2623,21 +2711,21 @@ The unit may change fan speeds during calibration.`
       exhaust: this._temperatureColour(l.exhaust),
       outdoor: this._temperatureColour(l.outdoor),
       supply: this._temperatureColour(l.supply)
-    }, h = l.extract !== null && l.exhaust !== null ? this._temperatureColour((l.extract + l.exhaust) / 2) : this._temperatureColour(null), p = l.outdoor !== null && l.supply !== null ? this._temperatureColour((l.outdoor + l.supply) / 2) : this._temperatureColour(null), u = this._number(t.filter_remaining) !== void 0, m = this._number(t.supply_fan_speed) !== void 0, g = this._number(t.extract_fan_speed) !== void 0, w = a.status === "ok" && this._prevRecoveryLabel !== void 0 && this._prevRecoveryLabel !== a.label;
+    }, h = l.extract !== null && l.exhaust !== null ? this._temperatureColour((l.extract + l.exhaust) / 2) : this._temperatureColour(null), p = l.outdoor !== null && l.supply !== null ? this._temperatureColour((l.outdoor + l.supply) / 2) : this._temperatureColour(null), u = this._number(t.filter_remaining) !== void 0, m = this._number(t.supply_fan_speed) !== void 0, b = this._number(t.extract_fan_speed) !== void 0, w = a.status === "ok" && this._prevRecoveryLabel !== void 0 && this._prevRecoveryLabel !== a.label;
     this._prevRecoveryLabel = a.status === "ok" ? a.label : this._prevRecoveryLabel;
-    const b = (f, _, y, S, P, M, ct) => {
+    const g = (f, _, y, A, U, M, ct) => {
       var k;
-      const F = n || S ? o : null, U = this._number(t[y]) ?? null, J = this._temperatureColour(U), tt = this._temperatureColour(U, 0.13), et = f === "extract" || f === "supply" ? "indoor" : "outdoor", rt = f === "extract" || f === "outdoor" ? "inward" : "outward", V = f === "extract" && ((k = t.indoor_humidity) == null ? void 0 : k.status) === "ok" ? this._value(t.indoor_humidity, !0) : null;
+      const F = n || A ? o : null, N = this._number(t[y]) ?? null, J = this._temperatureColour(N), tt = this._temperatureColour(N, 0.13), et = f === "extract" || f === "supply" ? "indoor" : "outdoor", rt = f === "extract" || f === "outdoor" ? "inward" : "outward", V = f === "extract" && ((k = t.indoor_humidity) == null ? void 0 : k.status) === "ok" ? this._value(t.indoor_humidity, !0) : null;
       return d`
         <div
           class="air-path ${f}"
           data-side=${et}
           data-flow=${rt}
-          data-temperature=${U ?? "unavailable"}
+          data-temperature=${N ?? "unavailable"}
           style=${`--stream-color:${J};--stream-soft:${tt}`}
         >
           <span class="path-label">
-            <ha-icon icon=${P} aria-hidden="true"></ha-icon>
+            <ha-icon icon=${U} aria-hidden="true"></ha-icon>
             ${_}
             <ha-icon class="path-arrow" icon=${M} aria-label=${ct}></ha-icon>
           </span>
@@ -2654,7 +2742,7 @@ The unit may change fan speeds during calibration.`
     };
     return d`
       <div class="visual-wrap system-visual-wrap">
-        ${b(
+        ${g(
       "outdoor",
       "Outdoor air",
       "outdoor_air_temp",
@@ -2663,7 +2751,7 @@ The unit may change fan speeds during calibration.`
       "mdi:arrow-bottom-right-thin",
       "Drawn from outdoors"
     )}
-        ${b(
+        ${g(
       "extract",
       "Extract air",
       "extract_air_temp",
@@ -2828,7 +2916,7 @@ The unit may change fan speeds during calibration.`
       [187, 327],
       [513, 327]
     ].map(
-      ([f, _]) => A`<g transform=${`translate(${f} ${_})`}><circle r="5"></circle><path d="M-2.2 0 H2.2"></path></g>`
+      ([f, _]) => S`<g transform=${`translate(${f} ${_})`}><circle r="5"></circle><path d="M-2.2 0 H2.2"></path></g>`
     )}
             </g>
             <g class="duct-shells" aria-hidden="true">
@@ -2868,7 +2956,7 @@ The unit may change fan speeds during calibration.`
       ["outdoor-filter", 134],
       ["extract-filter", 566]
     ].map(
-      ([f, _]) => A`
+      ([f, _]) => S`
                   <g
                     class="filter-cartridge ${f} ${u ? "known" : "unavailable"}"
                     data-path="incoming"
@@ -2878,7 +2966,7 @@ The unit may change fan speeds during calibration.`
                     <rect class="filter-depth" x="-17" y="-50" width="34" height="100" rx="4"></rect>
                     <rect class="filter-media" x="-12" y="-45" width="24" height="90" rx="2"></rect>
                     ${[-38, -26, -14, -2, 10, 22, 34].map(
-        (y) => A`<path class="filter-pleat" d=${`M-10 ${y} L10 ${y + 8}`}></path>`
+        (y) => S`<path class="filter-pleat" d=${`M-10 ${y} L10 ${y + 8}`}></path>`
       )}
                     <rect class="filter-status-edge" x="-17" y="-50" width="5" height="100" rx="2"></rect>
                   </g>
@@ -2887,12 +2975,12 @@ The unit may change fan speeds during calibration.`
             </g>
             <g class="fan-assemblies" aria-hidden="true">
               ${[
-      ["exhaust-fan", 148, 273, g],
+      ["exhaust-fan", 148, 273, b],
       ["supply-fan", 552, 273, m]
     ].map(
-      ([f, _, y, S]) => A`
+      ([f, _, y, A]) => S`
                   <g
-                    class="fan-assembly ${f} ${S ? "known" : "unavailable"}"
+                    class="fan-assembly ${f} ${A ? "known" : "unavailable"}"
                     data-location="internal"
                     transform=${`translate(${_} ${y})`}
                     filter="url(#component-shadow)"
@@ -2903,11 +2991,11 @@ The unit may change fan speeds during calibration.`
                     <path class="fan-drum-depth" d="M-27 -35 H-18 A38 35 0 0 1 -18 35 H-27 A38 35 0 0 0 -27 -35 Z"></path>
                     <circle class="fan-ring" cx="-27" r="33"></circle>
                     <g class="fan-rotor">
-                      ${Array.from({ length: 18 }, (P, M) => M * 20).map(
-        (P) => A`<path
+                      ${Array.from({ length: 18 }, (U, M) => M * 20).map(
+        (U) => S`<path
                           class="fan-vane"
                           d="M-31 -27 Q-21 -34 -13 -27 L-17 -21 Q-23 -26 -29 -20 Z"
-                          transform=${`rotate(${P} -27 0)`}
+                          transform=${`rotate(${U} -27 0)`}
                         ></path>`
       )}
                       <circle class="fan-shroud" cx="-27" r="24"></circle>
@@ -2927,20 +3015,20 @@ The unit may change fan speeds during calibration.`
               <g class="warm-channels" clip-path="url(#system-exchanger-clip)">
                 ${Array.from(
       { length: 15 },
-      (f, _) => A`<path d=${`M${220 + _ * 11} 75 L${405 + _ * 11} 260`}></path>`
+      (f, _) => S`<path d=${`M${220 + _ * 11} 75 L${405 + _ * 11} 260`}></path>`
     )}
               </g>
               <g class="cool-channels" clip-path="url(#system-exchanger-clip)">
                 ${Array.from(
       { length: 15 },
-      (f, _) => A`<path d=${`M${295 + _ * 11} 75 L${110 + _ * 11} 260`}></path>`
+      (f, _) => S`<path d=${`M${295 + _ * 11} 75 L${110 + _ * 11} 260`}></path>`
     )}
               </g>
               <path class="passage-separator" d="M350 66 V294 M234 180 H466"></path>
               <path class="exchanger-frame-detail" d="M350 62 L470 180 L350 298 L230 180 Z"></path>
             </g>
             ${["extract", "exhaust", "outdoor", "supply"].map(
-      (f) => A`<g
+      (f) => S`<g
                   class="airflow-particles ${f}-particles ${l[f] === null ? "unavailable" : ""}"
                   aria-hidden="true"
                 >
@@ -2956,11 +3044,11 @@ The unit may change fan speeds during calibration.`
       ["extract-collar", 676, 82, c.extract],
       ["supply-collar", 676, 278, c.supply]
     ].map(
-      ([f, _, y, S]) => A`
+      ([f, _, y, A]) => S`
                   <g
                     class="port-collar ${f}"
                     transform=${`translate(${_} ${y})`}
-                    style=${`--collar-color:${S}`}
+                    style=${`--collar-color:${A}`}
                   >
                     <rect x="-26" y="-31" width="52" height="62" rx="8"></rect>
                     <ellipse cx="0" cy="0" rx="14" ry="31"></ellipse>
@@ -2973,7 +3061,7 @@ The unit may change fan speeds during calibration.`
           </svg>
           </div>
         </div>
-        ${b(
+        ${g(
       "exhaust",
       "Exhaust air",
       "exhaust_air_temp",
@@ -2982,7 +3070,7 @@ The unit may change fan speeds during calibration.`
       "mdi:arrow-bottom-left-thin",
       "Flowing outdoors"
     )}
-        ${b(
+        ${g(
       "supply",
       "Supply air",
       "supply_air_temp",
@@ -3058,12 +3146,12 @@ The unit may change fan speeds during calibration.`
     const r = Math.max(0, Math.min(1, e));
     if (t === null || !Number.isFinite(t))
       return `color-mix(in srgb, var(--secondary-text-color), transparent ${Math.round((1 - r) * 100)}%)`;
-    const a = N[0], i = N[N.length - 1], o = Math.max(a[0], Math.min(i[0], t));
+    const a = P[0], i = P[P.length - 1], o = Math.max(a[0], Math.min(i[0], t));
     let n = a, l = i;
-    for (let p = 1; p < N.length; p += 1) {
-      const u = N[p];
+    for (let p = 1; p < P.length; p += 1) {
+      const u = P[p];
       if (o <= u[0]) {
-        n = N[p - 1], l = u;
+        n = P[p - 1], l = u;
         break;
       }
     }
@@ -3139,14 +3227,14 @@ The unit may change fan speeds during calibration.`
   _dashboardStatus(t) {
     var a, i;
     for (const o of yt) {
-      if (Xe.has(o))
+      if (Je.has(o))
         continue;
       const n = t[o];
       if ((n == null ? void 0 : n.status) === "entity_missing" || (n == null ? void 0 : n.status) === "unavailable")
         return { tone: "warning", label: "Communication issue" };
     }
     const e = t.fault_active;
-    if ((e == null ? void 0 : e.status) === "ok" && tr.has(e.value.toLowerCase()))
+    if ((e == null ? void 0 : e.status) === "ok" && er.has(e.value.toLowerCase()))
       return { tone: "warning", label: "Fault detected" };
     const r = ((a = t.calibration_status) == null ? void 0 : a.status) === "ok" ? t.calibration_status.value.toLowerCase() : "";
     return r && !qt.has(r) ? { tone: "muted", label: "Calibrating…" } : ((i = t.calibration_result) == null ? void 0 : i.status) === "ok" && t.calibration_result.value === "not_calibrated" ? { tone: "warning", label: "Calibration required" } : this._isStopped(t) ? { tone: "muted", label: "Stopped" } : { tone: "success", label: "System OK" };
@@ -4631,6 +4719,22 @@ kt.styles = Wt`
       color: var(--secondary-text-color);
       font-size: 0.6em;
       font-weight: 500;
+    }
+    .shower-settings {
+      flex: 1 1 260px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 10px;
+      min-width: 260px;
+    }
+    .shower-setting-field {
+      min-width: 0;
+      background: color-mix(in srgb, var(--ha-card-background, var(--card-background-color)), transparent 6%);
+      border-color: color-mix(in srgb, var(--shower-color), transparent 78%);
+    }
+    .shower-setting-field > span:first-child {
+      color: var(--secondary-text-color);
+      font-weight: 700;
     }
 
     @keyframes shower-fall {

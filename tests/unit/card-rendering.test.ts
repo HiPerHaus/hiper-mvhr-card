@@ -5,6 +5,7 @@ import { zehnderHass } from '../fixtures/hass-zehnder-comfoair-q';
 import { aerofreshHass } from '../fixtures/hass-aerofresh';
 import { genericHass } from '../fixtures/hass-generic';
 import type { HomeAssistant } from '../../src/types/hass';
+import type { EntityRoleId } from '../../src/types/entity-roles';
 
 function mount(): HiperMvhrCard {
   const el = document.createElement('hiper-mvhr-card') as HiperMvhrCard;
@@ -2775,24 +2776,29 @@ describe('hiper-mvhr-card', () => {
      * exercising the "not configured at all" path implicitly.
      */
     describe('shower detection panel', () => {
-      const showerEntities = {
+      const showerEntities: Partial<Record<EntityRoleId, string>> = {
         ...systemEntities,
         shower_detected: 'binary_sensor.altair_shower_detected',
         shower_trigger_temperature: 'sensor.altair_shower_trigger_temperature',
         shower_pipe_temperature: 'sensor.shower_pipe_temperature',
       };
 
-      function mountShower(showerStates: HomeAssistant['states']): HiperMvhrCard {
+      function mountShower(
+        showerStates: HomeAssistant['states'],
+        entities = showerEntities,
+        callService?: HomeAssistant['callService'],
+      ): HiperMvhrCard {
         const el = mount();
         set(el, {
           type: 'custom:hiper-mvhr-card',
           manufacturer: 'altair',
           display_mode: 'system',
-          entities: showerEntities,
+          entities,
         });
         el.hass = {
           ...altairHass,
           states: { ...altairHass.states, ...systemStates, ...showerStates },
+          ...(callService ? { callService } : {}),
         };
         return el;
       }
@@ -2827,6 +2833,159 @@ describe('hiper-mvhr-card', () => {
         const more = el.shadowRoot?.querySelector('.system-more');
         expect(lower?.nextElementSibling).toBe(panel);
         expect(panel?.nextElementSibling).toBe(more);
+      });
+
+      it('renders both adjustable shower detection controls from number metadata', async () => {
+        const el = mountShower({
+          'binary_sensor.altair_shower_detected': {
+            entity_id: 'binary_sensor.altair_shower_detected',
+            state: 'off',
+            attributes: {},
+          },
+          'number.altair_mvhr_shower_temperature_rise': {
+            entity_id: 'number.altair_mvhr_shower_temperature_rise',
+            state: '7.5',
+            attributes: { min: 2, max: 20, step: 0.5, unit_of_measurement: '°C' },
+          },
+          'number.altair_mvhr_shower_detection_window': {
+            entity_id: 'number.altair_mvhr_shower_detection_window',
+            state: '3',
+            attributes: { min: 1, max: 10, step: 1, unit_of_measurement: 'min' },
+          },
+        }, {
+          ...showerEntities,
+          shower_temperature_rise: 'number.altair_mvhr_shower_temperature_rise',
+          shower_detection_window: 'number.altair_mvhr_shower_detection_window',
+        });
+        await el.updateComplete;
+
+        const settings = el.shadowRoot?.querySelector('.shower-settings');
+        expect(settings?.textContent).toContain('Shower temperature rise');
+        expect(settings?.textContent).toContain('Detection window');
+        expect(settings?.textContent).toContain('°C');
+        expect(settings?.textContent).toContain('min');
+        const inputs = settings?.querySelectorAll('input') ?? [];
+        expect(inputs).toHaveLength(2);
+        expect((inputs[0] as HTMLInputElement).value).toBe('7.5');
+        expect((inputs[0] as HTMLInputElement).min).toBe('2');
+        expect((inputs[0] as HTMLInputElement).max).toBe('20');
+        expect((inputs[0] as HTMLInputElement).step).toBe('0.5');
+        expect((inputs[1] as HTMLInputElement).value).toBe('3');
+        expect((inputs[1] as HTMLInputElement).min).toBe('1');
+        expect((inputs[1] as HTMLInputElement).max).toBe('10');
+        expect((inputs[1] as HTMLInputElement).step).toBe('1');
+      });
+
+      it('hides only the missing adjustable shower control', async () => {
+        const el = mountShower({
+          'binary_sensor.altair_shower_detected': {
+            entity_id: 'binary_sensor.altair_shower_detected',
+            state: 'off',
+            attributes: {},
+          },
+          'number.altair_mvhr_shower_temperature_rise': {
+            entity_id: 'number.altair_mvhr_shower_temperature_rise',
+            state: '8',
+            attributes: { min: 2, max: 20, step: 0.5, unit_of_measurement: '°C' },
+          },
+        }, {
+          ...showerEntities,
+          shower_temperature_rise: 'number.altair_mvhr_shower_temperature_rise',
+          shower_detection_window: 'number.altair_mvhr_missing_window',
+        });
+        await el.updateComplete;
+
+        const settings = el.shadowRoot?.querySelector('.shower-settings');
+        expect(settings?.querySelectorAll('input')).toHaveLength(1);
+        expect(settings?.textContent).toContain('Shower temperature rise');
+        expect(settings?.textContent).not.toContain('Detection window');
+        expect(el.shadowRoot?.querySelector('.shower-panel')).toBeTruthy();
+      });
+
+      it('keeps the shower panel when both adjustable controls are missing', async () => {
+        const el = mountShower({
+          'binary_sensor.altair_shower_detected': {
+            entity_id: 'binary_sensor.altair_shower_detected',
+            state: 'off',
+            attributes: {},
+          },
+        }, {
+          ...showerEntities,
+          shower_temperature_rise: 'number.altair_mvhr_missing_rise',
+          shower_detection_window: 'number.altair_mvhr_missing_window',
+        });
+        await el.updateComplete;
+
+        expect(el.shadowRoot?.querySelector('.shower-panel')).toBeTruthy();
+        expect(el.shadowRoot?.querySelector('.shower-settings')).toBeNull();
+      });
+
+      it('calls number.set_value with the configured shower setting entity and value', async () => {
+        vi.useFakeTimers();
+        const callService = vi.fn().mockResolvedValue(undefined);
+        const el = mountShower({
+          'binary_sensor.altair_shower_detected': {
+            entity_id: 'binary_sensor.altair_shower_detected',
+            state: 'off',
+            attributes: {},
+          },
+          'number.in_ceiling_altair_mvhr_shower_temperature_rise': {
+            entity_id: 'number.in_ceiling_altair_mvhr_shower_temperature_rise',
+            state: '10',
+            attributes: { min: 2, max: 20, step: 0.5, unit_of_measurement: '°C' },
+          },
+          'number.in_ceiling_altair_mvhr_shower_detection_window': {
+            entity_id: 'number.in_ceiling_altair_mvhr_shower_detection_window',
+            state: '2',
+            attributes: { min: 1, max: 10, step: 1, unit_of_measurement: 'min' },
+          },
+        }, {
+          ...showerEntities,
+          shower_temperature_rise: 'number.in_ceiling_altair_mvhr_shower_temperature_rise',
+          shower_detection_window: 'number.in_ceiling_altair_mvhr_shower_detection_window',
+        }, callService);
+        await el.updateComplete;
+
+        const input = el.shadowRoot?.querySelector(
+          '.shower-setting-field input',
+        ) as HTMLInputElement;
+        input.value = '7.5';
+        input.dispatchEvent(new Event('input'));
+        input.dispatchEvent(new Event('change'));
+        await vi.advanceTimersByTimeAsync(300);
+
+        expect(callService).toHaveBeenCalledWith('number', 'set_value', {
+          entity_id: 'number.in_ceiling_altair_mvhr_shower_temperature_rise',
+          value: 7.5,
+        });
+        vi.useRealTimers();
+      });
+
+      it('renders unavailable shower setting controls safely disabled', async () => {
+        const el = mountShower({
+          'binary_sensor.altair_shower_detected': {
+            entity_id: 'binary_sensor.altair_shower_detected',
+            state: 'off',
+            attributes: {},
+          },
+          'number.altair_mvhr_shower_temperature_rise': {
+            entity_id: 'number.altair_mvhr_shower_temperature_rise',
+            state: 'unavailable',
+            attributes: { min: 2, max: 20, step: 0.5, unit_of_measurement: '°C' },
+          },
+        }, {
+          ...showerEntities,
+          shower_temperature_rise: 'number.altair_mvhr_shower_temperature_rise',
+        });
+        await el.updateComplete;
+
+        const input = el.shadowRoot?.querySelector(
+          '.shower-setting-field input',
+        ) as HTMLInputElement;
+        expect(input.disabled).toBe(true);
+        expect(el.shadowRoot?.querySelector('.shower-settings')?.textContent).toContain(
+          'Unavailable',
+        );
       });
 
       it('an unavailable shower_detected entity shows neutral unavailable state, not no-shower text', async () => {

@@ -63,6 +63,8 @@ entities:
   shower_detected: binary_sensor.altair_shower_detected
   shower_trigger_temperature: sensor.altair_shower_trigger_temperature
   shower_pipe_temperature: sensor.shower_pipe_temperature
+  shower_temperature_rise: number.altair_mvhr_shower_temperature_rise
+  shower_detection_window: number.altair_mvhr_shower_detection_window
 ```
 
 `calibration` and `start_calibration` are accepted as shortcuts for the canonical `calibration_start_control` role; `cancel_calibration` maps to `calibration_cancel_control`. The preset airflow rows only render for real configured number/input_number entities; if none are configured, More controls shows a short empty-state explanation.
