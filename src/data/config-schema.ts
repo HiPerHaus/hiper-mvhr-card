@@ -26,6 +26,7 @@ const ENTITY_ROLE_ALIASES: Record<string, EntityRoleId> = {
   filter_days_remaining: 'filter_remaining',
   supply_fan: 'supply_fan_speed',
   extract_fan: 'extract_fan_speed',
+  calibration: 'calibration_start_control',
   last_airflow_calibration: 'last_calibration',
 };
 

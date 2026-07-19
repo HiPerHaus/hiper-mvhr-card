@@ -276,7 +276,6 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
                 hass,
                 recovery,
                 modeLabel,
-                unitBrand,
                 active,
                 displayProfile,
               )
@@ -964,11 +963,7 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       boostActive && snapshot.boost_remaining?.status === 'ok'
         ? this._value(snapshot.boost_remaining)
         : null;
-    // A read-only status indicator, not a control — shown regardless of
-    // `show_controls`, same as the passive mode pill.
-    const shower = this._shower(snapshot);
-
-    if (!canEditMode && !modeLabel && !hasBoost && !shower.render) {
+    if (!canEditMode && !modeLabel && !hasBoost) {
       return html``;
     }
 
@@ -982,6 +977,7 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
                   <select
                     class="mode-select-pill ${currentModeRaw === 'off' ? 'mode-off' : ''}"
                     aria-label="Operating mode"
+                    .value=${this._selectedModeOption(modeOptions, currentModeRaw) ?? ''}
                     aria-busy=${Boolean(this._pendingMode)}
                     ?disabled=${Boolean(this._pendingMode)}
                     @change=${(event: Event) => {
@@ -995,7 +991,8 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
                       (option) => html`
                         <option
                           .value=${option}
-                          ?selected=${currentModeRaw !== undefined && option.toLowerCase() === currentModeRaw}
+                          .selected=${currentModeRaw !== undefined &&
+                          option.toLowerCase() === currentModeRaw}
                         >
                           ${this._modeLabel(option)}
                         </option>
@@ -1038,7 +1035,6 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
               `
             : ''
         }
-        ${shower.render ? this._systemShowerPill(shower) : ''}
       </div>
     `;
   }
@@ -1061,7 +1057,6 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     hass: HomeAssistant,
     recovery: HeatRecoveryResult,
     modeLabel: string,
-    unitBrand: string,
     active: boolean,
     profile: CapabilityProfile,
   ): TemplateResult {
@@ -1080,7 +1075,6 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
 
     return html`
       <div class="mvhr-system">
-        ${shower.active ? this._systemShowerBanner(shower) : ''}
         <section class="system-main">
           <section
             class="visual-panel system-visual-panel system-overview"
@@ -1089,7 +1083,7 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
             <div class="panel-heading-row">
               <h3>System Overview</h3>
             </div>
-            ${this._systemHeroVisual(snapshot, config, animated, unitBrand, recovery, boostActive)}
+            ${this._systemHeroVisual(snapshot, config, animated, recovery, boostActive)}
           </section>
         </section>
 
@@ -1099,6 +1093,7 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
           ${this._systemStatusCard(snapshot, config)}
         </section>
 
+        ${shower.render ? this._systemShowerBanner(shower) : ''}
         ${config.show_advanced_controls ? this._systemAdvancedToggle() : ''}
         ${config.show_advanced_controls ? this._advancedDrawer(snapshot, config, hass) : ''}
       </div>
@@ -1151,6 +1146,7 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
   private _shower(snapshot: Partial<Record<EntityRoleId, RoleValue>>): {
     render: boolean;
     active: boolean;
+    unavailable: boolean;
     boostActive: boolean;
     pipeTemperature: string | null;
     triggerTemperature: string | null;
@@ -1163,6 +1159,8 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       detected?.status !== 'unsupported' &&
       detected?.status !== 'not_configured';
     const active = detected?.status === 'ok' && detected.value.toLowerCase() === 'on';
+    const unavailable =
+      configured && (detected?.status === 'unavailable' || detected?.status === 'entity_missing');
 
     const triggerValue = snapshot.shower_trigger_temperature;
     const triggerNumber = this._number(triggerValue);
@@ -1176,6 +1174,7 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     return {
       render: configured,
       active,
+      unavailable,
       boostActive: this._state(snapshot.boost_active) === 'on',
       // Each fact is shown only when its own entity is genuinely 'ok' — an
       // unavailable/missing sensor omits its row entirely rather than
@@ -1198,51 +1197,41 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
   }
 
   /**
-   * The compact, always-on shower status indicator, next to the boost pill
-   * in the header — "float it as a small status card in the header"
-   * (visual-polish follow-up, round 2). Rendered whenever shower detection
-   * is configured at all; a quiet muted pill reading "No shower detected"
-   * when idle, so the main content area never has to spend space on an
-   * inactive card (the previous round's `.shower-inactive` card was exactly
-   * the "creates a lot of empty whitespace" complaint). The full illustrated
-   * detail only appears in `_systemShowerBanner`, and only while active.
-   */
-  private _systemShowerPill(shower: ReturnType<HiperMvhrCard['_shower']>): TemplateResult {
-    return html`
-      <div class="header-control">
-        <span class="header-control-label">Shower</span>
-        <span class="shower-pill ${shower.active ? 'is-active' : ''}" role="status">
-          <ha-icon icon="mdi:shower-head" aria-hidden="true"></ha-icon>
-          ${shower.active ? 'Detected' : 'No shower detected'}
-        </span>
-      </div>
-    `;
-  }
-
-  /**
-   * The full illustrated "Shower detected" banner — pipe/trigger/re-arm
-   * temperatures, boost status — only rendered while a shower is actually
-   * active (`_shower` gates this; see `_systemShowerPill` for the idle
-   * state). Moved to a full-width banner directly above System Overview
-   * (visual-polish follow-up, round 2) rather than a side column, so
-   * Overview can always use the full card width — "let it dominate the
-   * page" — while the shower detail still sits immediately next to it, not
-   * off in a separate part of the layout. Config's `show_airflow_animation`
+   * The full shower detection banner — ready/active/unavailable status,
+   * pipe/trigger/re-arm temperatures, and boost status. It sits below the
+   * lower Temperature/Airflow/System Status boxes and directly above More
+   * controls, so the header never duplicates shower state. Config's
+   * `show_airflow_animation`
    * doesn't gate this panel's own droplet animation — it's a separate,
    * lightweight CSS effect — but `prefers-reduced-motion` always does (see
    * the reduced-motion media query in `static styles`).
    */
   private _systemShowerBanner(shower: ReturnType<HiperMvhrCard['_shower']>): TemplateResult {
+    const stateClass = shower.active
+      ? 'shower-active'
+      : shower.unavailable
+        ? 'shower-unavailable'
+        : 'shower-ready';
+    const title = shower.active
+      ? 'Shower detected'
+      : shower.unavailable
+        ? 'Shower detection unavailable'
+        : 'Shower detection ready';
+    const subtitle = shower.active
+      ? shower.boostActive
+        ? 'Boost active'
+        : 'Boost not active'
+      : shower.unavailable
+        ? 'Check the configured shower detector entity'
+        : 'Rearmed and watching the pipe sensor';
     return html`
-      <section class="shower-panel shower-active" aria-label="Shower detection" role="status">
+      <section class="shower-panel ${stateClass}" aria-label="Shower detection" role="status">
         <div class="shower-banner-head">
           <div class="shower-illustration" aria-hidden="true">${this._showerIllustration()}</div>
           <div class="shower-banner-titles">
             <h3 class="shower-heading">Shower Detection</h3>
-            <strong class="shower-title">Shower detected</strong>
-            <span class="shower-subtitle"
-              >${shower.boostActive ? 'Boost active' : 'Boost not active'}</span
-            >
+            <strong class="shower-title">${title}</strong>
+            <span class="shower-subtitle">${subtitle}</span>
           </div>
         </div>
         <dl class="shower-facts">
@@ -1267,7 +1256,7 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
               : ''
           }
           ${
-            shower.rearmTemperature
+            shower.active && shower.rearmTemperature
               ? html`
                   <div class="shower-fact">
                     <dt>Re-arm at</dt>
@@ -1281,7 +1270,7 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
               : ''
           }
           ${
-            shower.boostRemaining
+            shower.active && shower.boostRemaining
               ? html`
                   <div class="shower-fact">
                     <dt>Boost remaining</dt>
@@ -1768,15 +1757,24 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     hass: HomeAssistant,
   ): TemplateResult {
     const configured = PRESET_AIRFLOW_ROLES.filter(([role]) => Boolean(config.entities[role]));
-    if (configured.length === 0) {
-      return html``;
-    }
-    const validation = this._presetValidation(snapshot, configured.map(([role]) => role));
+    const visible = configured.filter(([role]) => {
+      const value = snapshot[role];
+      return value?.status === 'ok' || value?.status === 'unavailable';
+    });
+    const validation = this._presetValidation(snapshot, visible.map(([role]) => role));
     return html`
-      <section class="preset-controls" aria-label="Airflow presets">
-        <div class="control-block-head"><span>Airflow presets</span></div>
-        <div class="preset-grid">
-          ${configured.map(([role, label]) => {
+      <section class="preset-controls" aria-label="Preset airflows">
+        <div class="control-block-head"><span>Preset airflows</span></div>
+        ${
+          visible.length === 0
+            ? html`
+                <p class="preset-empty">
+                  Preset airflow controls require number entities to be configured.
+                </p>
+              `
+            : html`
+                <div class="preset-grid">
+                  ${visible.map(([role, label]) => {
             const value = snapshot[role];
             const entityId = config.entities[role];
             const minimum = this._attributeNumber(value, 'min');
@@ -1823,7 +1821,9 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
               </label>
             `;
           })}
-        </div>
+                </div>
+              `
+        }
         ${
           validation
             ? html`<p class="preset-validation" role="alert">${validation}</p>`
@@ -1887,7 +1887,10 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
         this._presetTimers.delete(role);
         this._presetPending.add(role);
         this.requestUpdate();
-        void this._call(hass, 'number', 'set_value', { entity_id: entityId, value })
+        void this._call(hass, this._domain(entityId) || 'number', 'set_value', {
+          entity_id: entityId,
+          value,
+        })
           .catch(() => this._presetErrors.set(role, "Couldn't save preset"))
           .finally(() => {
             this._presetPending.delete(role);
@@ -2031,7 +2034,6 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     snapshot: Partial<Record<EntityRoleId, RoleValue>>,
     config: HiperMvhrCardConfig,
     animated: boolean,
-    unitBrand: string,
     recovery: HeatRecoveryResult,
     boostActive: boolean,
   ): TemplateResult {
@@ -2088,6 +2090,10 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       const streamSoft = this._temperatureColour(temperature, 0.13);
       const side = key === 'extract' || key === 'supply' ? 'indoor' : 'outdoor';
       const direction = key === 'extract' || key === 'outdoor' ? 'inward' : 'outward';
+      const humidity =
+        key === 'extract' && snapshot.indoor_humidity?.status === 'ok'
+          ? this._value(snapshot.indoor_humidity, true)
+          : null;
       return html`
         <div
           class="air-path ${key}"
@@ -2102,6 +2108,14 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
             <ha-icon class="path-arrow" icon=${arrowIcon} aria-label=${arrowLabel}></ha-icon>
           </span>
           <span class="path-temp">${this._value(snapshot[role], true) ?? '—'}</span>
+          ${
+            humidity
+              ? html`<span class="path-humidity">
+                  <ha-icon icon="mdi:water-percent" aria-hidden="true"></ha-icon>
+                  Indoor humidity ${humidity}
+                </span>`
+              : ''
+          }
           ${
             airflow
               ? html`<span class="path-airflow"
@@ -2154,9 +2168,6 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
             class="unit ${animated ? 'active' : ''} ${animated && boostActive ? 'boost-active' : ''}"
             aria-label="Heat recovery unit"
           >
-          <div class="brand">
-            ${unitBrand}${unitBrand.toLowerCase().includes('mvhr') ? '' : html`<br /><span>MVHR</span>`}
-          </div>
           <svg
             class="airflow-schematic"
             viewBox="0 0 700 360"
@@ -2588,6 +2599,13 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       .sort((a, b) => Number(b.toLowerCase() === 'off') - Number(a.toLowerCase() === 'off'));
   }
 
+  private _selectedModeOption(options: string[], currentModeRaw: string | undefined): string | null {
+    if (!currentModeRaw) {
+      return null;
+    }
+    return options.find((option) => option.toLowerCase() === currentModeRaw) ?? null;
+  }
+
   private async _setMode(
     hass: HomeAssistant,
     entityId: string,
@@ -2673,6 +2691,10 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       return;
     }
     void this._call(hass, 'button', 'press', { entity_id: entityId });
+  }
+
+  private _domain(entityId: string): string {
+    return entityId.split('.')[0] ?? '';
   }
 
   private async _call(
@@ -3469,11 +3491,9 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
          Assistant dashboard. */
       container-type: inline-size;
     }
-    /* System Overview's own wrapper — always full width. "Let the System
-       Overview dominate the page" (visual-polish follow-up, round 2): the
-       shower banner moved above it and the header pill replaced the old
-       side-column layout, so there's no longer a competing column here at
-       all, on any screen size. */
+    /* System Overview's own wrapper — always full width. The shower banner
+       sits below the lower cards now, so there's no competing column here
+       on any screen size. */
     .system-main {
       display: block;
     }
@@ -3495,7 +3515,9 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       .system-lower-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
-      .shower-active {
+      .shower-ready,
+      .shower-active,
+      .shower-unavailable {
         flex-direction: column;
         align-items: stretch;
         text-align: left;
@@ -3530,8 +3552,7 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
         width: 100%;
       }
       .mode-select-pill,
-      .boost-pill-button,
-      .shower-pill {
+      .boost-pill-button {
         width: 100%;
         justify-content: center;
       }
@@ -3571,10 +3592,8 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     .system-visual-panel {
       min-width: 0;
     }
-    /* "Let the System Overview dominate the page" (visual-polish follow-up,
-       round 2) — with the shower panel now a header pill/full-width banner
-       instead of a competing side column, Overview always gets the full
-       card width, so it's sized considerably larger again here. */
+    /* With shower status no longer competing in a side column, Overview
+       always gets the full card width and can stay generously sized. */
     .system-visual-wrap {
       min-height: 430px;
       grid-template-columns: minmax(160px, 1fr) minmax(460px, 700px) minmax(160px, 1fr);
@@ -3976,7 +3995,8 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       gap: 4px;
     }
     .system-visual-panel .path-label ha-icon,
-    .system-visual-panel .path-airflow ha-icon {
+    .system-visual-panel .path-airflow ha-icon,
+    .system-visual-panel .path-humidity ha-icon {
       --mdc-icon-size: 15px;
     }
     /* Directional arrow icon per path (visual redesign — "directional
@@ -4016,8 +4036,16 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       animation-duration: 1.35s;
     }
 
-    /* ---- shower-detection banner (full-width, active only — the idle
-       state is the header's .shower-pill instead, see above) ---- */
+    .path-humidity {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 4px;
+      font-size: 0.78em;
+      color: var(--secondary-text-color);
+    }
+
+    /* ---- shower-detection banner (full-width, below the lower cards) ---- */
     .shower-panel {
       border-radius: 16px;
       padding: 16px;
@@ -4027,9 +4055,19 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       flex-direction: column;
     }
     /* A horizontal banner (illustration + heading on the left, facts as a
-       row on the right) rather than a narrow vertical column — it now spans
-       the full card width, directly above System Overview, instead of
-       sitting in its own side column (visual-polish follow-up, round 2). */
+       row on the right) rather than a narrow vertical column. */
+    .shower-ready,
+    .shower-unavailable {
+      border: 1px solid var(--divider-color);
+      background: color-mix(in srgb, var(--divider-color), transparent 92%);
+      flex-direction: row;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 20px;
+    }
+    .shower-unavailable {
+      background: color-mix(in srgb, var(--secondary-text-color), transparent 94%);
+    }
     .shower-active {
       border: 1px solid color-mix(in srgb, var(--shower-color), transparent 55%);
       background: color-mix(in srgb, var(--shower-color), transparent 92%);
@@ -4079,6 +4117,18 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       stroke-linecap: round;
       opacity: 0;
       animation: shower-fall 1.1s linear infinite;
+    }
+    .shower-ready .droplet,
+    .shower-unavailable .droplet {
+      animation: none;
+      opacity: 0.45;
+      stroke: var(--secondary-text-color);
+    }
+    .shower-ready .shower-heading,
+    .shower-unavailable .shower-heading,
+    .shower-ready .shower-title,
+    .shower-unavailable .shower-title {
+      color: var(--secondary-text-color);
     }
     .shower-title {
       color: var(--shower-color);
@@ -4335,33 +4385,6 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       outline: 2px solid var(--primary-color);
       outline-offset: 2px;
     }
-    /* The always-on shower status indicator in the header ("float it as a
-       small status card in the header" — visual-polish follow-up, round
-       2). Read-only, so it's a plain pill, not a button. */
-    .shower-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      font-weight: 700;
-      font-size: 0.95em;
-      border: 1px solid var(--divider-color);
-      border-radius: 999px;
-      padding: 8px 14px;
-      min-height: 40px;
-      box-sizing: border-box;
-      background: var(--ha-card-background, var(--card-background-color));
-      color: var(--secondary-text-color);
-      white-space: nowrap;
-    }
-    .shower-pill ha-icon {
-      --mdc-icon-size: 16px;
-    }
-    .shower-pill.is-active {
-      background: color-mix(in srgb, var(--shower-color, #a855f7), transparent 82%);
-      border-color: color-mix(in srgb, var(--shower-color, #a855f7), transparent 45%);
-      color: var(--shower-color, #a855f7);
-    }
-
     .system-more {
       display: flex;
       justify-content: center;
@@ -4435,6 +4458,11 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     .preset-validation {
       margin: 10px 0 0;
       font-size: 0.8em;
+    }
+    .preset-empty {
+      margin: 10px 0 0;
+      color: var(--secondary-text-color);
+      font-size: 0.88em;
     }
     .calibration-control {
       display: flex;
@@ -4547,7 +4575,9 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       .system-lower-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
-      .shower-active {
+      .shower-ready,
+      .shower-active,
+      .shower-unavailable {
         flex-direction: column;
         align-items: stretch;
         text-align: left;
@@ -4633,8 +4663,7 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
         width: 100%;
       }
       .mode-select-pill,
-      .boost-pill-button,
-      .shower-pill {
+      .boost-pill-button {
         width: 100%;
         justify-content: center;
       }

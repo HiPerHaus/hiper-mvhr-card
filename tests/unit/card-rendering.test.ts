@@ -1183,6 +1183,34 @@ describe('hiper-mvhr-card', () => {
         expect(text).toContain('Supply air');
       });
 
+      it('shows indoor humidity beneath the extract-air card without changing stream colour inputs', async () => {
+        const el = mountSystem();
+        await el.updateComplete;
+
+        const extract = el.shadowRoot?.querySelector('.system-visual-panel .air-path.extract');
+        expect(extract?.textContent).toContain('Indoor humidity 61 %');
+        expect(extract?.getAttribute('data-temperature')).toBe('13');
+      });
+
+      it('omits extract-card humidity safely when the humidity entity is unavailable', async () => {
+        const el = mountSystem({
+          ...altairHass,
+          states: {
+            ...altairHass.states,
+            ...systemStates,
+            'sensor.altair_mvhr_indoor_humidity': {
+              entity_id: 'sensor.altair_mvhr_indoor_humidity',
+              state: 'unavailable',
+              attributes: { unit_of_measurement: '%' },
+            },
+          },
+        });
+        await el.updateComplete;
+
+        const extract = el.shadowRoot?.querySelector('.system-visual-panel .air-path.extract');
+        expect(extract?.textContent).not.toContain('Indoor humidity');
+      });
+
       it('draws four separate SVG paths with the correct inward and outward directions', async () => {
         const el = mountSystem();
         await el.updateComplete;
@@ -1261,6 +1289,7 @@ describe('hiper-mvhr-card', () => {
         expect(schematic?.querySelectorAll('.fan-drum-back')).toHaveLength(2);
         expect(schematic?.querySelectorAll('.fan-mount-frame')).toHaveLength(0);
         expect(schematic?.querySelectorAll('.motor-ribs')).toHaveLength(0);
+        expect(el.shadowRoot?.querySelector('.system-visual-panel .unit .brand')).toBeNull();
         expect(schematic?.querySelectorAll('.fan-shroud')).toHaveLength(2);
         expect(schematic?.querySelector('.fan-motor')).toBeTruthy();
         expect(schematic?.querySelector('.fan-ring')?.namespaceURI).toBe(
@@ -1711,6 +1740,42 @@ describe('hiper-mvhr-card', () => {
         expect(unsupportedOptions).not.toContain('off');
       });
 
+      it('preserves the runtime Off option casing and sends it through the select service', async () => {
+        const callService = vi.fn().mockResolvedValue(undefined);
+        const el = mount();
+        set(el, {
+          manufacturer: 'generic',
+          display_mode: 'system',
+          entities: { mode: 'select.mvhr_mode' },
+          feature_flags: { mode: true },
+        });
+        el.hass = {
+          states: {
+            'select.mvhr_mode': {
+              entity_id: 'select.mvhr_mode',
+              state: 'OFF',
+              attributes: { options: ['Away', 'OFF', 'Low', 'Home', 'High'] },
+            },
+          },
+          callService,
+        };
+        await el.updateComplete;
+
+        const select = el.shadowRoot?.querySelector(
+          'select[aria-label="Operating mode"]',
+        ) as HTMLSelectElement;
+        const options = [...select.options].map((option) => option.value);
+        expect(options[0]).toBe('OFF');
+        expect(select.classList.contains('mode-off')).toBe(true);
+
+        select.value = 'OFF';
+        select.dispatchEvent(new Event('change'));
+        expect(callService).toHaveBeenCalledWith('select', 'select_option', {
+          entity_id: 'select.mvhr_mode',
+          option: 'OFF',
+        });
+      });
+
       it('sends the internal medium option when Home is chosen from the compact header mode select', async () => {
         const callService = vi.fn().mockResolvedValue(undefined);
         const el = mountSystem();
@@ -1831,6 +1896,105 @@ describe('hiper-mvhr-card', () => {
         expect(el.shadowRoot?.querySelector('.control-error')?.textContent).toContain(
           'no more than 140',
         );
+        vi.useRealTimers();
+      });
+
+      it('shows a preset-airflow empty state when no preset entities are configured', async () => {
+        const el = mountSystem();
+        await el.updateComplete;
+        (el.shadowRoot?.querySelector('.disclosure-toggle') as HTMLButtonElement).click();
+        await el.updateComplete;
+
+        const presets = el.shadowRoot?.querySelector('.preset-controls');
+        expect(presets?.textContent).toContain('Preset airflows');
+        expect(presets?.textContent).toContain(
+          'Preset airflow controls require number entities to be configured.',
+        );
+        expect(presets?.querySelector('.preset-field')).toBeNull();
+      });
+
+      it('renders only available configured preset rows and keeps unavailable rows disabled', async () => {
+        const el = mount();
+        set(el, {
+          manufacturer: 'generic',
+          display_mode: 'system',
+          entities: {
+            away_airflow: 'number.mvhr_away',
+            low_airflow: 'number.mvhr_low',
+            home_airflow: 'number.mvhr_missing',
+            high_airflow: 'number.mvhr_high',
+          },
+          feature_flags: {
+            away_airflow: true,
+            low_airflow: true,
+            home_airflow: true,
+            high_airflow: true,
+          },
+        });
+        el.hass = {
+          states: {
+            'number.mvhr_away': {
+              entity_id: 'number.mvhr_away',
+              state: '50',
+              attributes: { unit_of_measurement: 'm³/h' },
+            },
+            'number.mvhr_low': {
+              entity_id: 'number.mvhr_low',
+              state: 'unavailable',
+              attributes: { unit_of_measurement: 'm³/h' },
+            },
+            'number.mvhr_high': {
+              entity_id: 'number.mvhr_high',
+              state: '120',
+              attributes: { unit_of_measurement: 'm³/h' },
+            },
+          },
+        };
+        await el.updateComplete;
+        (el.shadowRoot?.querySelector('.disclosure-toggle') as HTMLButtonElement).click();
+        await el.updateComplete;
+
+        const labels = [...(el.shadowRoot?.querySelectorAll('.preset-field > span:first-child') ?? [])]
+          .map((node) => node.textContent?.trim());
+        expect(labels).toEqual(['Away', 'Low', 'High']);
+        const inputs = el.shadowRoot?.querySelectorAll('.preset-field input') ?? [];
+        expect((inputs[1] as HTMLInputElement).disabled).toBe(true);
+      });
+
+      it('uses the configured preset entity domain for set_value service calls', async () => {
+        vi.useFakeTimers();
+        const callService = vi.fn().mockResolvedValue(undefined);
+        const el = mount();
+        set(el, {
+          manufacturer: 'generic',
+          display_mode: 'system',
+          entities: { away_airflow: 'input_number.mvhr_away' },
+          feature_flags: { away_airflow: true },
+        });
+        el.hass = {
+          states: {
+            'input_number.mvhr_away': {
+              entity_id: 'input_number.mvhr_away',
+              state: '50',
+              attributes: { min: 20, max: 140, step: 5, unit_of_measurement: 'm³/h' },
+            },
+          },
+          callService,
+        };
+        await el.updateComplete;
+        (el.shadowRoot?.querySelector('.disclosure-toggle') as HTMLButtonElement).click();
+        await el.updateComplete;
+
+        const input = el.shadowRoot?.querySelector('.preset-field input') as HTMLInputElement;
+        input.value = '55';
+        input.dispatchEvent(new Event('input'));
+        input.dispatchEvent(new Event('change'));
+        await vi.advanceTimersByTimeAsync(300);
+
+        expect(callService).toHaveBeenCalledWith('input_number', 'set_value', {
+          entity_id: 'input_number.mvhr_away',
+          value: 55,
+        });
         vi.useRealTimers();
       });
 
@@ -2472,7 +2636,7 @@ describe('hiper-mvhr-card', () => {
         expect(el.shadowRoot?.querySelector('.shower-pill')).toBeNull();
       });
 
-      it('shower entities configured but off: a quiet header pill, not the large illustration or a main-content card', async () => {
+      it('shower entities configured but off: a calm ready banner below the lower cards', async () => {
         const el = mountShower({
           'binary_sensor.altair_shower_detected': {
             entity_id: 'binary_sensor.altair_shower_detected',
@@ -2482,17 +2646,21 @@ describe('hiper-mvhr-card', () => {
         });
         await el.updateComplete;
 
-        const pill = el.shadowRoot?.querySelector('.shower-pill');
-        expect(pill).toBeTruthy();
-        expect(pill?.classList.contains('is-active')).toBe(false);
-        expect(pill?.textContent).toContain('No shower detected');
-        // Idle state renders no main-content card at all — visual-polish
-        // follow-up, round 2: "creates a lot of empty whitespace."
-        expect(el.shadowRoot?.querySelector('.shower-panel')).toBeNull();
+        expect(el.shadowRoot?.querySelector('.shower-pill')).toBeNull();
+        const panel = el.shadowRoot?.querySelector('.shower-panel');
+        expect(panel).toBeTruthy();
+        expect(panel?.classList.contains('shower-ready')).toBe(true);
+        expect(panel?.textContent).toContain('Shower detection ready');
+        expect(panel?.textContent).toContain('Rearmed and watching the pipe sensor');
         expect(el.shadowRoot?.querySelector('.shower-active')).toBeNull();
+
+        const lower = el.shadowRoot?.querySelector('.system-lower-grid');
+        const more = el.shadowRoot?.querySelector('.system-more');
+        expect(lower?.nextElementSibling).toBe(panel);
+        expect(panel?.nextElementSibling).toBe(more);
       });
 
-      it('an unavailable shower_detected entity is treated as inactive, not as an active shower', async () => {
+      it('an unavailable shower_detected entity shows neutral unavailable state, not no-shower text', async () => {
         const el = mountShower({
           'binary_sensor.altair_shower_detected': {
             entity_id: 'binary_sensor.altair_shower_detected',
@@ -2502,9 +2670,11 @@ describe('hiper-mvhr-card', () => {
         });
         await el.updateComplete;
 
-        const pill = el.shadowRoot?.querySelector('.shower-pill');
-        expect(pill).toBeTruthy();
-        expect(pill?.classList.contains('is-active')).toBe(false);
+        const panel = el.shadowRoot?.querySelector('.shower-panel');
+        expect(panel).toBeTruthy();
+        expect(panel?.classList.contains('shower-unavailable')).toBe(true);
+        expect(panel?.textContent).toContain('Shower detection unavailable');
+        expect(panel?.textContent).not.toContain('No shower detected');
         expect(el.shadowRoot?.querySelector('.shower-active')).toBeNull();
       });
 
@@ -2546,6 +2716,7 @@ describe('hiper-mvhr-card', () => {
         // Re-arm = trigger - 10°C, computed by the card, not a separate entity.
         expect(panel?.textContent).toContain('33.6');
         expect(panel?.textContent).toContain('25 min');
+        expect(el.shadowRoot?.querySelector('.shower-pill')).toBeNull();
       });
 
       it('does not display a fake pipe temperature when that sensor is unavailable', async () => {
@@ -2590,6 +2761,39 @@ describe('hiper-mvhr-card', () => {
         expect(el.shadowRoot?.querySelector('.shower-active')?.textContent).toContain(
           'Boost not active',
         );
+      });
+
+      it('keeps shower active during software boost while selected mode remains Home', async () => {
+        const el = mountShower({
+          'binary_sensor.altair_shower_detected': {
+            entity_id: 'binary_sensor.altair_shower_detected',
+            state: 'on',
+            attributes: {},
+          },
+          'select.altair_mvhr_mode': {
+            entity_id: 'select.altair_mvhr_mode',
+            state: 'medium',
+            attributes: { options: ['away', 'low', 'medium', 'high'] },
+          },
+          'binary_sensor.altair_mvhr_boost_active': {
+            entity_id: 'binary_sensor.altair_mvhr_boost_active',
+            state: 'on',
+            attributes: {},
+          },
+          'sensor.altair_mvhr_boost_remaining': {
+            entity_id: 'sensor.altair_mvhr_boost_remaining',
+            state: '12',
+            attributes: { unit_of_measurement: 'min' },
+          },
+        });
+        await el.updateComplete;
+
+        const panel = el.shadowRoot?.querySelector('.shower-panel');
+        expect(panel?.classList.contains('shower-active')).toBe(true);
+        expect(panel?.textContent).toContain('Shower detected');
+        expect(panel?.textContent).toContain('Boost active');
+        expect(panel?.textContent).toContain('12 min');
+        expect(el.shadowRoot?.querySelector('.mode-select-pill')).toBeTruthy();
       });
 
       it('renders a lightweight inline SVG illustration, not an externally hosted image', async () => {

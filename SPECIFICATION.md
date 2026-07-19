@@ -54,7 +54,7 @@ Roles are grouped by category. `views` lists which audience views show the role 
 
 This table is the initial set, not a closed one — new roles are additive (see architecture §4) and don't require a schema version bump for `MvhrSnapshot`/`CapabilityProfile`, only a role-registry entry.
 
-**Implemented so far** (`src/types/entity-roles.ts`): `mode`, `outdoor_air_temp`, `supply_air_temp`, `extract_air_temp`, `exhaust_air_temp`, `supply_airflow`, `extract_airflow`, `maximum_airflow`, `away_airflow`, `low_airflow`, `home_airflow`, `high_airflow`, `bypass_state` (Phase 1), `filter_remaining`, `fault_active`, `frost_protection_active` (Phase 2), `filter_reset_control` (Phase 3A — the first interactive/action role), plus `calibration_start_control` (system-mode visual-polish follow-up — a second action role, same generic/feature-flaggable pattern as filter reset). The airflow preset and maximum roles are generic and only appear when mapped/supported; no manufacturer default assumes a fixed installed capacity. Everything else in the table above (`mode_control`, `heat_recovery_efficiency`, `bypass_control`, `filter_alarm`, `fault_code`, `fault_description`, `boost_remaining`, `indoor_humidity`, `co2_level`, `commissioning_diagnostics`) is specified but not yet implemented; `mode_control` and `bypass_control` are Phase 3B/3C respectively (`ROADMAP.md`).
+**Implemented so far** (`src/types/entity-roles.ts`): `mode`, `outdoor_air_temp`, `supply_air_temp`, `extract_air_temp`, `exhaust_air_temp`, `supply_airflow`, `extract_airflow`, `maximum_airflow`, `away_airflow`, `low_airflow`, `home_airflow`, `high_airflow`, `indoor_humidity`, `bypass_state` (Phase 1), `filter_remaining`, `fault_active`, `frost_protection_active` (Phase 2), `filter_reset_control` (Phase 3A — the first interactive/action role), plus `calibration_start_control` (system-mode visual-polish follow-up — a second action role, same generic/feature-flaggable pattern as filter reset). The airflow preset and maximum roles are generic and only appear when mapped/supported; no manufacturer default assumes a fixed installed capacity. Everything else in the table above (`mode_control`, `heat_recovery_efficiency`, `bypass_control`, `filter_alarm`, `fault_code`, `fault_description`, `boost_remaining`, `co2_level`, `commissioning_diagnostics`) is specified but not yet implemented; `mode_control` and `bypass_control` are Phase 3B/3C respectively (`ROADMAP.md`).
 
 ## 3. Capability matrix (launch set)
 
@@ -96,6 +96,7 @@ Validation rules:
 
 - `manufacturer` must match a registered profile ID; unknown values fail config validation with a clear error (this is a config-time error, not a runtime "unavailable" state).
 - `max_airflow`, when provided, must be a positive number. In system mode it is the first-priority maximum for the Airflow gauge; if omitted, the card falls back to a `maximum_airflow` entity, then `high_airflow`, then any manufacturer-profile default, and only finally to the legacy mapped-level gauge behaviour.
+- `calibration` is accepted as a config alias for the canonical `calibration_start_control` role.
 - Keys under `entities` that aren't roles supported by the active profile are ignored with a non-fatal warning (surfaced in the editor, not thrown at runtime).
 - Roles supported by the profile but absent from `entities` are valid — they render as "not configured" (see §6).
 
@@ -105,7 +106,7 @@ Validation rules:
 |---|---|---|
 | `homeowner` | non-technical residents | mode, configured temps/airflow/status, plain language, unconfigured optional roles omitted entirely, no raw entity IDs |
 | `detailed` | installers/technicians | everything in homeowner + "not configured" roles shown, missing-entity configuration warnings (with the entity id), still no raw Modbus/integration-specific detail |
-| `system` | residents/home dashboards | full-width visual dashboard with cutaway unit, shower banner/pill, compact controls, lower summary cards, and advanced controls behind disclosure |
+| `system` | residents/home dashboards | full-width visual dashboard with cutaway unit, compact operating controls, lower summary cards, shower banner below those cards, and advanced controls behind disclosure |
 | `commissioning` | commissioning engineers | not yet implemented — reserved for raw entity/register inspection (`ROADMAP.md` Phase 4) |
 
 Modes are additive top to bottom; a future `commissioning` mode is expected to show everything `detailed` shows, plus more.
