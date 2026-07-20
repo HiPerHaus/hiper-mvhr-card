@@ -86,10 +86,13 @@ export const ENTITY_ROLES = [
   // Editable shower-detector settings exposed by backend integrations that
   // support configurable auto-boost detection. These are number/input_number
   // roles, not diagnostics: they tune the configured temperature rise and
-  // rolling detection window while preserving the trigger-temperature role's
-  // meaning as the actual temperature at the most recent trigger.
+  // rolling detection window, and re-arm temperature drop while preserving
+  // the trigger-temperature role's meaning as the actual temperature at
+  // the most recent trigger. Old dashboards without the re-arm role keep
+  // the previous trigger - 10°C display fallback.
   'shower_temperature_rise',
   'shower_detection_window',
+  'shower_rearm_temperature_drop',
 ] as const;
 
 export type EntityRoleId = (typeof ENTITY_ROLES)[number];

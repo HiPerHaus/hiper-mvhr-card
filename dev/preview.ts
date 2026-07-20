@@ -289,10 +289,11 @@ const systemShowerConfig = {
     shower_pipe_temperature: 'sensor.shower_pipe_temperature',
     shower_temperature_rise: 'number.altair_mvhr_shower_temperature_rise',
     shower_detection_window: 'number.altair_mvhr_shower_detection_window',
+    shower_rearm_temperature_drop: 'number.altair_mvhr_shower_rearm_temperature_drop',
   },
 };
 
-// Trigger 43.6°C, rearm at 33.6°C (trigger - 10°C, computed by the card —
+// Trigger 31.4°C, rearm at 28.4°C (trigger - configured 3°C drop, computed by the card —
 // see the "shower detection panel" describe block in
 // tests/unit/card-rendering.test.ts for the same worked example).
 const showerActiveStates: HomeAssistant['states'] = {
@@ -303,12 +304,12 @@ const showerActiveStates: HomeAssistant['states'] = {
   },
   'sensor.altair_shower_trigger_temperature': {
     entity_id: 'sensor.altair_shower_trigger_temperature',
-    state: '43.6',
+    state: '31.4',
     attributes: { unit_of_measurement: '°C' },
   },
   'sensor.shower_pipe_temperature': {
     entity_id: 'sensor.shower_pipe_temperature',
-    state: '43.6',
+    state: '31.8',
     attributes: { unit_of_measurement: '°C' },
   },
   'binary_sensor.altair_mvhr_boost_active': {
@@ -330,6 +331,11 @@ const showerActiveStates: HomeAssistant['states'] = {
     entity_id: 'number.altair_mvhr_shower_detection_window',
     state: '2',
     attributes: { min: 1, max: 10, step: 1, unit_of_measurement: 'min' },
+  },
+  'number.altair_mvhr_shower_rearm_temperature_drop': {
+    entity_id: 'number.altair_mvhr_shower_rearm_temperature_drop',
+    state: '3.0',
+    attributes: { min: 1, max: 15, step: 0.5, unit_of_measurement: '°C' },
   },
 };
 

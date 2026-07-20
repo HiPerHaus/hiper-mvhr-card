@@ -51,6 +51,7 @@ const PRESET_AIRFLOW_ROLES: Array<[EntityRoleId, string]> = [
 const SHOWER_SETTING_ROLES: Array<[EntityRoleId, string, string]> = [
   ['shower_temperature_rise', 'Shower temperature rise', '°C'],
   ['shower_detection_window', 'Detection window', 'min'],
+  ['shower_rearm_temperature_drop', 'Re-arm temperature drop', '°C'],
 ];
 
 const FAN_ROLES: Array<[EntityRoleId, string]> = [
@@ -128,14 +129,10 @@ const OPTIONAL_AVAILABILITY_ROLES: EntityRoleId[] = [
 const OPTIONAL_AVAILABILITY_ROLE_SET = new Set(OPTIONAL_AVAILABILITY_ROLES);
 
 /**
- * The shower detector's documented rearm rule (see ha-altair-mvhr's
- * shower_detector.py and CLAUDE.md-equivalent spec for that integration):
- * it rearms once the pipe cools to trigger_temperature - 10°C. This is
- * fixed, generic UI math describing what the `shower_trigger_temperature`
- * role means, not a manufacturer conditional — any profile that supports
- * these roles gets the same derived rearm reading.
+ * Legacy fallback for dashboards/integrations that do not yet expose the
+ * adjustable shower re-arm number entity.
  */
-const SHOWER_REARM_OFFSET_C = 10;
+const SHOWER_REARM_FALLBACK_DROP_C = 10;
 
 /** display_mode: system's ordered temperature list (Phase visual redesign). */
 const SYSTEM_TEMPERATURE_ROLES: Array<[EntityRoleId, string]> = [
@@ -1167,6 +1164,7 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     pipeTemperature: string | null;
     triggerTemperature: string | null;
     rearmTemperature: string | null;
+    rearmDrop: string | null;
     boostRemaining: string | null;
   } {
     const detected = snapshot.shower_detected;
@@ -1176,6 +1174,7 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       'shower_pipe_temperature',
       'shower_temperature_rise',
       'shower_detection_window',
+      'shower_rearm_temperature_drop',
     ].some((role) => {
       const value = snapshot[role as EntityRoleId];
       return value && value.status !== 'unsupported' && value.status !== 'not_configured';
@@ -1186,10 +1185,18 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
 
     const triggerValue = snapshot.shower_trigger_temperature;
     const triggerNumber = this._number(triggerValue);
+    const rearmDropValue = snapshot.shower_rearm_temperature_drop;
+    const rearmDropNumber = this._number(rearmDropValue) ?? SHOWER_REARM_FALLBACK_DROP_C;
+    const rearmDropUnit =
+      rearmDropValue?.status === 'ok' && rearmDropValue.unit
+        ? rearmDropValue.unit
+        : triggerValue?.status === 'ok' && triggerValue.unit
+          ? triggerValue.unit
+          : '°C';
     const rearmTemperature =
       triggerNumber === undefined
         ? null
-        : `${(triggerNumber - SHOWER_REARM_OFFSET_C).toFixed(1)}${
+        : `${(triggerNumber - rearmDropNumber).toFixed(1)}${
             triggerValue?.status === 'ok' && triggerValue.unit ? ` ${triggerValue.unit}` : ''
           }`;
 
@@ -1208,6 +1215,7 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
           : null,
       triggerTemperature: triggerValue?.status === 'ok' ? this._value(triggerValue, true) : null,
       rearmTemperature: active ? rearmTemperature : null,
+      rearmDrop: active ? `${rearmDropNumber.toFixed(1)} ${rearmDropUnit}` : null,
       // Gated on boost actually being on, not just the sensor having a
       // value — otherwise an idle "0 min"/"0" reading renders as if a
       // countdown were running (visual-polish follow-up, round 2).
@@ -1289,7 +1297,7 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
                     <dt>Re-arm at</dt>
                     <dd>
                       ${shower.rearmTemperature}<small
-                        >(${SHOWER_REARM_OFFSET_C}°C below trigger)</small
+                        >(${shower.rearmDrop} below trigger)</small
                       >
                     </dd>
                   </div>

@@ -2835,7 +2835,7 @@ describe('hiper-mvhr-card', () => {
         expect(panel?.nextElementSibling).toBe(more);
       });
 
-      it('renders both adjustable shower detection controls from number metadata', async () => {
+      it('renders all adjustable shower detection controls from number metadata', async () => {
         const el = mountShower({
           'binary_sensor.altair_shower_detected': {
             entity_id: 'binary_sensor.altair_shower_detected',
@@ -2852,20 +2852,27 @@ describe('hiper-mvhr-card', () => {
             state: '3',
             attributes: { min: 1, max: 10, step: 1, unit_of_measurement: 'min' },
           },
+          'number.altair_mvhr_shower_rearm_temperature_drop': {
+            entity_id: 'number.altair_mvhr_shower_rearm_temperature_drop',
+            state: '3.0',
+            attributes: { min: 1, max: 15, step: 0.5, unit_of_measurement: '°C' },
+          },
         }, {
           ...showerEntities,
           shower_temperature_rise: 'number.altair_mvhr_shower_temperature_rise',
           shower_detection_window: 'number.altair_mvhr_shower_detection_window',
+          shower_rearm_temperature_drop: 'number.altair_mvhr_shower_rearm_temperature_drop',
         });
         await el.updateComplete;
 
         const settings = el.shadowRoot?.querySelector('.shower-settings');
         expect(settings?.textContent).toContain('Shower temperature rise');
         expect(settings?.textContent).toContain('Detection window');
+        expect(settings?.textContent).toContain('Re-arm temperature drop');
         expect(settings?.textContent).toContain('°C');
         expect(settings?.textContent).toContain('min');
         const inputs = settings?.querySelectorAll('input') ?? [];
-        expect(inputs).toHaveLength(2);
+        expect(inputs).toHaveLength(3);
         expect((inputs[0] as HTMLInputElement).value).toBe('7.5');
         expect((inputs[0] as HTMLInputElement).min).toBe('2');
         expect((inputs[0] as HTMLInputElement).max).toBe('20');
@@ -2874,6 +2881,10 @@ describe('hiper-mvhr-card', () => {
         expect((inputs[1] as HTMLInputElement).min).toBe('1');
         expect((inputs[1] as HTMLInputElement).max).toBe('10');
         expect((inputs[1] as HTMLInputElement).step).toBe('1');
+        expect((inputs[2] as HTMLInputElement).value).toBe('3');
+        expect((inputs[2] as HTMLInputElement).min).toBe('1');
+        expect((inputs[2] as HTMLInputElement).max).toBe('15');
+        expect((inputs[2] as HTMLInputElement).step).toBe('0.5');
       });
 
       it('hides only the missing adjustable shower control', async () => {
@@ -2961,6 +2972,41 @@ describe('hiper-mvhr-card', () => {
         vi.useRealTimers();
       });
 
+      it('calls number.set_value for the configured re-arm temperature drop entity', async () => {
+        vi.useFakeTimers();
+        const callService = vi.fn().mockResolvedValue(undefined);
+        const el = mountShower({
+          'binary_sensor.altair_shower_detected': {
+            entity_id: 'binary_sensor.altair_shower_detected',
+            state: 'off',
+            attributes: {},
+          },
+          'number.altair_mvhr_shower_rearm_temperature_drop': {
+            entity_id: 'number.altair_mvhr_shower_rearm_temperature_drop',
+            state: '3.0',
+            attributes: { min: 1, max: 15, step: 0.5, unit_of_measurement: '°C' },
+          },
+        }, {
+          ...showerEntities,
+          shower_rearm_temperature_drop: 'number.altair_mvhr_shower_rearm_temperature_drop',
+        }, callService);
+        await el.updateComplete;
+
+        const input = el.shadowRoot?.querySelector(
+          'input[aria-label="Re-arm temperature drop"]',
+        ) as HTMLInputElement;
+        input.value = '3.5';
+        input.dispatchEvent(new Event('input'));
+        input.dispatchEvent(new Event('change'));
+        await vi.advanceTimersByTimeAsync(300);
+
+        expect(callService).toHaveBeenCalledWith('number', 'set_value', {
+          entity_id: 'number.altair_mvhr_shower_rearm_temperature_drop',
+          value: 3.5,
+        });
+        vi.useRealTimers();
+      });
+
       it('renders unavailable shower setting controls safely disabled', async () => {
         const el = mountShower({
           'binary_sensor.altair_shower_detected': {
@@ -2988,6 +3034,33 @@ describe('hiper-mvhr-card', () => {
         );
       });
 
+      it('disables an unavailable re-arm temperature drop control', async () => {
+        const el = mountShower({
+          'binary_sensor.altair_shower_detected': {
+            entity_id: 'binary_sensor.altair_shower_detected',
+            state: 'off',
+            attributes: {},
+          },
+          'number.altair_mvhr_shower_rearm_temperature_drop': {
+            entity_id: 'number.altair_mvhr_shower_rearm_temperature_drop',
+            state: 'unavailable',
+            attributes: { min: 1, max: 15, step: 0.5, unit_of_measurement: '°C' },
+          },
+        }, {
+          ...showerEntities,
+          shower_rearm_temperature_drop: 'number.altair_mvhr_shower_rearm_temperature_drop',
+        });
+        await el.updateComplete;
+
+        const input = el.shadowRoot?.querySelector(
+          'input[aria-label="Re-arm temperature drop"]',
+        ) as HTMLInputElement;
+        expect(input.disabled).toBe(true);
+        expect(el.shadowRoot?.querySelector('.shower-settings')?.textContent).toContain(
+          'Unavailable',
+        );
+      });
+
       it('an unavailable shower_detected entity shows neutral unavailable state, not no-shower text', async () => {
         const el = mountShower({
           'binary_sensor.altair_shower_detected': {
@@ -3006,7 +3079,7 @@ describe('hiper-mvhr-card', () => {
         expect(el.shadowRoot?.querySelector('.shower-active')).toBeNull();
       });
 
-      it('shower detected: shows the full panel with pipe, trigger, and computed re-arm temperatures', async () => {
+      it('shower detected: shows the full panel with pipe, trigger, and fallback re-arm temperature', async () => {
         const el = mountShower({
           'binary_sensor.altair_shower_detected': {
             entity_id: 'binary_sensor.altair_shower_detected',
@@ -3043,8 +3116,38 @@ describe('hiper-mvhr-card', () => {
         expect(panel?.textContent).toContain('43.6 °C');
         // Re-arm = trigger - 10°C, computed by the card, not a separate entity.
         expect(panel?.textContent).toContain('33.6');
+        expect(panel?.textContent).toContain('10.0 °C below trigger');
         expect(panel?.textContent).toContain('25 min');
         expect(el.shadowRoot?.querySelector('.shower-pill')).toBeNull();
+      });
+
+      it('uses the configured re-arm temperature drop for the dynamic Re-arm at display', async () => {
+        const el = mountShower({
+          'binary_sensor.altair_shower_detected': {
+            entity_id: 'binary_sensor.altair_shower_detected',
+            state: 'on',
+            attributes: {},
+          },
+          'sensor.altair_shower_trigger_temperature': {
+            entity_id: 'sensor.altair_shower_trigger_temperature',
+            state: '31.4',
+            attributes: { unit_of_measurement: '°C' },
+          },
+          'number.altair_mvhr_shower_rearm_temperature_drop': {
+            entity_id: 'number.altair_mvhr_shower_rearm_temperature_drop',
+            state: '3.0',
+            attributes: { min: 1, max: 15, step: 0.5, unit_of_measurement: '°C' },
+          },
+        }, {
+          ...showerEntities,
+          shower_rearm_temperature_drop: 'number.altair_mvhr_shower_rearm_temperature_drop',
+        });
+        await el.updateComplete;
+
+        const panel = el.shadowRoot?.querySelector('.shower-active');
+        expect(panel?.textContent).toContain('Re-arm at');
+        expect(panel?.textContent).toContain('28.4 °C');
+        expect(panel?.textContent).toContain('3.0 °C below trigger');
       });
 
       it('does not display a fake pipe temperature when that sensor is unavailable', async () => {

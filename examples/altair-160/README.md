@@ -65,6 +65,13 @@ entities:
   shower_pipe_temperature: sensor.shower_pipe_temperature
   shower_temperature_rise: number.altair_mvhr_shower_temperature_rise
   shower_detection_window: number.altair_mvhr_shower_detection_window
+  shower_rearm_temperature_drop: number.altair_mvhr_shower_rearm_temperature_drop
 ```
 
 `calibration` and `start_calibration` are accepted as shortcuts for the canonical `calibration_start_control` role; `cancel_calibration` maps to `calibration_cancel_control`. The preset airflow rows only render for real configured number/input_number entities; if none are configured, More controls shows a short empty-state explanation.
+
+`shower_temperature_rise`, `shower_detection_window`, and
+`shower_rearm_temperature_drop` are optional editable shower auto-boost
+settings. Missing controls are hidden, unavailable controls are disabled, and
+the active shower banner uses the re-arm drop to calculate "Re-arm at". Without
+that mapping it keeps the older 10°C fallback.

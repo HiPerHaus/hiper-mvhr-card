@@ -53,6 +53,7 @@ export const altairProfile: CapabilityProfile = {
     shower_pipe_temperature: {},
     shower_temperature_rise: {},
     shower_detection_window: {},
+    shower_rearm_temperature_drop: {},
     // bypass_state is intentionally absent — see unsupportedRoles below.
   },
   // Confirmed product fact, not a "not configured yet" default: the Altair

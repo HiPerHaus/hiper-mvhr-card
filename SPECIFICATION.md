@@ -75,6 +75,7 @@ Roles are grouped by category. `views` lists which audience views show the role 
 | `shower_pipe_temperature` | optional | numeric | H, I | live pipe temperature feeding shower detector |
 | `shower_temperature_rise` | optional | numeric control | H, I | editable shower detector rise threshold |
 | `shower_detection_window` | optional | numeric control | H, I | editable shower detector rolling window |
+| `shower_rearm_temperature_drop` | optional | numeric control | H, I | editable shower detector re-arm drop |
 | `co2_level` | optional | numeric | H, I | not all systems expose this |
 | `commissioning_diagnostics` | commissioning | text/table | C | raw register/entity inspector |
 
@@ -114,6 +115,7 @@ display_mode: homeowner | detailed | system  # default: homeowner
 max_airflow: <positive number>       # optional, system-mode gauge maximum in m³/h
 entities:                           # required, only supported roles are meaningful
   <role id>: <entity id>
+  shower_rearm_temperature_drop: number.altair_mvhr_shower_rearm_temperature_drop
 feature_flags:                      # optional, overrides profile defaults
   <flag id>: true | false
 ```
