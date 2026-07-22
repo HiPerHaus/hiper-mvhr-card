@@ -1193,16 +1193,16 @@ describe('hiper-mvhr-card', () => {
         expect(text).toContain('Supply air');
       });
 
-      it('shows indoor humidity beneath the extract-air card without changing stream colour inputs', async () => {
+      it('removes indoor humidity from the System Overview extract-air card', async () => {
         const el = mountSystem();
         await el.updateComplete;
 
         const extract = el.shadowRoot?.querySelector('.system-visual-panel .air-path.extract');
-        expect(extract?.textContent).toContain('Indoor humidity 61 %');
+        expect(extract?.textContent).not.toContain('Indoor humidity');
         expect(extract?.getAttribute('data-temperature')).toBe('13');
       });
 
-      it('omits extract-card humidity safely when the humidity entity is unavailable', async () => {
+      it('omits overview humidity safely when the humidity entity is unavailable', async () => {
         const el = mountSystem({
           ...altairHass,
           states: {
@@ -1586,11 +1586,68 @@ describe('hiper-mvhr-card', () => {
         await el.updateComplete;
 
         const card = el.shadowRoot?.querySelector('.temperatures-card');
+        expect(card?.textContent).toContain('ENVIRONMENT');
         expect(card?.textContent).toContain('Supply air');
         expect(card?.textContent).toContain('Extract air');
+        expect(card?.textContent).toContain('Indoor humidity');
+        expect(card?.textContent).toContain('61 %');
         expect(card?.textContent).toContain('Outdoor air');
         expect(card?.textContent).toContain('Exhaust air');
         expect(card?.textContent).toContain('Heat recovery');
+      });
+
+      it('orders the Environment lower card rows and preserves unavailable humidity handling', async () => {
+        const el = mountSystem({
+          ...altairHass,
+          states: {
+            ...altairHass.states,
+            ...systemStates,
+            'sensor.altair_mvhr_indoor_humidity': {
+              entity_id: 'sensor.altair_mvhr_indoor_humidity',
+              state: 'unavailable',
+              attributes: { unit_of_measurement: '%' },
+            },
+          },
+        });
+        await el.updateComplete;
+
+        const card = el.shadowRoot?.querySelector('.temperatures-card');
+        expect(card?.textContent).toContain('Indoor humidity');
+        expect(card?.textContent).toContain('Unavailable');
+
+        const withHumidity = mountSystem();
+        await withHumidity.updateComplete;
+        const labels = Array.from(
+          withHumidity.shadowRoot?.querySelectorAll('.temperatures-card .status-label') ?? [],
+        ).map((row) => row.textContent?.trim());
+
+        expect(labels).toEqual([
+          'Supply air',
+          'Extract air',
+          'Indoor humidity',
+          'Outdoor air',
+          'Exhaust air',
+          'Heat recovery',
+        ]);
+      });
+
+      it('hides the Environment humidity row when indoor_humidity is not mapped', async () => {
+        const el = mount();
+        const entitiesWithoutHumidity = Object.fromEntries(
+          Object.entries(systemEntities).filter(([role]) => role !== 'indoor_humidity'),
+        );
+        set(el, {
+          type: 'custom:hiper-mvhr-card',
+          title: 'Altair MVHR',
+          manufacturer: 'altair',
+          display_mode: 'system',
+          entities: entitiesWithoutHumidity,
+        });
+        el.hass = { ...altairHass, states: { ...altairHass.states, ...systemStates } };
+        await el.updateComplete;
+
+        const card = el.shadowRoot?.querySelector('.temperatures-card');
+        expect(card?.textContent).not.toContain('Indoor humidity');
       });
 
       it('renders the apparent heat-recovery calculation correctly (~74% for these values), not a hard-coded figure', async () => {
@@ -2278,7 +2335,7 @@ describe('hiper-mvhr-card', () => {
         expect(cssText).toMatch(/repeat\(2,\s*minmax\(0,\s*1fr\)\)/);
       });
 
-      it('the lower dashboard cards (Airflow/Temperatures/System Status) collapse to a single column on mobile', () => {
+      it('the lower dashboard cards (Airflow/Environment/System Status) collapse to a single column on mobile', () => {
         const cssText = HiperMvhrCard.styles.cssText;
         const mobileBlock =
           cssText.match(/@media \(max-width: 599px\)\s*{[\s\S]*?\n {4}}/)?.[0] ?? '';
@@ -3114,14 +3171,14 @@ describe('hiper-mvhr-card', () => {
         expect(panel?.textContent).toContain('Shower detected');
         expect(panel?.textContent).toContain('Boost active');
         expect(panel?.textContent).toContain('43.6 °C');
-        // Re-arm = trigger - 10°C, computed by the card, not a separate entity.
+        // Legacy fallback for older backends without peak-based diagnostics.
         expect(panel?.textContent).toContain('33.6');
-        expect(panel?.textContent).toContain('10.0 °C below trigger');
+        expect(panel?.textContent).toContain('10.0 °C below peak');
         expect(panel?.textContent).toContain('25 min');
         expect(el.shadowRoot?.querySelector('.shower-pill')).toBeNull();
       });
 
-      it('uses the configured re-arm temperature drop for the dynamic Re-arm at display', async () => {
+      it('uses the backend re-arm temperature attribute for the dynamic Re-arm at display', async () => {
         const el = mountShower({
           'binary_sensor.altair_shower_detected': {
             entity_id: 'binary_sensor.altair_shower_detected',
@@ -3131,7 +3188,11 @@ describe('hiper-mvhr-card', () => {
           'sensor.altair_shower_trigger_temperature': {
             entity_id: 'sensor.altair_shower_trigger_temperature',
             state: '31.4',
-            attributes: { unit_of_measurement: '°C' },
+            attributes: {
+              unit_of_measurement: '°C',
+              shower_peak_temperature: 40.0,
+              rearm_temperature: 37.0,
+            },
           },
           'number.altair_mvhr_shower_rearm_temperature_drop': {
             entity_id: 'number.altair_mvhr_shower_rearm_temperature_drop',
@@ -3146,8 +3207,9 @@ describe('hiper-mvhr-card', () => {
 
         const panel = el.shadowRoot?.querySelector('.shower-active');
         expect(panel?.textContent).toContain('Re-arm at');
-        expect(panel?.textContent).toContain('28.4 °C');
-        expect(panel?.textContent).toContain('3.0 °C below trigger');
+        expect(panel?.textContent).toContain('37.0 °C');
+        expect(panel?.textContent).toContain('3.0 °C below peak');
+        expect(panel?.textContent).not.toContain('28.4 °C');
       });
 
       it('does not display a fake pipe temperature when that sensor is unavailable', async () => {

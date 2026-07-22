@@ -293,9 +293,8 @@ const systemShowerConfig = {
   },
 };
 
-// Trigger 31.4°C, rearm at 28.4°C (trigger - configured 3°C drop, computed by the card —
-// see the "shower detection panel" describe block in
-// tests/unit/card-rendering.test.ts for the same worked example).
+// Trigger 31.4°C, shower peak 40.0°C, rearm at 37.0°C from the backend
+// `rearm_temperature` diagnostic attribute.
 const showerActiveStates: HomeAssistant['states'] = {
   'binary_sensor.altair_shower_detected': {
     entity_id: 'binary_sensor.altair_shower_detected',
@@ -305,7 +304,11 @@ const showerActiveStates: HomeAssistant['states'] = {
   'sensor.altair_shower_trigger_temperature': {
     entity_id: 'sensor.altair_shower_trigger_temperature',
     state: '31.4',
-    attributes: { unit_of_measurement: '°C' },
+    attributes: {
+      unit_of_measurement: '°C',
+      shower_peak_temperature: 40.0,
+      rearm_temperature: 37.0,
+    },
   },
   'sensor.shower_pipe_temperature': {
     entity_id: 'sensor.shower_pipe_temperature',

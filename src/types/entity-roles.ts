@@ -76,10 +76,9 @@ export const ENTITY_ROLES = [
   // pipe sensor feeding the detector (typically a foreign/ESPHome entity,
   // not part of the MVHR integration itself, but still just an optional
   // role like any other); `shower_trigger_temperature` is the stored pipe
-  // temperature at the moment a shower was detected, from which the
-  // component derives the rearm temperature (trigger - 10°C) — that
-  // subtraction is fixed, generic UI math describing what these two roles
-  // mean together, not a manufacturer conditional.
+  // temperature at the moment a shower was detected. Newer integrations
+  // may expose the live backend-calculated re-arm threshold as that sensor's
+  // `rearm_temperature` attribute.
   'shower_detected',
   'shower_trigger_temperature',
   'shower_pipe_temperature',
@@ -88,8 +87,9 @@ export const ENTITY_ROLES = [
   // roles, not diagnostics: they tune the configured temperature rise and
   // rolling detection window, and re-arm temperature drop while preserving
   // the trigger-temperature role's meaning as the actual temperature at
-  // the most recent trigger. Old dashboards without the re-arm role keep
-  // the previous trigger - 10°C display fallback.
+  // the most recent trigger. Old dashboards without the backend
+  // `rearm_temperature` attribute keep the previous trigger-minus-drop
+  // display fallback.
   'shower_temperature_rise',
   'shower_detection_window',
   'shower_rearm_temperature_drop',

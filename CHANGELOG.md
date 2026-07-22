@@ -13,9 +13,16 @@ All notable changes to this project are documented here. Format follows [Keep a 
   controls are hidden independently, unavailable controls render disabled, and
   existing shower status/pipe/trigger/re-arm/boost behavior is preserved.
 - Added `shower_rearm_temperature_drop` as a third editable shower detection
-  control. The active shower banner now calculates "Re-arm at" from trigger
-  temperature minus the mapped drop value, while keeping the older 10°C display
-  fallback when the entity is not configured.
+  control. Older backends without a `rearm_temperature` diagnostic still use
+  trigger temperature minus the mapped drop value, while keeping the older 10°C
+  display fallback when the entity is not configured.
+- Moved System-mode indoor humidity from the System Overview extract-air path
+  into the lower `ENVIRONMENT` card, ordered between Extract air and Outdoor
+  air, and kept Home Assistant entity unit formatting.
+- Updated the active shower banner contract to prefer the backend
+  `rearm_temperature` attribute on `shower_trigger_temperature`, with the old
+  trigger-minus-drop calculation retained only as a fallback for older
+  integrations.
 - **v1.0 polish release controller completion:** the system card now consumes the merged ha-altair-mvhr backend controller entities: `stop_control` exposes Altair Coil 00004 as a normal Off option, stopped units show a clear stopped state and disable airflow particles/fan rotation while preserving live temperatures, airflow calibration has a dedicated panel with availability/start/cancel/progress/status/result/last-calibration fields, and Away/Low/Home/High airflow presets render as editable native number controls. The Airflow gauge now scales measured airflow against the configured maximum (`max_airflow`, then `maximum_airflow`, then `high_airflow`, then profile default, with mapped level only as the final fallback). The cutaway also gets final minor polish to blower clarity, exchanger plate detail, recovery-badge placement, cabinet seams, shadows, and duct collars without changing the responsive layout, temperature colour mapping, gradients, particle system, shower banner, reduced-motion handling, or theme compatibility.
 - **Temperature colour tuning:** adjusted the system-overview airflow interpolation so warm tones begin at roughly 18°C. Air in the 15–17°C range now stays low-saturation and only slightly cool, then transitions through warm cream/amber to red by 35°C while preserving the existing independent stream gradients, particles, unavailable fallback, and animation behaviour.
 - **System dashboard follow-up:** removed the duplicate internal cabinet label from the system cutaway, moved shower detection out of the header and into a full-width banner below the lower cards, added ready/active/unavailable shower states driven by `shower_detected` plus `boost_active`, surfaced indoor humidity on the Extract air card, made preset airflow controls visible in More controls with an empty state when no backend number entities are configured, added `calibration`/`start_calibration`/`cancel_calibration` aliases, and tightened runtime Off handling/tests so the card only shows Off when a real mode-select option or supported stop-control entity exists.

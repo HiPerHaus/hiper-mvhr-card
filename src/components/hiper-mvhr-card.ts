@@ -138,6 +138,7 @@ const SHOWER_REARM_FALLBACK_DROP_C = 10;
 const SYSTEM_TEMPERATURE_ROLES: Array<[EntityRoleId, string]> = [
   ['supply_air_temp', 'Supply air'],
   ['extract_air_temp', 'Extract air'],
+  ['indoor_humidity', 'Indoor humidity'],
   ['outdoor_air_temp', 'Outdoor air'],
   ['exhaust_air_temp', 'Exhaust air'],
 ];
@@ -1185,6 +1186,7 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
 
     const triggerValue = snapshot.shower_trigger_temperature;
     const triggerNumber = this._number(triggerValue);
+    const backendRearmNumber = this._attributeNumber(triggerValue, 'rearm_temperature');
     const rearmDropValue = snapshot.shower_rearm_temperature_drop;
     const rearmDropNumber = this._number(rearmDropValue) ?? SHOWER_REARM_FALLBACK_DROP_C;
     const rearmDropUnit =
@@ -1193,12 +1195,14 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
         : triggerValue?.status === 'ok' && triggerValue.unit
           ? triggerValue.unit
           : '°C';
+    const temperatureUnit =
+      triggerValue?.status === 'ok' && triggerValue.unit ? ` ${triggerValue.unit}` : '';
     const rearmTemperature =
-      triggerNumber === undefined
+      backendRearmNumber !== undefined
+        ? `${backendRearmNumber.toFixed(1)}${temperatureUnit}`
+        : triggerNumber === undefined
         ? null
-        : `${(triggerNumber - rearmDropNumber).toFixed(1)}${
-            triggerValue?.status === 'ok' && triggerValue.unit ? ` ${triggerValue.unit}` : ''
-          }`;
+          : `${(triggerNumber - rearmDropNumber).toFixed(1)}${temperatureUnit}`;
 
     return {
       render: configured,
@@ -1229,7 +1233,7 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
   /**
    * The full shower detection banner — ready/active/unavailable status,
    * pipe/trigger/re-arm temperatures, and boost status. It sits below the
-   * lower Temperature/Airflow/System Status boxes and directly above More
+   * lower Environment/Airflow/System Status boxes and directly above More
    * controls, so the header never duplicates shower state. Config's
    * `show_airflow_animation`
    * doesn't gate this panel's own droplet animation — it's a separate,
@@ -1297,7 +1301,7 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
                     <dt>Re-arm at</dt>
                     <dd>
                       ${shower.rearmTemperature}<small
-                        >(${shower.rearmDrop} below trigger)</small
+                        >(${shower.rearmDrop} below peak)</small
                       >
                     </dd>
                   </div>
@@ -1562,9 +1566,9 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
   }
 
   /**
-   * Lower-panel "Temperatures" card: the same four temperature roles the
-   * hero visual shows, in a clean aligned list (icons + values, per the
-   * brief), plus the heat-recovery percentage.
+   * Lower-panel "Environment" card: the same four temperature roles the
+   * hero visual shows, plus indoor humidity when mapped and the heat-recovery
+   * percentage.
    */
   private _systemTemperaturesCard(
     snapshot: Partial<Record<EntityRoleId, RoleValue>>,
@@ -1572,12 +1576,19 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
   ): TemplateResult {
     const rows = SYSTEM_TEMPERATURE_ROLES.map(([role, label]) => {
       const value = snapshot[role];
-      return value ? this._diagnosticRow('mdi:thermometer', label, this._value(value, true)) : null;
+      if (
+        role === 'indoor_humidity' &&
+        (value?.status === 'unsupported' || value?.status === 'not_configured')
+      ) {
+        return null;
+      }
+      const icon = role === 'indoor_humidity' ? 'mdi:water-percent' : 'mdi:thermometer';
+      return value ? this._diagnosticRow(icon, label, this._value(value, true)) : null;
     }).filter((row): row is TemplateResult => row !== null);
 
     return html`
-      <section class="lower-card temperatures-card" aria-label="Temperatures">
-        <h3>Temperatures</h3>
+      <section class="lower-card temperatures-card" aria-label="Environment">
+        <h3>ENVIRONMENT</h3>
         <div class="status-list">
           ${rows} ${this._diagnosticRow('mdi:heat-wave', 'Heat recovery', recovery.label)}
         </div>
@@ -2316,10 +2327,6 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       const streamSoft = this._temperatureColour(temperature, 0.13);
       const side = key === 'extract' || key === 'supply' ? 'indoor' : 'outdoor';
       const direction = key === 'extract' || key === 'outdoor' ? 'inward' : 'outward';
-      const humidity =
-        key === 'extract' && snapshot.indoor_humidity?.status === 'ok'
-          ? this._value(snapshot.indoor_humidity, true)
-          : null;
       return html`
         <div
           class="air-path ${key}"
@@ -2334,14 +2341,6 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
             <ha-icon class="path-arrow" icon=${arrowIcon} aria-label=${arrowLabel}></ha-icon>
           </span>
           <span class="path-temp">${this._value(snapshot[role], true) ?? '—'}</span>
-          ${
-            humidity
-              ? html`<span class="path-humidity">
-                  <ha-icon icon="mdi:water-percent" aria-hidden="true"></ha-icon>
-                  Indoor humidity ${humidity}
-                </span>`
-              : ''
-          }
           ${
             airflow
               ? html`<span class="path-airflow"
@@ -4302,8 +4301,7 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       gap: 4px;
     }
     .system-visual-panel .path-label ha-icon,
-    .system-visual-panel .path-airflow ha-icon,
-    .system-visual-panel .path-humidity ha-icon {
+    .system-visual-panel .path-airflow ha-icon {
       --mdc-icon-size: 15px;
     }
     /* Directional arrow icon per path (visual redesign — "directional
@@ -4341,15 +4339,6 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     }
     .system-visual-panel .unit.active.boost-active .airflow-particle {
       animation-duration: 1.35s;
-    }
-
-    .path-humidity {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      margin-top: 4px;
-      font-size: 0.78em;
-      color: var(--secondary-text-color);
     }
 
     /* ---- shower-detection banner (full-width, below the lower cards) ---- */

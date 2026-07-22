@@ -73,5 +73,7 @@ entities:
 `shower_temperature_rise`, `shower_detection_window`, and
 `shower_rearm_temperature_drop` are optional editable shower auto-boost
 settings. Missing controls are hidden, unavailable controls are disabled, and
-the active shower banner uses the re-arm drop to calculate "Re-arm at". Without
-that mapping it keeps the older 10°C fallback.
+the active shower banner reads the backend `rearm_temperature` attribute from
+`shower_trigger_temperature` when available. Without that backend diagnostic it
+falls back to trigger temperature minus the mapped re-arm drop, or the older
+10°C fallback when the drop is not mapped.
