@@ -118,6 +118,24 @@ entities:
   shower_detection_window: number.altair_mvhr_shower_detection_window
   shower_rearm_temperature_drop: number.altair_mvhr_shower_rearm_temperature_drop
 
+  # Optional — see "Performance analytics" below. Omit any/all of these and
+  # the PERFORMANCE section disappears or trims itself automatically.
+  heat_recovery: sensor.altair_mvhr_heat_recovery
+  cooling_recovery: sensor.altair_mvhr_cooling_recovery
+  heat_recovery_efficiency: sensor.altair_mvhr_heat_recovery_efficiency
+  heating_recovered_today: sensor.altair_mvhr_heat_recovered_today
+  heating_recovered_month: sensor.altair_mvhr_heat_recovered_month
+  heating_recovered_lifetime: sensor.altair_mvhr_heat_recovered_total
+  cooling_recovered_today: sensor.altair_mvhr_cooling_recovered_today
+  cooling_recovered_month: sensor.altair_mvhr_cooling_recovered_month
+  cooling_recovered_lifetime: sensor.altair_mvhr_cooling_recovered_total
+  heating_savings_today: sensor.altair_mvhr_heating_saving_today
+  heating_savings_lifetime: sensor.altair_mvhr_heating_saving_total
+  cooling_savings_today: sensor.altair_mvhr_cooling_saving_today
+  cooling_savings_lifetime: sensor.altair_mvhr_cooling_saving_total
+  avoided_emissions_today: sensor.altair_mvhr_avoided_emissions_today
+  avoided_emissions_lifetime: sensor.altair_mvhr_avoided_emissions_total
+
 show_airflow_on_all_paths: false
 show_fan_speeds: true
 show_filter: true
@@ -135,6 +153,8 @@ heat_recovery_method: automatic
 - **Configured, but no shower right now** — a calm full-width banner below the lower Environment/Airflow/System Status cards and directly above "More controls" reads "Shower detection ready." If the number entities are mapped, the same banner includes native editable controls for the temperature rise, detection window, and re-arm temperature drop.
 - **Detector unavailable or missing** — the same banner location shows a neutral unavailable state and never claims no shower was detected.
 - **Shower detected** (`shower_detected` is `on`) — the full banner changes to an active purple state with a lightweight inline-SVG shower illustration, "Boost active"/"Boost not active" (from the same `boost_active` role the header and status card use), the pipe temperature, the stored trigger temperature, optional peak temperature, optional boost remaining, editable detection settings when mapped, and a **re-arm temperature** from the mapped `shower_rearm_temperature` sensor. The card does not calculate re-arm temperature from trigger temperature. Any unavailable/missing setting or sensor is handled independently: missing controls are hidden, unavailable controls are safely disabled, and the banner never shows a fake sensor reading.
+
+**Performance analytics.** Optional MVHR performance sensors render as a full-width **PERFORMANCE** section below Shower Detection and above "More controls." The section appears only when at least one mapped performance entity has a real value, and each group trims itself independently — no blank cards, no "Unavailable" placeholders. Live recovered power (`heat_recovery`, `cooling_recovery`) is displayed in kW when the entity reports W; `heat_recovery_efficiency` keeps the entity's percentage unit. Recovered energy roles (`heating_recovered_today`, `heating_recovered_month`, `heating_recovered_lifetime`, `cooling_recovered_today`, `cooling_recovered_month`, `cooling_recovered_lifetime`) use the entity units, normally kWh. Savings roles (`heating_savings_today`, `heating_savings_lifetime`, `cooling_savings_today`, `cooling_savings_lifetime`) use currency formatting when the entity unit is a currency code such as `AUD`. Emissions roles (`avoided_emissions_today`, `avoided_emissions_lifetime`) use the entity unit, such as `kg CO₂`.
 
 **Lower cards.** Airflow (a semicircular SVG/CSS gauge, no charting library — the number and its unit stack on separate lines — plus target airflow/fan speed/current profile) now scales measured airflow against the best available capacity: `max_airflow`, then `maximum_airflow`, then `high_airflow`, then a profile default, with mapped level retained only as a final fallback. It also shows a quiet scale hint such as `70 of 120 m³/h` and briefly brightens whenever the current-airflow reading increases from the previous update (never on load, never on a decrease). Environment shows Supply air, Extract air, optional Indoor humidity, Outdoor air, Exhaust air, and Heat recovery in that order. System Status shows coloured badges for boost/filter/overall state, plus a prominent countdown callout when boost is actually active — never a stray "0 min" when it isn't. Each row only renders when its role is actually configured or supported.
 
@@ -155,7 +175,7 @@ npm install
 npm run dev
 ```
 
-This opens `dev/preview.html`, which renders the card against realistic mock Home Assistant states, including Altair detailed/homeowner/system layouts, running and Off modes, boost active, override active, calibration running/required controls, editable airflow presets, configured-maximum gauge scaling, an unavailable required entity, a Zehnder system-mode scenario with bypass mapped, light/dark themes, and desktop/tablet/430px/375px widths.
+This opens `dev/preview.html`, which renders the card against realistic mock Home Assistant states, including Altair detailed/homeowner/system layouts, running and Off modes, boost active, override active, calibration running/required controls, editable airflow presets, MVHR performance analytics, configured-maximum gauge scaling, an unavailable required entity, a Zehnder system-mode scenario with bypass mapped, light/dark themes, and desktop/tablet/430px/375px widths.
 
 ## Installation
 

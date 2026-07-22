@@ -95,6 +95,25 @@ export const ENTITY_ROLES = [
   'shower_temperature_rise',
   'shower_detection_window',
   'shower_rearm_temperature_drop',
+  // Optional MVHR performance analytics. These roles are deliberately
+  // display-only and additive: integrations can expose any subset of live
+  // recovered power, recovered energy totals, money saved, and avoided
+  // emissions, and the card will render only the values that actually exist.
+  'heat_recovery',
+  'cooling_recovery',
+  'heat_recovery_efficiency',
+  'heating_recovered_today',
+  'heating_recovered_month',
+  'heating_recovered_lifetime',
+  'cooling_recovered_today',
+  'cooling_recovered_month',
+  'cooling_recovered_lifetime',
+  'heating_savings_today',
+  'heating_savings_lifetime',
+  'cooling_savings_today',
+  'cooling_savings_lifetime',
+  'avoided_emissions_today',
+  'avoided_emissions_lifetime',
 ] as const;
 
 export type EntityRoleId = (typeof ENTITY_ROLES)[number];

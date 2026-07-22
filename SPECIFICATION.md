@@ -42,7 +42,21 @@ Roles are grouped by category. `views` lists which audience views show the role 
 | `extract_air_temp` | core | numeric | I | °C |
 | `outdoor_air_temp` | core | numeric | H, I | °C |
 | `exhaust_air_temp` | core | numeric | I | °C |
+| `heat_recovery` | optional | numeric | H, I | live recovered heating power, usually W or kW |
+| `cooling_recovery` | optional | numeric | H, I | live recovered cooling power, usually W or kW |
 | `heat_recovery_efficiency` | core | numeric | H, I | % |
+| `heating_recovered_today` | optional | numeric | H, I | recovered heating energy today, usually kWh |
+| `heating_recovered_month` | optional | numeric | H, I | recovered heating energy this month, usually kWh |
+| `heating_recovered_lifetime` | optional | numeric | H, I | lifetime recovered heating energy, usually kWh |
+| `cooling_recovered_today` | optional | numeric | H, I | recovered cooling energy today, usually kWh |
+| `cooling_recovered_month` | optional | numeric | H, I | recovered cooling energy this month, usually kWh |
+| `cooling_recovered_lifetime` | optional | numeric | H, I | lifetime recovered cooling energy, usually kWh |
+| `heating_savings_today` | optional | numeric | H, I | heating money saved today, currency unit from entity |
+| `heating_savings_lifetime` | optional | numeric | H, I | lifetime heating money saved, currency unit from entity |
+| `cooling_savings_today` | optional | numeric | H, I | cooling money saved today, currency unit from entity |
+| `cooling_savings_lifetime` | optional | numeric | H, I | lifetime cooling money saved, currency unit from entity |
+| `avoided_emissions_today` | optional | numeric | H, I | avoided emissions today, unit from entity |
+| `avoided_emissions_lifetime` | optional | numeric | H, I | lifetime avoided emissions, unit from entity |
 | `supply_fan_speed` | diagnostic | numeric | I | supply fan rpm, if exposed |
 | `extract_fan_speed` | diagnostic | numeric | I | extract fan rpm, if exposed |
 | `bypass_state` | core | binary | H, I | omitted entirely for profiles without bypass (e.g. Altair) |
@@ -83,7 +97,7 @@ Roles are grouped by category. `views` lists which audience views show the role 
 
 This table is the initial set, not a closed one — new roles are additive (see architecture §4) and don't require a schema version bump for `MvhrSnapshot`/`CapabilityProfile`, only a role-registry entry.
 
-**Implemented so far** (`src/types/entity-roles.ts`): every role in the table above except `mode_control`, `heat_recovery_efficiency`, `bypass_control`, `filter_alarm`, `fault_code`, `fault_description`, `co2_level`, and `commissioning_diagnostics`. The airflow preset and maximum roles are generic and only appear when mapped/supported; no manufacturer default assumes a fixed installed capacity. `stop_control` is implemented generically but declared supported for Altair now that the backend exposes the stop coil. `mode_control` and `bypass_control` are Phase 3B/3C respectively (`ROADMAP.md`).
+**Implemented so far** (`src/types/entity-roles.ts`): every role in the table above except `mode_control`, `bypass_control`, `filter_alarm`, `fault_code`, `fault_description`, `co2_level`, and `commissioning_diagnostics`. The airflow preset, maximum, and performance analytics roles are generic and only appear when mapped/supported; no manufacturer default assumes a fixed installed capacity or a fixed analytics set. `stop_control` is implemented generically but declared supported for Altair now that the backend exposes the stop coil. `mode_control` and `bypass_control` are Phase 3B/3C respectively (`ROADMAP.md`).
 
 ## 3. Capability matrix (launch set)
 
@@ -97,6 +111,7 @@ This table is the initial set, not a closed one — new roles are additive (see 
 | Stop/start control | Role implemented and declared supported via backend Coil 00004 (`stop_control`) | TBD — not declared supported | TBD — not declared supported | Role implemented, feature-flaggable |
 | Airflow preset numbers | Role implemented and declared supported (`away_airflow`, `low_airflow`, `home_airflow`, `high_airflow`) | TBD — not declared supported | TBD — not declared supported | Role implemented, feature-flaggable |
 | Airflow calibration controls | Role implemented and declared supported (`calibration_available`, start/cancel/status/progress/result/last) | TBD — not declared supported | TBD — not declared supported | Role implemented, feature-flaggable |
+| Performance analytics | Role implemented and declared supported (`heat_recovery`, cooling/heating energy, savings, emissions) | TBD — not declared supported | TBD — not declared supported | Role implemented, feature-flaggable |
 | Fault indication | Role implemented, assumed supported | Role implemented, assumed supported | Role implemented, assumed supported | Off by default |
 | Boost timer | Not implemented | Not implemented | Not implemented | Not implemented |
 | Humidity sensor | Not implemented | Not implemented | Not implemented | Not implemented |

@@ -68,9 +68,24 @@ entities:
   shower_temperature_rise: number.altair_mvhr_shower_temperature_rise
   shower_detection_window: number.altair_mvhr_shower_detection_window
   shower_rearm_temperature_drop: number.altair_mvhr_shower_rearm_temperature_drop
+  heat_recovery: sensor.altair_mvhr_heat_recovery
+  cooling_recovery: sensor.altair_mvhr_cooling_recovery
+  heat_recovery_efficiency: sensor.altair_mvhr_heat_recovery_efficiency
+  heating_recovered_today: sensor.altair_mvhr_heat_recovered_today
+  heating_recovered_month: sensor.altair_mvhr_heat_recovered_month
+  heating_recovered_lifetime: sensor.altair_mvhr_heat_recovered_total
+  cooling_recovered_today: sensor.altair_mvhr_cooling_recovered_today
+  cooling_recovered_month: sensor.altair_mvhr_cooling_recovered_month
+  cooling_recovered_lifetime: sensor.altair_mvhr_cooling_recovered_total
+  heating_savings_today: sensor.altair_mvhr_heating_saving_today
+  heating_savings_lifetime: sensor.altair_mvhr_heating_saving_total
+  cooling_savings_today: sensor.altair_mvhr_cooling_saving_today
+  cooling_savings_lifetime: sensor.altair_mvhr_cooling_saving_total
+  avoided_emissions_today: sensor.altair_mvhr_avoided_emissions_today
+  avoided_emissions_lifetime: sensor.altair_mvhr_avoided_emissions_total
 ```
 
-`calibration` and `start_calibration` are accepted as shortcuts for the canonical `calibration_start_control` role; `cancel_calibration` maps to `calibration_cancel_control`. The preset airflow rows only render for real configured number/input_number entities; if none are configured, More controls shows a short empty-state explanation.
+`calibration` and `start_calibration` are accepted as shortcuts for the canonical `calibration_start_control` role; `cancel_calibration` maps to `calibration_cancel_control`. The preset airflow rows only render for real configured number/input_number entities; if none are configured, More controls shows a short empty-state explanation. Performance analytics roles are optional and the PERFORMANCE section trims itself to whichever live power, recovered energy, savings, or emissions sensors your backend exposes.
 
 `shower_peak_temperature` and `shower_rearm_temperature` are optional
 diagnostic shower sensors. The active shower banner reads "Re-arm at" from the

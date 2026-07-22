@@ -45,6 +45,21 @@ const altairEntities = {
   low_airflow: 'number.altair_mvhr_low_airflow',
   home_airflow: 'number.altair_mvhr_home_airflow',
   high_airflow: 'number.altair_mvhr_high_airflow',
+  heat_recovery: 'sensor.altair_mvhr_heat_recovery',
+  cooling_recovery: 'sensor.altair_mvhr_cooling_recovery',
+  heat_recovery_efficiency: 'sensor.altair_mvhr_heat_recovery_efficiency',
+  heating_recovered_today: 'sensor.altair_mvhr_heat_recovered_today',
+  heating_recovered_month: 'sensor.altair_mvhr_heat_recovered_month',
+  heating_recovered_lifetime: 'sensor.altair_mvhr_heat_recovered_total',
+  cooling_recovered_today: 'sensor.altair_mvhr_cooling_recovered_today',
+  cooling_recovered_month: 'sensor.altair_mvhr_cooling_recovered_month',
+  cooling_recovered_lifetime: 'sensor.altair_mvhr_cooling_recovered_total',
+  heating_savings_today: 'sensor.altair_mvhr_heating_saving_today',
+  heating_savings_lifetime: 'sensor.altair_mvhr_heating_saving_total',
+  cooling_savings_today: 'sensor.altair_mvhr_cooling_saving_today',
+  cooling_savings_lifetime: 'sensor.altair_mvhr_cooling_saving_total',
+  avoided_emissions_today: 'sensor.altair_mvhr_avoided_emissions_today',
+  avoided_emissions_lifetime: 'sensor.altair_mvhr_avoided_emissions_total',
 };
 
 const altairConfig = {
@@ -253,6 +268,81 @@ const systemStates: HomeAssistant['states'] = {
     entity_id: 'sensor.altair_mvhr_airflow_calibration_result',
     state: 'calibrated',
     attributes: {},
+  },
+  'sensor.altair_mvhr_heat_recovery': {
+    entity_id: 'sensor.altair_mvhr_heat_recovery',
+    state: '1420',
+    attributes: { unit_of_measurement: 'W' },
+  },
+  'sensor.altair_mvhr_cooling_recovery': {
+    entity_id: 'sensor.altair_mvhr_cooling_recovery',
+    state: '380',
+    attributes: { unit_of_measurement: 'W' },
+  },
+  'sensor.altair_mvhr_heat_recovery_efficiency': {
+    entity_id: 'sensor.altair_mvhr_heat_recovery_efficiency',
+    state: '87',
+    attributes: { unit_of_measurement: '%' },
+  },
+  'sensor.altair_mvhr_heat_recovered_today': {
+    entity_id: 'sensor.altair_mvhr_heat_recovered_today',
+    state: '4.2',
+    attributes: { unit_of_measurement: 'kWh' },
+  },
+  'sensor.altair_mvhr_heat_recovered_month': {
+    entity_id: 'sensor.altair_mvhr_heat_recovered_month',
+    state: '82.4',
+    attributes: { unit_of_measurement: 'kWh' },
+  },
+  'sensor.altair_mvhr_heat_recovered_total': {
+    entity_id: 'sensor.altair_mvhr_heat_recovered_total',
+    state: '1240.5',
+    attributes: { unit_of_measurement: 'kWh' },
+  },
+  'sensor.altair_mvhr_cooling_recovered_today': {
+    entity_id: 'sensor.altair_mvhr_cooling_recovered_today',
+    state: '1.1',
+    attributes: { unit_of_measurement: 'kWh' },
+  },
+  'sensor.altair_mvhr_cooling_recovered_month': {
+    entity_id: 'sensor.altair_mvhr_cooling_recovered_month',
+    state: '18.6',
+    attributes: { unit_of_measurement: 'kWh' },
+  },
+  'sensor.altair_mvhr_cooling_recovered_total': {
+    entity_id: 'sensor.altair_mvhr_cooling_recovered_total',
+    state: '210.4',
+    attributes: { unit_of_measurement: 'kWh' },
+  },
+  'sensor.altair_mvhr_heating_saving_today': {
+    entity_id: 'sensor.altair_mvhr_heating_saving_today',
+    state: '1.23',
+    attributes: { unit_of_measurement: 'AUD' },
+  },
+  'sensor.altair_mvhr_heating_saving_total': {
+    entity_id: 'sensor.altair_mvhr_heating_saving_total',
+    state: '456.78',
+    attributes: { unit_of_measurement: 'AUD' },
+  },
+  'sensor.altair_mvhr_cooling_saving_today': {
+    entity_id: 'sensor.altair_mvhr_cooling_saving_today',
+    state: '0.42',
+    attributes: { unit_of_measurement: 'AUD' },
+  },
+  'sensor.altair_mvhr_cooling_saving_total': {
+    entity_id: 'sensor.altair_mvhr_cooling_saving_total',
+    state: '98.76',
+    attributes: { unit_of_measurement: 'AUD' },
+  },
+  'sensor.altair_mvhr_avoided_emissions_today': {
+    entity_id: 'sensor.altair_mvhr_avoided_emissions_today',
+    state: '1.8',
+    attributes: { unit_of_measurement: 'kg CO₂' },
+  },
+  'sensor.altair_mvhr_avoided_emissions_total': {
+    entity_id: 'sensor.altair_mvhr_avoided_emissions_total',
+    state: '620',
+    attributes: { unit_of_measurement: 'kg CO₂' },
   },
 };
 

@@ -6,6 +6,14 @@ All notable changes to this project are documented here. Format follows [Keep a 
 
 ### Added
 
+- **Performance Analytics section:** `display_mode: system` now renders an
+  optional full-width PERFORMANCE panel when any mapped analytics sensor has a
+  real value. It supports live heat/cooling recovery power, recovery
+  efficiency, recovered heating/cooling energy totals, heating/cooling
+  savings, and avoided emissions, omitting missing/unavailable rows instead
+  of showing placeholders. Live W readings are displayed as kW, savings use
+  currency formatting when the entity unit is a currency code, and the
+  desktop/mobile layout follows the existing system-card styling.
 - **Adjustable shower detection controls:** `display_mode: system` now renders
   editable `shower_temperature_rise` and `shower_detection_window` number
   roles inside the Shower Detection banner, using Home Assistant number

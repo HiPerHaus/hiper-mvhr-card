@@ -37,6 +37,21 @@ const ROLE_ICONS: Partial<Record<EntityRoleId, string>> = {
   shower_temperature_rise: 'mdi:thermometer-chevron-up',
   shower_detection_window: 'mdi:timer-outline',
   shower_rearm_temperature_drop: 'mdi:thermometer-chevron-down',
+  heat_recovery: 'mdi:fire',
+  cooling_recovery: 'mdi:snowflake',
+  heat_recovery_efficiency: 'mdi:lightning-bolt',
+  heating_recovered_today: 'mdi:fire',
+  heating_recovered_month: 'mdi:fire',
+  heating_recovered_lifetime: 'mdi:fire',
+  cooling_recovered_today: 'mdi:snowflake',
+  cooling_recovered_month: 'mdi:snowflake',
+  cooling_recovered_lifetime: 'mdi:snowflake',
+  heating_savings_today: 'mdi:cash',
+  heating_savings_lifetime: 'mdi:cash',
+  cooling_savings_today: 'mdi:cash',
+  cooling_savings_lifetime: 'mdi:cash',
+  avoided_emissions_today: 'mdi:leaf',
+  avoided_emissions_lifetime: 'mdi:leaf',
 };
 
 export function getRoleIcon(role: EntityRoleId): string | undefined {

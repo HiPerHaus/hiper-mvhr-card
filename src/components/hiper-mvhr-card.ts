@@ -54,6 +54,54 @@ const SHOWER_SETTING_ROLES: Array<[EntityRoleId, string, string]> = [
   ['shower_rearm_temperature_drop', 'Re-arm temperature drop', '°C'],
 ];
 
+const PERFORMANCE_LIVE_ROLES: Array<[EntityRoleId, string, string]> = [
+  ['heat_recovery', 'Heat Recovery', 'mdi:fire'],
+  ['cooling_recovery', 'Cooling Recovery', 'mdi:snowflake'],
+  ['heat_recovery_efficiency', 'Heat Recovery Efficiency', 'mdi:lightning-bolt'],
+];
+
+const PERFORMANCE_ENERGY_ROWS: Array<
+  readonly [string, string, Array<readonly [EntityRoleId, string]>]
+> = [
+  [
+    'Heating',
+    'mdi:fire',
+    [
+      ['heating_recovered_today', 'Today'],
+      ['heating_recovered_month', 'Month'],
+      ['heating_recovered_lifetime', 'Lifetime'],
+    ],
+  ],
+  [
+    'Cooling',
+    'mdi:snowflake',
+    [
+      ['cooling_recovered_today', 'Today'],
+      ['cooling_recovered_month', 'Month'],
+      ['cooling_recovered_lifetime', 'Lifetime'],
+    ],
+  ],
+];
+
+const PERFORMANCE_SAVINGS_ROLES: Array<[EntityRoleId, string]> = [
+  ['heating_savings_today', 'Heating Savings Today'],
+  ['heating_savings_lifetime', 'Heating Savings Lifetime'],
+  ['cooling_savings_today', 'Cooling Savings Today'],
+  ['cooling_savings_lifetime', 'Cooling Savings Lifetime'],
+];
+
+const PERFORMANCE_EMISSIONS_ROLES: Array<[EntityRoleId, string]> = [
+  ['avoided_emissions_today', 'CO₂ Avoided Today'],
+  ['avoided_emissions_lifetime', 'CO₂ Avoided Lifetime'],
+];
+
+const PERFORMANCE_ROLES: EntityRoleId[] = [
+  ...PERFORMANCE_LIVE_ROLES.map(([role]) => role),
+  ...PERFORMANCE_ENERGY_ROWS.flatMap(([, , metrics]) => metrics.map(([role]) => role)),
+  ...PERFORMANCE_SAVINGS_ROLES.map(([role]) => role),
+  ...PERFORMANCE_EMISSIONS_ROLES.map(([role]) => role),
+];
+
 const FAN_ROLES: Array<[EntityRoleId, string]> = [
   ['supply_fan_speed', 'Supply fan'],
   ['extract_fan_speed', 'Extract fan'],
@@ -125,6 +173,7 @@ const OPTIONAL_AVAILABILITY_ROLES: EntityRoleId[] = [
   'shower_pipe_temperature',
   'shower_temperature_rise',
   'shower_detection_window',
+  ...PERFORMANCE_ROLES,
 ];
 const OPTIONAL_AVAILABILITY_ROLE_SET = new Set(OPTIONAL_AVAILABILITY_ROLES);
 
@@ -1108,6 +1157,7 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
         </section>
 
         ${shower.render ? this._systemShowerBanner(shower, snapshot, config, hass) : ''}
+        ${this._systemPerformanceSection(snapshot)}
         ${config.show_advanced_controls ? this._systemAdvancedToggle() : ''}
         ${config.show_advanced_controls ? this._advancedDrawer(snapshot, config, hass) : ''}
       </div>
@@ -1395,6 +1445,137 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
           `;
         })}
       </div>
+    `;
+  }
+
+  private _systemPerformanceSection(
+    snapshot: Partial<Record<EntityRoleId, RoleValue>>,
+  ): TemplateResult {
+    if (!PERFORMANCE_ROLES.some((role) => snapshot[role]?.status === 'ok')) {
+      return html``;
+    }
+
+    const liveItems: TemplateResult[] = PERFORMANCE_LIVE_ROLES.flatMap(([role, label, icon]) => {
+      const value = this._performanceValue(snapshot[role], role);
+      return value
+        ? [
+            html`
+            <div class="performance-live-item">
+              <ha-icon icon=${icon}></ha-icon>
+              <span>${label}</span>
+              <strong>${value}</strong>
+            </div>
+          `,
+          ]
+        : [];
+    });
+
+    const energyRows: TemplateResult[] = PERFORMANCE_ENERGY_ROWS.flatMap(([label, icon, metrics]) => {
+      const visibleMetrics: TemplateResult[] = metrics.flatMap(([role, metricLabel]) => {
+        const value = this._performanceValue(snapshot[role], role);
+        return value
+          ? [
+              html`
+                <div class="performance-metric">
+                  <dt>${metricLabel}</dt>
+                  <dd>${value}</dd>
+                </div>
+              `,
+            ]
+          : [];
+      });
+      return visibleMetrics.length
+        ? [
+            html`
+            <div class="performance-row">
+              <div class="performance-row-label">
+                <ha-icon icon=${icon}></ha-icon>
+                <strong>${label}</strong>
+              </div>
+              <dl class="performance-metrics">${visibleMetrics}</dl>
+            </div>
+          `,
+          ]
+        : [];
+    });
+
+    const savingsRows: TemplateResult[] = PERFORMANCE_SAVINGS_ROLES.flatMap(([role, label]) => {
+      const value = this._currencyValue(snapshot[role]);
+      return value
+        ? [
+            html`
+            <div class="performance-list-row">
+              <span>${label}</span>
+              <strong>${value}</strong>
+            </div>
+          `,
+          ]
+        : [];
+    });
+
+    const emissionsRows: TemplateResult[] = PERFORMANCE_EMISSIONS_ROLES.flatMap(([role, label]) => {
+      const value = this._performanceValue(snapshot[role], role);
+      return value
+        ? [
+            html`
+            <div class="performance-list-row">
+              <span>${label}</span>
+              <strong>${value}</strong>
+            </div>
+          `,
+          ]
+        : [];
+    });
+
+    return html`
+      <section class="performance-panel" aria-label="Performance analytics">
+        <div class="panel-heading-row performance-heading">
+          <h3>Performance</h3>
+          <ha-icon icon="mdi:chart-line"></ha-icon>
+        </div>
+        <div class="performance-grid">
+          ${
+            liveItems.length
+              ? html`
+                  <article class="performance-card performance-live" aria-label="Live performance">
+                    <h4>Live Performance</h4>
+                    <div class="performance-live-grid">${liveItems}</div>
+                  </article>
+                `
+              : ''
+          }
+          ${
+            energyRows.length
+              ? html`
+                  <article class="performance-card" aria-label="Energy recovered">
+                    <h4>Energy Recovered</h4>
+                    <div class="performance-table">${energyRows}</div>
+                  </article>
+                `
+              : ''
+          }
+          ${
+            savingsRows.length
+              ? html`
+                  <article class="performance-card" aria-label="Financial savings">
+                    <h4>Financial Savings</h4>
+                    <div class="performance-list">${savingsRows}</div>
+                  </article>
+                `
+              : ''
+          }
+          ${
+            emissionsRows.length
+              ? html`
+                  <article class="performance-card" aria-label="Environmental impact">
+                    <h4>Environmental Impact</h4>
+                    <div class="performance-list">${emissionsRows}</div>
+                  </article>
+                `
+              : ''
+          }
+        </div>
+      </section>
     `;
   }
 
@@ -2775,6 +2956,37 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     return presentation?.text ?? null;
   }
 
+  private _performanceValue(value: RoleValue | undefined, role: EntityRoleId): string | null {
+    if (value?.status !== 'ok') {
+      return null;
+    }
+    const numeric = this._number(value);
+    const unit = value.unit?.trim();
+    if (
+      numeric !== undefined &&
+      unit?.toLowerCase() === 'w' &&
+      (role === 'heat_recovery' || role === 'cooling_recovery')
+    ) {
+      return `${(numeric / 1000).toFixed(2)} kW`;
+    }
+    return this._value(value, true);
+  }
+
+  private _currencyValue(value: RoleValue | undefined): string | null {
+    if (value?.status !== 'ok') {
+      return null;
+    }
+    const numeric = this._number(value);
+    const unit = value.unit?.trim();
+    if (numeric !== undefined && unit && /^[A-Z]{3}$/.test(unit)) {
+      return new Intl.NumberFormat(undefined, {
+        style: 'currency',
+        currency: unit,
+      }).format(numeric);
+    }
+    return this._value(value, true);
+  }
+
   private _text(value: RoleValue | undefined): string {
     return this._value(value) ?? '';
   }
@@ -3852,6 +4064,12 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       .system-lower-grid {
         grid-template-columns: minmax(0, 1fr);
       }
+      .performance-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      .performance-row {
+        grid-template-columns: minmax(0, 1fr);
+      }
       .header-controls {
         width: 100%;
         flex-direction: column;
@@ -4347,6 +4565,138 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     }
     .system-visual-panel .unit.active.boost-active .airflow-particle {
       animation-duration: 1.35s;
+    }
+
+    /* ---- performance analytics (optional, full-width section) ---- */
+    .performance-panel {
+      border: 1px solid var(--divider-color);
+      border-radius: 16px;
+      padding: 16px;
+      background: var(--ha-card-background, var(--card-background-color));
+      box-sizing: border-box;
+      min-width: 0;
+    }
+    .performance-heading {
+      margin-bottom: 14px;
+    }
+    .performance-heading h3 {
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .performance-heading ha-icon {
+      --mdc-icon-size: 20px;
+      color: var(--secondary-text-color);
+    }
+    .performance-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .performance-card {
+      border: 1px solid color-mix(in srgb, var(--divider-color), transparent 18%);
+      border-radius: 14px;
+      padding: 14px;
+      min-width: 0;
+      background: color-mix(
+        in srgb,
+        var(--ha-card-background, var(--card-background-color)),
+        var(--primary-text-color) 2%
+      );
+    }
+    .performance-card h4 {
+      margin: 0 0 12px;
+      color: var(--primary-text-color);
+      font-size: 0.9em;
+      font-weight: 800;
+    }
+    .performance-live-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 10px;
+    }
+    .performance-live-item {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      grid-template-areas:
+        'icon label'
+        'icon value';
+      align-items: center;
+      gap: 2px 10px;
+      min-width: 0;
+    }
+    .performance-live-item ha-icon {
+      grid-area: icon;
+      --mdc-icon-size: 24px;
+      color: var(--accent-color, #3b82f6);
+    }
+    .performance-live-item span,
+    .performance-metric dt,
+    .performance-list-row span {
+      color: var(--secondary-text-color);
+      font-size: 0.84em;
+    }
+    .performance-live-item strong {
+      grid-area: value;
+      color: var(--primary-text-color);
+      font-size: 1.35em;
+      line-height: 1.1;
+    }
+    .performance-table,
+    .performance-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .performance-row {
+      display: grid;
+      grid-template-columns: minmax(90px, 0.6fr) minmax(0, 1.6fr);
+      gap: 12px;
+      align-items: start;
+    }
+    .performance-row + .performance-row,
+    .performance-list-row + .performance-list-row {
+      padding-top: 10px;
+      border-top: 1px solid color-mix(in srgb, var(--divider-color), transparent 45%);
+    }
+    .performance-row-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--primary-text-color);
+      min-width: 0;
+    }
+    .performance-row-label ha-icon {
+      --mdc-icon-size: 18px;
+      color: var(--secondary-text-color);
+    }
+    .performance-metrics {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
+      gap: 8px;
+      margin: 0;
+    }
+    .performance-metric {
+      min-width: 0;
+    }
+    .performance-metric dt {
+      margin: 0 0 2px;
+    }
+    .performance-metric dd {
+      margin: 0;
+      color: var(--primary-text-color);
+      font-weight: 800;
+      overflow-wrap: anywhere;
+    }
+    .performance-list-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: baseline;
+    }
+    .performance-list-row strong {
+      color: var(--primary-text-color);
+      text-align: right;
+      overflow-wrap: anywhere;
     }
 
     /* ---- shower-detection banner (full-width, below the lower cards) ---- */
@@ -4996,6 +5346,12 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
          layout, and the gauge shrinks so nothing overlaps or forces
          horizontal scroll. */
       .system-lower-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      .performance-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      .performance-row {
         grid-template-columns: minmax(0, 1fr);
       }
       .header-controls {

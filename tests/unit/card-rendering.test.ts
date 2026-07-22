@@ -1053,6 +1053,122 @@ describe('hiper-mvhr-card', () => {
       return el;
     }
 
+    const performanceEntities: Partial<Record<EntityRoleId, string>> = {
+      ...systemEntities,
+      heat_recovery: 'sensor.altair_mvhr_heat_recovery',
+      cooling_recovery: 'sensor.altair_mvhr_cooling_recovery',
+      heat_recovery_efficiency: 'sensor.altair_mvhr_heat_recovery_efficiency',
+      heating_recovered_today: 'sensor.altair_mvhr_heat_recovered_today',
+      heating_recovered_month: 'sensor.altair_mvhr_heat_recovered_month',
+      heating_recovered_lifetime: 'sensor.altair_mvhr_heat_recovered_total',
+      cooling_recovered_today: 'sensor.altair_mvhr_cooling_recovered_today',
+      cooling_recovered_month: 'sensor.altair_mvhr_cooling_recovered_month',
+      cooling_recovered_lifetime: 'sensor.altair_mvhr_cooling_recovered_total',
+      heating_savings_today: 'sensor.altair_mvhr_heating_saving_today',
+      heating_savings_lifetime: 'sensor.altair_mvhr_heating_saving_total',
+      cooling_savings_today: 'sensor.altair_mvhr_cooling_saving_today',
+      cooling_savings_lifetime: 'sensor.altair_mvhr_cooling_saving_total',
+      avoided_emissions_today: 'sensor.altair_mvhr_avoided_emissions_today',
+      avoided_emissions_lifetime: 'sensor.altair_mvhr_avoided_emissions_total',
+    };
+
+    const performanceStates: HomeAssistant['states'] = {
+      'sensor.altair_mvhr_heat_recovery': {
+        entity_id: 'sensor.altair_mvhr_heat_recovery',
+        state: '1420',
+        attributes: { unit_of_measurement: 'W' },
+      },
+      'sensor.altair_mvhr_cooling_recovery': {
+        entity_id: 'sensor.altair_mvhr_cooling_recovery',
+        state: '380',
+        attributes: { unit_of_measurement: 'W' },
+      },
+      'sensor.altair_mvhr_heat_recovery_efficiency': {
+        entity_id: 'sensor.altair_mvhr_heat_recovery_efficiency',
+        state: '87',
+        attributes: { unit_of_measurement: '%' },
+      },
+      'sensor.altair_mvhr_heat_recovered_today': {
+        entity_id: 'sensor.altair_mvhr_heat_recovered_today',
+        state: '4.2',
+        attributes: { unit_of_measurement: 'kWh' },
+      },
+      'sensor.altair_mvhr_heat_recovered_month': {
+        entity_id: 'sensor.altair_mvhr_heat_recovered_month',
+        state: '82.4',
+        attributes: { unit_of_measurement: 'kWh' },
+      },
+      'sensor.altair_mvhr_heat_recovered_total': {
+        entity_id: 'sensor.altair_mvhr_heat_recovered_total',
+        state: '1240.5',
+        attributes: { unit_of_measurement: 'kWh' },
+      },
+      'sensor.altair_mvhr_cooling_recovered_today': {
+        entity_id: 'sensor.altair_mvhr_cooling_recovered_today',
+        state: '1.1',
+        attributes: { unit_of_measurement: 'kWh' },
+      },
+      'sensor.altair_mvhr_cooling_recovered_month': {
+        entity_id: 'sensor.altair_mvhr_cooling_recovered_month',
+        state: '18.6',
+        attributes: { unit_of_measurement: 'kWh' },
+      },
+      'sensor.altair_mvhr_cooling_recovered_total': {
+        entity_id: 'sensor.altair_mvhr_cooling_recovered_total',
+        state: '210.4',
+        attributes: { unit_of_measurement: 'kWh' },
+      },
+      'sensor.altair_mvhr_heating_saving_today': {
+        entity_id: 'sensor.altair_mvhr_heating_saving_today',
+        state: '1.23',
+        attributes: { unit_of_measurement: 'AUD' },
+      },
+      'sensor.altair_mvhr_heating_saving_total': {
+        entity_id: 'sensor.altair_mvhr_heating_saving_total',
+        state: '456.78',
+        attributes: { unit_of_measurement: 'AUD' },
+      },
+      'sensor.altair_mvhr_cooling_saving_today': {
+        entity_id: 'sensor.altair_mvhr_cooling_saving_today',
+        state: '0.42',
+        attributes: { unit_of_measurement: 'AUD' },
+      },
+      'sensor.altair_mvhr_cooling_saving_total': {
+        entity_id: 'sensor.altair_mvhr_cooling_saving_total',
+        state: '98.76',
+        attributes: { unit_of_measurement: 'AUD' },
+      },
+      'sensor.altair_mvhr_avoided_emissions_today': {
+        entity_id: 'sensor.altair_mvhr_avoided_emissions_today',
+        state: '1.8',
+        attributes: { unit_of_measurement: 'kg CO₂' },
+      },
+      'sensor.altair_mvhr_avoided_emissions_total': {
+        entity_id: 'sensor.altair_mvhr_avoided_emissions_total',
+        state: '620',
+        attributes: { unit_of_measurement: 'kg CO₂' },
+      },
+    };
+
+    function mountPerformance(
+      performanceOverrideStates: HomeAssistant['states'] = performanceStates,
+      entities = performanceEntities,
+    ): HiperMvhrCard {
+      const el = mount();
+      set(el, {
+        type: 'custom:hiper-mvhr-card',
+        title: 'Altair MVHR',
+        manufacturer: 'altair',
+        display_mode: 'system',
+        entities,
+      });
+      el.hass = {
+        ...altairHass,
+        states: { ...altairHass.states, ...systemStates, ...performanceOverrideStates },
+      };
+      return el;
+    }
+
     describe('configuration', () => {
       it('accepts display_mode: system and old configs (homeowner/detailed) keep working', async () => {
         for (const display_mode of ['homeowner', 'detailed', 'system'] as const) {
@@ -1065,6 +1181,136 @@ describe('hiper-mvhr-card', () => {
           expect(el.shadowRoot?.querySelector('ha-card')).toBeTruthy();
           el.remove();
         }
+      });
+    });
+
+    describe('performance analytics section', () => {
+      it('is hidden when no performance analytics entities are configured', async () => {
+        const el = mountSystem();
+        await el.updateComplete;
+
+        expect(el.shadowRoot?.querySelector('.performance-panel')).toBeNull();
+      });
+
+      it('renders live, energy, savings and environmental analytics when configured', async () => {
+        const el = mountPerformance();
+        await el.updateComplete;
+
+        const panel = el.shadowRoot?.querySelector('.performance-panel');
+        expect(panel).toBeTruthy();
+        expect(panel?.textContent).toContain('Performance');
+        expect(panel?.querySelectorAll('.performance-card')).toHaveLength(4);
+        expect(panel?.textContent).toContain('Live Performance');
+        expect(panel?.textContent).toContain('Heat Recovery');
+        expect(panel?.textContent).toContain('1.42 kW');
+        expect(panel?.textContent).toContain('Cooling Recovery');
+        expect(panel?.textContent).toContain('0.38 kW');
+        expect(panel?.textContent).toContain('Heat Recovery Efficiency');
+        expect(panel?.textContent).toContain('87 %');
+        expect(panel?.textContent).toContain('Energy Recovered');
+        expect(panel?.textContent).toContain('Heating');
+        expect(panel?.textContent).toContain('Cooling');
+        expect(panel?.textContent).toContain('1240.5 kWh');
+        expect(panel?.textContent).toContain('Financial Savings');
+        expect(panel?.textContent).toMatch(/\$1\.23|A\$1\.23/);
+        expect(panel?.textContent).toContain('Environmental Impact');
+        expect(panel?.textContent).toContain('620 kg CO₂');
+      });
+
+      it('omits missing and unavailable performance values without placeholders', async () => {
+        const el = mountPerformance(
+          {
+            'sensor.altair_mvhr_heat_recovery': {
+              entity_id: 'sensor.altair_mvhr_heat_recovery',
+              state: '900',
+              attributes: { unit_of_measurement: 'W' },
+            },
+            'sensor.altair_mvhr_cooling_recovery': {
+              entity_id: 'sensor.altair_mvhr_cooling_recovery',
+              state: 'unavailable',
+              attributes: { unit_of_measurement: 'W' },
+            },
+          },
+          {
+            ...systemEntities,
+            heat_recovery: 'sensor.altair_mvhr_heat_recovery',
+            cooling_recovery: 'sensor.altair_mvhr_cooling_recovery',
+            heating_recovered_today: 'sensor.altair_mvhr_missing_energy',
+          },
+        );
+        await el.updateComplete;
+
+        const panel = el.shadowRoot?.querySelector('.performance-panel');
+        expect(panel).toBeTruthy();
+        expect(panel?.textContent).toContain('0.90 kW');
+        expect(panel?.textContent).not.toContain('Cooling Recovery');
+        expect(panel?.textContent).not.toContain('Energy Recovered');
+        expect(panel?.textContent).not.toContain('Unavailable');
+      });
+
+      it('stays hidden when every configured performance entity is unavailable', async () => {
+        const el = mountPerformance(
+          {
+            'sensor.altair_mvhr_heat_recovery': {
+              entity_id: 'sensor.altair_mvhr_heat_recovery',
+              state: 'unavailable',
+              attributes: { unit_of_measurement: 'W' },
+            },
+          },
+          {
+            ...systemEntities,
+            heat_recovery: 'sensor.altair_mvhr_heat_recovery',
+          },
+        );
+        await el.updateComplete;
+
+        expect(el.shadowRoot?.querySelector('.performance-panel')).toBeNull();
+      });
+
+      it('updates performance values reactively when Home Assistant state changes', async () => {
+        const el = mountPerformance({
+          'sensor.altair_mvhr_heat_recovery': {
+            entity_id: 'sensor.altair_mvhr_heat_recovery',
+            state: '1000',
+            attributes: { unit_of_measurement: 'W' },
+          },
+        }, {
+          ...systemEntities,
+          heat_recovery: 'sensor.altair_mvhr_heat_recovery',
+        });
+        await el.updateComplete;
+        expect(el.shadowRoot?.querySelector('.performance-panel')?.textContent).toContain(
+          '1.00 kW',
+        );
+
+        el.hass = {
+          ...altairHass,
+          states: {
+            ...altairHass.states,
+            ...systemStates,
+            'sensor.altair_mvhr_heat_recovery': {
+              entity_id: 'sensor.altair_mvhr_heat_recovery',
+              state: '2500',
+              attributes: { unit_of_measurement: 'W' },
+            },
+          },
+        };
+        await el.updateComplete;
+
+        expect(el.shadowRoot?.querySelector('.performance-panel')?.textContent).toContain(
+          '2.50 kW',
+        );
+      });
+
+      it('keeps the performance analytics layout responsive', () => {
+        const cssText = HiperMvhrCard.styles.toString();
+
+        expect(cssText).toMatch(
+          /\.performance-grid\s*{[^}]*grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/,
+        );
+        expect(cssText).toMatch(
+          /@media \(max-width:\s*599px\)[\s\S]*\.performance-grid\s*{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)/,
+        );
       });
     });
 
