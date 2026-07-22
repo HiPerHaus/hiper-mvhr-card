@@ -50,6 +50,8 @@ export const altairProfile: CapabilityProfile = {
     // a user wires in themselves — see ha-altair-mvhr's shower_detector.py.
     shower_detected: {},
     shower_trigger_temperature: {},
+    shower_peak_temperature: {},
+    shower_rearm_temperature: {},
     shower_pipe_temperature: {},
     shower_temperature_rise: {},
     shower_detection_window: {},

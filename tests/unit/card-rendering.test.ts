@@ -2826,7 +2826,8 @@ describe('hiper-mvhr-card', () => {
 
     /**
      * Shower-detection panel (visual redesign) — `shower_detected`,
-     * `shower_trigger_temperature`, and `shower_pipe_temperature` are
+     * `shower_trigger_temperature`, `shower_peak_temperature`,
+     * `shower_rearm_temperature`, and `shower_pipe_temperature` are
      * optional roles; these tests deliberately mount with a separate
      * entities object rather than adding them to `systemEntities`, so
      * every test above (mounted without any shower entities) keeps
@@ -2837,6 +2838,8 @@ describe('hiper-mvhr-card', () => {
         ...systemEntities,
         shower_detected: 'binary_sensor.altair_shower_detected',
         shower_trigger_temperature: 'sensor.altair_shower_trigger_temperature',
+        shower_peak_temperature: 'sensor.altair_mvhr_shower_peak_temperature',
+        shower_rearm_temperature: 'sensor.altair_mvhr_shower_rearm_temperature',
         shower_pipe_temperature: 'sensor.shower_pipe_temperature',
       };
 
@@ -3136,7 +3139,7 @@ describe('hiper-mvhr-card', () => {
         expect(el.shadowRoot?.querySelector('.shower-active')).toBeNull();
       });
 
-      it('shower detected: shows the full panel with pipe, trigger, and fallback re-arm temperature', async () => {
+      it('shower detected: shows pipe and trigger without inventing a re-arm temperature', async () => {
         const el = mountShower({
           'binary_sensor.altair_shower_detected': {
             entity_id: 'binary_sensor.altair_shower_detected',
@@ -3171,14 +3174,12 @@ describe('hiper-mvhr-card', () => {
         expect(panel?.textContent).toContain('Shower detected');
         expect(panel?.textContent).toContain('Boost active');
         expect(panel?.textContent).toContain('43.6 °C');
-        // Legacy fallback for older backends without peak-based diagnostics.
-        expect(panel?.textContent).toContain('33.6');
-        expect(panel?.textContent).toContain('10.0 °C below peak');
+        expect(panel?.textContent).not.toContain('Re-arm at');
         expect(panel?.textContent).toContain('25 min');
         expect(el.shadowRoot?.querySelector('.shower-pill')).toBeNull();
       });
 
-      it('uses the backend re-arm temperature attribute for the dynamic Re-arm at display', async () => {
+      it('uses backend peak and re-arm temperature sensors for the dynamic display', async () => {
         const el = mountShower({
           'binary_sensor.altair_shower_detected': {
             entity_id: 'binary_sensor.altair_shower_detected',
@@ -3188,11 +3189,17 @@ describe('hiper-mvhr-card', () => {
           'sensor.altair_shower_trigger_temperature': {
             entity_id: 'sensor.altair_shower_trigger_temperature',
             state: '31.4',
-            attributes: {
-              unit_of_measurement: '°C',
-              shower_peak_temperature: 40.0,
-              rearm_temperature: 37.0,
-            },
+            attributes: { unit_of_measurement: '°C' },
+          },
+          'sensor.altair_mvhr_shower_peak_temperature': {
+            entity_id: 'sensor.altair_mvhr_shower_peak_temperature',
+            state: '40.0',
+            attributes: { unit_of_measurement: '°C' },
+          },
+          'sensor.altair_mvhr_shower_rearm_temperature': {
+            entity_id: 'sensor.altair_mvhr_shower_rearm_temperature',
+            state: '37.0',
+            attributes: { unit_of_measurement: '°C' },
           },
           'number.altair_mvhr_shower_rearm_temperature_drop': {
             entity_id: 'number.altair_mvhr_shower_rearm_temperature_drop',
@@ -3206,6 +3213,8 @@ describe('hiper-mvhr-card', () => {
         await el.updateComplete;
 
         const panel = el.shadowRoot?.querySelector('.shower-active');
+        expect(panel?.textContent).toContain('Peak temperature');
+        expect(panel?.textContent).toContain('40.0 °C');
         expect(panel?.textContent).toContain('Re-arm at');
         expect(panel?.textContent).toContain('37.0 °C');
         expect(panel?.textContent).toContain('3.0 °C below peak');

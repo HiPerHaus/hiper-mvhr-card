@@ -71,7 +71,9 @@ Roles are grouped by category. `views` lists which audience views show the role 
 | `clear_override` | core | action | I | clear temporary override |
 | `indoor_humidity` | optional | numeric | H, I | not all systems expose this; System mode shows it in the lower Environment card when mapped |
 | `shower_detected` | optional | binary | H, I | optional shower detector status |
-| `shower_trigger_temperature` | optional | numeric | H, I | detector trigger temperature; `rearm_temperature` attribute is used for peak-based active re-arm display when exposed |
+| `shower_trigger_temperature` | optional | numeric | H, I | detector trigger temperature |
+| `shower_peak_temperature` | optional | numeric | H, I | active shower peak temperature |
+| `shower_rearm_temperature` | optional | numeric | H, I | backend-calculated active re-arm threshold |
 | `shower_pipe_temperature` | optional | numeric | H, I | live pipe temperature feeding shower detector |
 | `shower_temperature_rise` | optional | numeric control | H, I | editable shower detector rise threshold |
 | `shower_detection_window` | optional | numeric control | H, I | editable shower detector rolling window |
@@ -115,6 +117,8 @@ display_mode: homeowner | detailed | system  # default: homeowner
 max_airflow: <positive number>       # optional, system-mode gauge maximum in m³/h
 entities:                           # required, only supported roles are meaningful
   <role id>: <entity id>
+  shower_peak_temperature: sensor.altair_mvhr_shower_peak_temperature
+  shower_rearm_temperature: sensor.altair_mvhr_shower_rearm_temperature
   shower_rearm_temperature_drop: number.altair_mvhr_shower_rearm_temperature_drop
 feature_flags:                      # optional, overrides profile defaults
   <flag id>: true | false

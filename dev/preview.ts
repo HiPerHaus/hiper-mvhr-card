@@ -286,6 +286,8 @@ const systemShowerConfig = {
     ...systemAltairConfig.entities,
     shower_detected: 'binary_sensor.altair_shower_detected',
     shower_trigger_temperature: 'sensor.altair_shower_trigger_temperature',
+    shower_peak_temperature: 'sensor.altair_mvhr_shower_peak_temperature',
+    shower_rearm_temperature: 'sensor.altair_mvhr_shower_rearm_temperature',
     shower_pipe_temperature: 'sensor.shower_pipe_temperature',
     shower_temperature_rise: 'number.altair_mvhr_shower_temperature_rise',
     shower_detection_window: 'number.altair_mvhr_shower_detection_window',
@@ -294,7 +296,7 @@ const systemShowerConfig = {
 };
 
 // Trigger 31.4°C, shower peak 40.0°C, rearm at 37.0°C from the backend
-// `rearm_temperature` diagnostic attribute.
+// diagnostic sensors.
 const showerActiveStates: HomeAssistant['states'] = {
   'binary_sensor.altair_shower_detected': {
     entity_id: 'binary_sensor.altair_shower_detected',
@@ -304,11 +306,17 @@ const showerActiveStates: HomeAssistant['states'] = {
   'sensor.altair_shower_trigger_temperature': {
     entity_id: 'sensor.altair_shower_trigger_temperature',
     state: '31.4',
-    attributes: {
-      unit_of_measurement: '°C',
-      shower_peak_temperature: 40.0,
-      rearm_temperature: 37.0,
-    },
+    attributes: { unit_of_measurement: '°C' },
+  },
+  'sensor.altair_mvhr_shower_peak_temperature': {
+    entity_id: 'sensor.altair_mvhr_shower_peak_temperature',
+    state: '40.0',
+    attributes: { unit_of_measurement: '°C' },
+  },
+  'sensor.altair_mvhr_shower_rearm_temperature': {
+    entity_id: 'sensor.altair_mvhr_shower_rearm_temperature',
+    state: '37.0',
+    attributes: { unit_of_measurement: '°C' },
   },
   'sensor.shower_pipe_temperature': {
     entity_id: 'sensor.shower_pipe_temperature',

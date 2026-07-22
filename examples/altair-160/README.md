@@ -62,6 +62,8 @@ entities:
   last_calibration: sensor.altair_mvhr_last_airflow_calibration
   shower_detected: binary_sensor.altair_shower_detected
   shower_trigger_temperature: sensor.altair_shower_trigger_temperature
+  shower_peak_temperature: sensor.altair_mvhr_shower_peak_temperature
+  shower_rearm_temperature: sensor.altair_mvhr_shower_rearm_temperature
   shower_pipe_temperature: sensor.shower_pipe_temperature
   shower_temperature_rise: number.altair_mvhr_shower_temperature_rise
   shower_detection_window: number.altair_mvhr_shower_detection_window
@@ -70,10 +72,10 @@ entities:
 
 `calibration` and `start_calibration` are accepted as shortcuts for the canonical `calibration_start_control` role; `cancel_calibration` maps to `calibration_cancel_control`. The preset airflow rows only render for real configured number/input_number entities; if none are configured, More controls shows a short empty-state explanation.
 
-`shower_temperature_rise`, `shower_detection_window`, and
-`shower_rearm_temperature_drop` are optional editable shower auto-boost
-settings. Missing controls are hidden, unavailable controls are disabled, and
-the active shower banner reads the backend `rearm_temperature` attribute from
-`shower_trigger_temperature` when available. Without that backend diagnostic it
-falls back to trigger temperature minus the mapped re-arm drop, or the older
-10°C fallback when the drop is not mapped.
+`shower_peak_temperature` and `shower_rearm_temperature` are optional
+diagnostic shower sensors. The active shower banner reads "Re-arm at" from the
+backend re-arm temperature sensor directly; it does not recalculate that value
+from the trigger temperature. `shower_temperature_rise`,
+`shower_detection_window`, and `shower_rearm_temperature_drop` are optional
+editable shower auto-boost settings. Missing controls are hidden and
+unavailable controls are disabled.

@@ -77,19 +77,21 @@ export const ENTITY_ROLES = [
   // not part of the MVHR integration itself, but still just an optional
   // role like any other); `shower_trigger_temperature` is the stored pipe
   // temperature at the moment a shower was detected. Newer integrations
-  // may expose the live backend-calculated re-arm threshold as that sensor's
-  // `rearm_temperature` attribute.
+  // may also expose separate peak and re-arm threshold sensors so the card
+  // can display the backend's live calculation directly.
   'shower_detected',
   'shower_trigger_temperature',
+  'shower_peak_temperature',
+  'shower_rearm_temperature',
   'shower_pipe_temperature',
   // Editable shower-detector settings exposed by backend integrations that
   // support configurable auto-boost detection. These are number/input_number
   // roles, not diagnostics: they tune the configured temperature rise and
   // rolling detection window, and re-arm temperature drop while preserving
   // the trigger-temperature role's meaning as the actual temperature at
-  // the most recent trigger. Old dashboards without the backend
-  // `rearm_temperature` attribute keep the previous trigger-minus-drop
-  // display fallback.
+  // the most recent trigger. `shower_rearm_temperature_drop` remains an
+  // editable setting; the displayed re-arm temperature comes from the
+  // backend `shower_rearm_temperature` role when mapped.
   'shower_temperature_rise',
   'shower_detection_window',
   'shower_rearm_temperature_drop',

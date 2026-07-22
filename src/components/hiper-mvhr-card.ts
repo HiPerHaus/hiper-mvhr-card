@@ -1164,6 +1164,7 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     boostActive: boolean;
     pipeTemperature: string | null;
     triggerTemperature: string | null;
+    peakTemperature: string | null;
     rearmTemperature: string | null;
     rearmDrop: string | null;
     boostRemaining: string | null;
@@ -1172,6 +1173,8 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     const configured = [
       'shower_detected',
       'shower_trigger_temperature',
+      'shower_peak_temperature',
+      'shower_rearm_temperature',
       'shower_pipe_temperature',
       'shower_temperature_rise',
       'shower_detection_window',
@@ -1185,8 +1188,7 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       configured && (detected?.status === 'unavailable' || detected?.status === 'entity_missing');
 
     const triggerValue = snapshot.shower_trigger_temperature;
-    const triggerNumber = this._number(triggerValue);
-    const backendRearmNumber = this._attributeNumber(triggerValue, 'rearm_temperature');
+    const rearmValue = snapshot.shower_rearm_temperature;
     const rearmDropValue = snapshot.shower_rearm_temperature_drop;
     const rearmDropNumber = this._number(rearmDropValue) ?? SHOWER_REARM_FALLBACK_DROP_C;
     const rearmDropUnit =
@@ -1195,14 +1197,6 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
         : triggerValue?.status === 'ok' && triggerValue.unit
           ? triggerValue.unit
           : '°C';
-    const temperatureUnit =
-      triggerValue?.status === 'ok' && triggerValue.unit ? ` ${triggerValue.unit}` : '';
-    const rearmTemperature =
-      backendRearmNumber !== undefined
-        ? `${backendRearmNumber.toFixed(1)}${temperatureUnit}`
-        : triggerNumber === undefined
-        ? null
-          : `${(triggerNumber - rearmDropNumber).toFixed(1)}${temperatureUnit}`;
 
     return {
       render: configured,
@@ -1218,7 +1212,11 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
           ? this._value(snapshot.shower_pipe_temperature, true)
           : null,
       triggerTemperature: triggerValue?.status === 'ok' ? this._value(triggerValue, true) : null,
-      rearmTemperature: active ? rearmTemperature : null,
+      peakTemperature:
+        snapshot.shower_peak_temperature?.status === 'ok'
+          ? this._value(snapshot.shower_peak_temperature, true)
+          : null,
+      rearmTemperature: active && rearmValue?.status === 'ok' ? this._value(rearmValue, true) : null,
       rearmDrop: active ? `${rearmDropNumber.toFixed(1)} ${rearmDropUnit}` : null,
       // Gated on boost actually being on, not just the sensor having a
       // value — otherwise an idle "0 min"/"0" reading renders as if a
@@ -1290,6 +1288,16 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
                   <div class="shower-fact">
                     <dt>Trigger temperature</dt>
                     <dd>${shower.triggerTemperature}</dd>
+                  </div>
+                `
+              : ''
+          }
+          ${
+            shower.active && shower.peakTemperature
+              ? html`
+                  <div class="shower-fact">
+                    <dt>Peak temperature</dt>
+                    <dd>${shower.peakTemperature}</dd>
                   </div>
                 `
               : ''

@@ -31,6 +31,8 @@ const ROLE_ICONS: Partial<Record<EntityRoleId, string>> = {
   calibration_cancel_control: 'mdi:cancel',
   shower_detected: 'mdi:shower-head',
   shower_trigger_temperature: 'mdi:thermometer-water',
+  shower_peak_temperature: 'mdi:thermometer-high',
+  shower_rearm_temperature: 'mdi:thermometer-chevron-down',
   shower_pipe_temperature: 'mdi:thermometer-water',
   shower_temperature_rise: 'mdi:thermometer-chevron-up',
   shower_detection_window: 'mdi:timer-outline',
