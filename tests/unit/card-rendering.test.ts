@@ -1169,6 +1169,87 @@ describe('hiper-mvhr-card', () => {
       return el;
     }
 
+    const scheduleEntities: Partial<Record<EntityRoleId, string>> = {
+      ...systemEntities,
+      weekly_schedule: 'sensor.altair_mvhr_weekly_schedule',
+      schedule_control: 'switch.altair_mvhr_weekly_schedule',
+      schedule_enabled: 'binary_sensor.altair_mvhr_weekly_schedule_enabled',
+      current_scheduled_mode: 'sensor.altair_mvhr_current_scheduled_mode',
+      next_scheduled_change: 'sensor.altair_mvhr_next_scheduled_change',
+      schedule_override_active: 'binary_sensor.altair_mvhr_schedule_override_active',
+    };
+
+    const scheduleStates: HomeAssistant['states'] = {
+      'sensor.altair_mvhr_weekly_schedule': {
+        entity_id: 'sensor.altair_mvhr_weekly_schedule',
+        state: 'enabled',
+        attributes: {
+          enabled: true,
+          current_mode: 'medium',
+          next_change: '2026-07-24T07:30:00+09:30',
+          next_mode: 'high',
+          days: {
+            monday: [
+              { start: '06:30', mode: 'medium' },
+              { start: '18:00', mode: 'high' },
+            ],
+            tuesday: [{ start: '07:00', mode: 'low' }],
+            wednesday: [],
+            thursday: [],
+            friday: [],
+            saturday: [{ start: '08:00', mode: 'medium' }],
+            sunday: [{ start: '21:30', mode: 'low' }],
+          },
+        },
+      },
+      'switch.altair_mvhr_weekly_schedule': {
+        entity_id: 'switch.altair_mvhr_weekly_schedule',
+        state: 'on',
+        attributes: {},
+      },
+      'binary_sensor.altair_mvhr_weekly_schedule_enabled': {
+        entity_id: 'binary_sensor.altair_mvhr_weekly_schedule_enabled',
+        state: 'on',
+        attributes: {},
+      },
+      'sensor.altair_mvhr_current_scheduled_mode': {
+        entity_id: 'sensor.altair_mvhr_current_scheduled_mode',
+        state: 'medium',
+        attributes: {},
+      },
+      'sensor.altair_mvhr_next_scheduled_change': {
+        entity_id: 'sensor.altair_mvhr_next_scheduled_change',
+        state: '2026-07-24T07:30:00+09:30',
+        attributes: { next_mode: 'high', device_class: 'timestamp' },
+      },
+      'binary_sensor.altair_mvhr_schedule_override_active': {
+        entity_id: 'binary_sensor.altair_mvhr_schedule_override_active',
+        state: 'off',
+        attributes: {},
+      },
+    };
+
+    function mountSchedule(
+      scheduleOverrideStates: HomeAssistant['states'] = scheduleStates,
+      entities = scheduleEntities,
+      callService = vi.fn().mockResolvedValue(undefined),
+    ): HiperMvhrCard {
+      const el = mount();
+      set(el, {
+        type: 'custom:hiper-mvhr-card',
+        title: 'Altair MVHR',
+        manufacturer: 'altair',
+        display_mode: 'system',
+        entities,
+      });
+      el.hass = {
+        ...altairHass,
+        callService,
+        states: { ...altairHass.states, ...systemStates, ...scheduleOverrideStates },
+      };
+      return el;
+    }
+
     describe('configuration', () => {
       it('accepts display_mode: system and old configs (homeowner/detailed) keep working', async () => {
         for (const display_mode of ['homeowner', 'detailed', 'system'] as const) {
@@ -1310,6 +1391,152 @@ describe('hiper-mvhr-card', () => {
         );
         expect(cssText).toMatch(
           /@media \(max-width:\s*599px\)[\s\S]*\.performance-grid\s*{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)/,
+        );
+      });
+    });
+
+    describe('weekly schedule section', () => {
+      it('is hidden when no schedule roles are configured', async () => {
+        const el = mountSystem();
+        await el.updateComplete;
+
+        expect(el.shadowRoot?.querySelector('.schedule-panel')).toBeNull();
+      });
+
+      it('renders backend schedule status and day periods when configured', async () => {
+        const el = mountSchedule();
+        await el.updateComplete;
+
+        const panel = el.shadowRoot?.querySelector('.schedule-panel');
+        expect(panel).toBeTruthy();
+        expect(panel?.textContent).toContain('Schedule');
+        expect(panel?.textContent).toContain('Enabled');
+        expect(panel?.textContent).toContain('Current scheduled mode');
+        expect(panel?.textContent).toContain('Home');
+        expect(panel?.textContent).toContain('Next change');
+        expect(panel?.textContent).toContain('High');
+        expect(panel?.textContent).toContain('Monday');
+        expect(panel?.textContent).toContain('Sunday');
+        expect(panel?.querySelectorAll('.schedule-period-row')).toHaveLength(5);
+      });
+
+      it('toggles the mapped schedule switch when available', async () => {
+        const callService = vi.fn().mockResolvedValue(undefined);
+        const el = mountSchedule(scheduleStates, scheduleEntities, callService);
+        await el.updateComplete;
+
+        const toggle = el.shadowRoot?.querySelector(
+          '.schedule-toggle input',
+        ) as HTMLInputElement | null;
+        expect(toggle).toBeTruthy();
+        toggle!.checked = false;
+        toggle!.dispatchEvent(new Event('change'));
+        await el.updateComplete;
+
+        expect(callService).toHaveBeenCalledWith('switch', 'turn_off', {
+          entity_id: 'switch.altair_mvhr_weekly_schedule',
+        });
+      });
+
+      it('falls back to backend enable service without a schedule control entity', async () => {
+        const callService = vi.fn().mockResolvedValue(undefined);
+        const entities = { ...scheduleEntities };
+        delete entities.schedule_control;
+        const el = mountSchedule(scheduleStates, entities, callService);
+        await el.updateComplete;
+
+        const toggle = el.shadowRoot?.querySelector(
+          '.schedule-toggle input',
+        ) as HTMLInputElement | null;
+        toggle!.checked = false;
+        toggle!.dispatchEvent(new Event('change'));
+        await el.updateComplete;
+
+        expect(callService).toHaveBeenCalledWith('altair_mvhr', 'set_weekly_schedule_enabled', {
+          enabled: false,
+        });
+      });
+
+      it('saves edited day periods through the backend day service', async () => {
+        const callService = vi.fn().mockResolvedValue(undefined);
+        const el = mountSchedule(scheduleStates, scheduleEntities, callService);
+        await el.updateComplete;
+
+        const firstMondayTime = el.shadowRoot?.querySelector(
+          'article[aria-label="Monday schedule"] input[type="time"]',
+        ) as HTMLInputElement | null;
+        expect(firstMondayTime).toBeTruthy();
+        firstMondayTime!.value = '07:15';
+        firstMondayTime!.dispatchEvent(new Event('change'));
+        await el.updateComplete;
+
+        expect(callService).toHaveBeenCalledWith('altair_mvhr', 'set_weekly_schedule_day', {
+          day: 'monday',
+          periods: [
+            { start: '07:15', mode: 'medium' },
+            { start: '18:00', mode: 'high' },
+          ],
+        });
+      });
+
+      it('blocks duplicate period start times before calling the backend', async () => {
+        const callService = vi.fn().mockResolvedValue(undefined);
+        const el = mountSchedule(scheduleStates, scheduleEntities, callService);
+        await el.updateComplete;
+
+        const firstMondayTime = el.shadowRoot?.querySelector(
+          'article[aria-label="Monday schedule"] input[type="time"]',
+        ) as HTMLInputElement | null;
+        firstMondayTime!.value = '18:00';
+        firstMondayTime!.dispatchEvent(new Event('change'));
+        await el.updateComplete;
+
+        expect(callService).not.toHaveBeenCalledWith(
+          'altair_mvhr',
+          'set_weekly_schedule_day',
+          expect.anything(),
+        );
+        expect(el.shadowRoot?.querySelector('.schedule-panel')?.textContent).toContain(
+          'cannot use the same start time',
+        );
+      });
+
+      it('calls backend copy and clear schedule services', async () => {
+        const callService = vi.fn().mockResolvedValue(undefined);
+        const el = mountSchedule(scheduleStates, scheduleEntities, callService);
+        await el.updateComplete;
+
+        const copyMonday = el.shadowRoot?.querySelector(
+          'article[aria-label="Monday schedule"] .schedule-day-actions button',
+        ) as HTMLButtonElement | null;
+        copyMonday!.click();
+        await el.updateComplete;
+
+        expect(callService).toHaveBeenCalledWith('altair_mvhr', 'copy_weekly_schedule_day', {
+          source_day: 'monday',
+          target_days: ['tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'],
+        });
+
+        const clearCallService = vi.fn().mockResolvedValue(undefined);
+        const clearEl = mountSchedule(scheduleStates, scheduleEntities, clearCallService);
+        await clearEl.updateComplete;
+        const clearWeek = Array.from(
+          clearEl.shadowRoot?.querySelectorAll<HTMLButtonElement>('.schedule-toolbar button') ?? [],
+        ).find((button) => button.textContent?.includes('Clear week'));
+        clearWeek!.click();
+        await clearEl.updateComplete;
+
+        expect(clearCallService).toHaveBeenCalledWith('altair_mvhr', 'clear_weekly_schedule', {});
+      });
+
+      it('keeps the weekly schedule layout responsive', () => {
+        const cssText = HiperMvhrCard.styles.toString();
+
+        expect(cssText).toMatch(
+          /\.schedule-grid\s*{[^}]*grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/,
+        );
+        expect(cssText).toMatch(
+          /@media \(max-width:\s*599px\)[\s\S]*\.schedule-grid\s*{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)/,
         );
       });
     });

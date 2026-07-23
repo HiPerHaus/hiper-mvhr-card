@@ -60,6 +60,12 @@ const altairEntities = {
   cooling_savings_lifetime: 'sensor.altair_mvhr_cooling_saving_total',
   avoided_emissions_today: 'sensor.altair_mvhr_avoided_emissions_today',
   avoided_emissions_lifetime: 'sensor.altair_mvhr_avoided_emissions_total',
+  weekly_schedule: 'sensor.altair_mvhr_weekly_schedule',
+  schedule_control: 'switch.altair_mvhr_weekly_schedule',
+  schedule_enabled: 'binary_sensor.altair_mvhr_weekly_schedule_enabled',
+  current_scheduled_mode: 'sensor.altair_mvhr_current_scheduled_mode',
+  next_scheduled_change: 'sensor.altair_mvhr_next_scheduled_change',
+  schedule_override_active: 'binary_sensor.altair_mvhr_schedule_override_active',
 };
 
 const altairConfig = {
@@ -343,6 +349,77 @@ const systemStates: HomeAssistant['states'] = {
     entity_id: 'sensor.altair_mvhr_avoided_emissions_total',
     state: '620',
     attributes: { unit_of_measurement: 'kg CO₂' },
+  },
+  'sensor.altair_mvhr_weekly_schedule': {
+    entity_id: 'sensor.altair_mvhr_weekly_schedule',
+    state: 'enabled',
+    attributes: {
+      enabled: true,
+      current_mode: 'medium',
+      next_change: '2026-07-24T07:30:00+09:30',
+      next_mode: 'high',
+      manual_override_active: false,
+      days: {
+        monday: [
+          { start: '06:30', mode: 'medium' },
+          { start: '18:00', mode: 'high' },
+          { start: '22:30', mode: 'low' },
+        ],
+        tuesday: [
+          { start: '06:30', mode: 'medium' },
+          { start: '18:00', mode: 'high' },
+          { start: '22:30', mode: 'low' },
+        ],
+        wednesday: [
+          { start: '06:30', mode: 'medium' },
+          { start: '18:00', mode: 'high' },
+          { start: '22:30', mode: 'low' },
+        ],
+        thursday: [
+          { start: '06:30', mode: 'medium' },
+          { start: '18:00', mode: 'high' },
+          { start: '22:30', mode: 'low' },
+        ],
+        friday: [
+          { start: '06:30', mode: 'medium' },
+          { start: '18:00', mode: 'high' },
+          { start: '23:30', mode: 'low' },
+        ],
+        saturday: [
+          { start: '08:00', mode: 'medium' },
+          { start: '20:00', mode: 'high' },
+        ],
+        sunday: [
+          { start: '08:00', mode: 'medium' },
+          { start: '21:30', mode: 'low' },
+        ],
+      },
+    },
+  },
+  'switch.altair_mvhr_weekly_schedule': {
+    entity_id: 'switch.altair_mvhr_weekly_schedule',
+    state: 'on',
+    attributes: {},
+  },
+  'binary_sensor.altair_mvhr_weekly_schedule_enabled': {
+    entity_id: 'binary_sensor.altair_mvhr_weekly_schedule_enabled',
+    state: 'on',
+    attributes: {},
+  },
+  'sensor.altair_mvhr_current_scheduled_mode': {
+    entity_id: 'sensor.altair_mvhr_current_scheduled_mode',
+    state: 'medium',
+    attributes: {},
+  },
+  'sensor.altair_mvhr_next_scheduled_change': {
+    entity_id: 'sensor.altair_mvhr_next_scheduled_change',
+    state: '2026-07-24T07:30:00+09:30',
+    attributes: { next_mode: 'high', device_class: 'timestamp' },
+  },
+  'binary_sensor.altair_mvhr_schedule_override_active': {
+    entity_id: 'binary_sensor.altair_mvhr_schedule_override_active',
+    state: 'off',
+    attributes: {},
   },
 };
 

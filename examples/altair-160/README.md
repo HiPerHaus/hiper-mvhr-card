@@ -83,9 +83,19 @@ entities:
   cooling_savings_lifetime: sensor.altair_mvhr_cooling_saving_total
   avoided_emissions_today: sensor.altair_mvhr_avoided_emissions_today
   avoided_emissions_lifetime: sensor.altair_mvhr_avoided_emissions_total
+  weekly_schedule: sensor.altair_mvhr_weekly_schedule
+  schedule_control: switch.altair_mvhr_weekly_schedule
+  schedule_enabled: binary_sensor.altair_mvhr_weekly_schedule_enabled
+  current_scheduled_mode: sensor.altair_mvhr_current_scheduled_mode
+  next_scheduled_change: sensor.altair_mvhr_next_scheduled_change
+  schedule_override_active: binary_sensor.altair_mvhr_schedule_override_active
 ```
 
 `calibration` and `start_calibration` are accepted as shortcuts for the canonical `calibration_start_control` role; `cancel_calibration` maps to `calibration_cancel_control`. The preset airflow rows only render for real configured number/input_number entities; if none are configured, More controls shows a short empty-state explanation. Performance analytics roles are optional and the PERFORMANCE section trims itself to whichever live power, recovered energy, savings, or emissions sensors your backend exposes.
+
+Weekly schedule roles are optional. When mapped, the SCHEDULE section edits the
+backend schedule model via `altair_mvhr` services; the Lovelace card is not the
+source of truth and missing schedule entities are omitted cleanly.
 
 `shower_peak_temperature` and `shower_rearm_temperature` are optional
 diagnostic shower sensors. The active shower banner reads "Re-arm at" from the

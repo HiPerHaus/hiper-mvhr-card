@@ -136,6 +136,15 @@ entities:
   avoided_emissions_today: sensor.altair_mvhr_avoided_emissions_today
   avoided_emissions_lifetime: sensor.altair_mvhr_avoided_emissions_total
 
+  # Optional — see "Weekly schedule" below. The backend remains the source
+  # of truth; the card only edits and displays these entities/services.
+  weekly_schedule: sensor.altair_mvhr_weekly_schedule
+  schedule_control: switch.altair_mvhr_weekly_schedule
+  schedule_enabled: binary_sensor.altair_mvhr_weekly_schedule_enabled
+  current_scheduled_mode: sensor.altair_mvhr_current_scheduled_mode
+  next_scheduled_change: sensor.altair_mvhr_next_scheduled_change
+  schedule_override_active: binary_sensor.altair_mvhr_schedule_override_active
+
 show_airflow_on_all_paths: false
 show_fan_speeds: true
 show_filter: true
@@ -156,6 +165,8 @@ heat_recovery_method: automatic
 
 **Performance analytics.** Optional MVHR performance sensors render as a full-width **PERFORMANCE** section below Shower Detection and above "More controls." The section appears only when at least one mapped performance entity has a real value, and each group trims itself independently — no blank cards, no "Unavailable" placeholders. Live recovered power (`heat_recovery`, `cooling_recovery`) is displayed in kW when the entity reports W; `heat_recovery_efficiency` keeps the entity's percentage unit. Recovered energy roles (`heating_recovered_today`, `heating_recovered_month`, `heating_recovered_lifetime`, `cooling_recovered_today`, `cooling_recovered_month`, `cooling_recovered_lifetime`) use the entity units, normally kWh. Savings roles (`heating_savings_today`, `heating_savings_lifetime`, `cooling_savings_today`, `cooling_savings_lifetime`) use currency formatting when the entity unit is a currency code such as `AUD`. Emissions roles (`avoided_emissions_today`, `avoided_emissions_lifetime`) use the entity unit, such as `kg CO₂`.
 
+**Weekly schedule.** Optional backend-owned scheduling roles render as a full-width **SCHEDULE** editor below Performance and above "More controls." The schedule is not stored in the Lovelace card: `weekly_schedule` provides the day/period model and status, `schedule_control` or the backend service enables/disables it, and the card calls the `altair_mvhr` schedule services to set a day, copy one day to others, clear a day, or clear the week. Each day supports multiple start-time periods targeting Off, Away, Low, Home or High; duplicate start times are rejected before the service call. Missing schedule entities hide the section cleanly, so installations without backend scheduling keep the existing layout.
+
 **Lower cards.** Airflow (a semicircular SVG/CSS gauge, no charting library — the number and its unit stack on separate lines — plus target airflow/fan speed/current profile) now scales measured airflow against the best available capacity: `max_airflow`, then `maximum_airflow`, then `high_airflow`, then a profile default, with mapped level retained only as a final fallback. It also shows a quiet scale hint such as `70 of 120 m³/h` and briefly brightens whenever the current-airflow reading increases from the previous update (never on load, never on a decrease). Environment shows Supply air, Extract air, optional Indoor humidity, Outdoor air, Exhaust air, and Heat recovery in that order. System Status shows coloured badges for boost/filter/overall state, plus a prominent countdown callout when boost is actually active — never a stray "0 min" when it isn't. Each row only renders when its role is actually configured or supported.
 
 **More controls.** Airflow preset number entities (`away_airflow`, `low_airflow`, `home_airflow`, `high_airflow`) render as native number inputs when mapped and supported, using the entity's min/max/step/unit attributes, debounced writes, pending state, service-error feedback, and Away ≤ Low ≤ Home ≤ High validation. If no preset number entities are configured, the drawer says so instead of silently hiding the section. Airflow calibration renders as its own compact panel when any supported calibration backend is configured: `calibration_available`, `calibration_start_control`, `calibration_cancel_control`, `calibration_status`, `calibration_progress`, `calibration_result`, and `last_calibration`. It shows Start Calibration, Cancel Calibration while running, a progress bar, status, percentage, last timestamp, and result. `calibration` and `start_calibration` are accepted as config aliases for `calibration_start_control`; `cancel_calibration` is accepted for `calibration_cancel_control`.
@@ -175,7 +186,7 @@ npm install
 npm run dev
 ```
 
-This opens `dev/preview.html`, which renders the card against realistic mock Home Assistant states, including Altair detailed/homeowner/system layouts, running and Off modes, boost active, override active, calibration running/required controls, editable airflow presets, MVHR performance analytics, configured-maximum gauge scaling, an unavailable required entity, a Zehnder system-mode scenario with bypass mapped, light/dark themes, and desktop/tablet/430px/375px widths.
+This opens `dev/preview.html`, which renders the card against realistic mock Home Assistant states, including Altair detailed/homeowner/system layouts, running and Off modes, boost active, override active, calibration running/required controls, editable airflow presets, MVHR performance analytics, weekly schedule editing/status, configured-maximum gauge scaling, an unavailable required entity, a Zehnder system-mode scenario with bypass mapped, light/dark themes, and desktop/tablet/430px/375px widths.
 
 ## Installation
 
@@ -232,6 +243,12 @@ entities:
   shower_temperature_rise: number.altair_mvhr_shower_temperature_rise
   shower_detection_window: number.altair_mvhr_shower_detection_window
   shower_rearm_temperature_drop: number.altair_mvhr_shower_rearm_temperature_drop
+  weekly_schedule: sensor.altair_mvhr_weekly_schedule
+  schedule_control: switch.altair_mvhr_weekly_schedule
+  schedule_enabled: binary_sensor.altair_mvhr_weekly_schedule_enabled
+  current_scheduled_mode: sensor.altair_mvhr_current_scheduled_mode
+  next_scheduled_change: sensor.altair_mvhr_next_scheduled_change
+  schedule_override_active: binary_sensor.altair_mvhr_schedule_override_active
 show_airflow_on_all_paths: false
 show_controls: true
 show_fan_speeds: true

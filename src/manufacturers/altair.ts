@@ -71,6 +71,12 @@ export const altairProfile: CapabilityProfile = {
     cooling_savings_lifetime: {},
     avoided_emissions_today: {},
     avoided_emissions_lifetime: {},
+    weekly_schedule: {},
+    schedule_control: {},
+    schedule_enabled: {},
+    current_scheduled_mode: {},
+    next_scheduled_change: {},
+    schedule_override_active: {},
     // bypass_state is intentionally absent — see unsupportedRoles below.
   },
   // Confirmed product fact, not a "not configured yet" default: the Altair

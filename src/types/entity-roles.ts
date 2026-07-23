@@ -114,6 +114,15 @@ export const ENTITY_ROLES = [
   'cooling_savings_lifetime',
   'avoided_emissions_today',
   'avoided_emissions_lifetime',
+  // Optional backend-owned weekly schedule controls/status. The card may
+  // edit these through Home Assistant services, but the schedule itself
+  // lives in the integration or HA helpers so it survives dashboard reloads.
+  'weekly_schedule',
+  'schedule_control',
+  'schedule_enabled',
+  'current_scheduled_mode',
+  'next_scheduled_change',
+  'schedule_override_active',
 ] as const;
 
 export type EntityRoleId = (typeof ENTITY_ROLES)[number];

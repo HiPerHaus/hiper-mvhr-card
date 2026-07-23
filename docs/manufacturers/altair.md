@@ -11,10 +11,14 @@ Capability profile ID: `altair`
   efficiency, recovered energy, savings, and avoided-emissions sensors. The
   card maps these through generic analytics roles and renders only whichever
   entities an installation configures and Home Assistant currently reports.
+- **Weekly scheduling.** The backend owns the weekly schedule model and
+  exposes schedule status/control entities plus `altair_mvhr` schedule
+  services. The card maps these through generic schedule roles and acts only
+  as an editor/status display.
 
 ## Implemented
 
-`filter_remaining`, `fault_active`, `frost_protection_active`, `stop_control`, airflow preset numbers, airflow calibration roles, shower-detection roles, and performance analytics roles are declared supported and render when configured — this means the *role* exists and the card can show/use it, not that every optional entity must be present in every installation. Correct the TBD items below the moment real documentation exists; the profile's declared support doesn't need to change either way unless a capability itself is disproven.
+`filter_remaining`, `fault_active`, `frost_protection_active`, `stop_control`, airflow preset numbers, airflow calibration roles, shower-detection roles, performance analytics roles, and backend-owned schedule roles are declared supported and render when configured — this means the *role* exists and the card can show/use it, not that every optional entity must be present in every installation. Correct the TBD items below the moment real documentation exists; the profile's declared support doesn't need to change either way unless a capability itself is disproven.
 
 ## TBD (needs verification)
 

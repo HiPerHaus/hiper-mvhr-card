@@ -52,6 +52,12 @@ const ROLE_ICONS: Partial<Record<EntityRoleId, string>> = {
   cooling_savings_lifetime: 'mdi:cash',
   avoided_emissions_today: 'mdi:leaf',
   avoided_emissions_lifetime: 'mdi:leaf',
+  weekly_schedule: 'mdi:calendar-week',
+  schedule_control: 'mdi:calendar-week',
+  schedule_enabled: 'mdi:calendar-check',
+  current_scheduled_mode: 'mdi:calendar-clock',
+  next_scheduled_change: 'mdi:calendar-arrow-right',
+  schedule_override_active: 'mdi:calendar-alert',
 };
 
 export function getRoleIcon(role: EntityRoleId): string | undefined {

@@ -102,6 +102,32 @@ const PERFORMANCE_ROLES: EntityRoleId[] = [
   ...PERFORMANCE_EMISSIONS_ROLES.map(([role]) => role),
 ];
 
+type SchedulePeriod = {
+  start: string;
+  mode: string;
+};
+
+const SCHEDULE_DAYS: Array<[string, string]> = [
+  ['monday', 'Monday'],
+  ['tuesday', 'Tuesday'],
+  ['wednesday', 'Wednesday'],
+  ['thursday', 'Thursday'],
+  ['friday', 'Friday'],
+  ['saturday', 'Saturday'],
+  ['sunday', 'Sunday'],
+];
+
+const SCHEDULE_MODE_OPTIONS = ['off', 'away', 'low', 'medium', 'high'] as const;
+
+const SCHEDULE_ROLES: EntityRoleId[] = [
+  'weekly_schedule',
+  'schedule_control',
+  'schedule_enabled',
+  'current_scheduled_mode',
+  'next_scheduled_change',
+  'schedule_override_active',
+];
+
 const FAN_ROLES: Array<[EntityRoleId, string]> = [
   ['supply_fan_speed', 'Supply fan'],
   ['extract_fan_speed', 'Extract fan'],
@@ -170,10 +196,14 @@ const OPTIONAL_AVAILABILITY_ROLES: EntityRoleId[] = [
   'high_airflow',
   'shower_detected',
   'shower_trigger_temperature',
+  'shower_peak_temperature',
+  'shower_rearm_temperature',
   'shower_pipe_temperature',
   'shower_temperature_rise',
   'shower_detection_window',
+  'shower_rearm_temperature_drop',
   ...PERFORMANCE_ROLES,
+  ...SCHEDULE_ROLES,
 ];
 const OPTIONAL_AVAILABILITY_ROLE_SET = new Set(OPTIONAL_AVAILABILITY_ROLES);
 
@@ -231,6 +261,8 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
   @state() private _pendingMode?: string;
   @state() private _modeError?: string;
   @state() private _calibrationFeedback?: string;
+  @state() private _scheduleError?: string;
+  @state() private _schedulePending = false;
   private readonly _presetDrafts = new Map<EntityRoleId, number>();
   private readonly _presetPending = new Set<EntityRoleId>();
   private readonly _presetErrors = new Map<EntityRoleId, string>();
@@ -1158,6 +1190,7 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
 
         ${shower.render ? this._systemShowerBanner(shower, snapshot, config, hass) : ''}
         ${this._systemPerformanceSection(snapshot)}
+        ${this._systemScheduleSection(snapshot, config, hass)}
         ${config.show_advanced_controls ? this._systemAdvancedToggle() : ''}
         ${config.show_advanced_controls ? this._advancedDrawer(snapshot, config, hass) : ''}
       </div>
@@ -1576,6 +1609,198 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
           }
         </div>
       </section>
+    `;
+  }
+
+  private _systemScheduleSection(
+    snapshot: Partial<Record<EntityRoleId, RoleValue>>,
+    config: HiperMvhrCardConfig,
+    hass: HomeAssistant,
+  ): TemplateResult {
+    const hasSchedule = SCHEDULE_ROLES.some((role) => {
+      const value = snapshot[role];
+      return value && value.status !== 'unsupported' && value.status !== 'not_configured';
+    });
+    if (!hasSchedule) {
+      return html``;
+    }
+
+    const days = this._scheduleDays(snapshot);
+    const status = this._scheduleStatus(snapshot);
+    const enabledEntity = config.entities.schedule_control;
+    const disabled = this._schedulePending || snapshot.weekly_schedule?.status === 'unavailable';
+
+    return html`
+      <section class="schedule-panel" aria-label="Weekly schedule">
+        <div class="panel-heading-row schedule-heading">
+          <div>
+            <h3>Schedule</h3>
+            <p>Backend-owned weekly periods for Off, Away, Low, Home and High.</p>
+          </div>
+          <label class="schedule-toggle">
+            <input
+              type="checkbox"
+              .checked=${status.enabled}
+              ?disabled=${this._schedulePending}
+              aria-label="Enable weekly schedule"
+              @change=${(event: Event) => {
+                const checked = (event.currentTarget as HTMLInputElement).checked;
+                void this._setScheduleEnabled(hass, enabledEntity, checked);
+              }}
+            />
+            <span>${status.enabled ? 'Enabled' : 'Disabled'}</span>
+          </label>
+        </div>
+
+        <div class="schedule-summary" aria-label="Schedule status">
+          <div>
+            <span>Current scheduled mode</span>
+            <strong>${status.currentMode ? this._modeLabel(status.currentMode) : '—'}</strong>
+          </div>
+          <div>
+            <span>Next change</span>
+            <strong>
+              ${status.nextChange
+                ? `${this._formatScheduleDateTime(status.nextChange)}${
+                    status.nextMode ? ` → ${this._modeLabel(status.nextMode)}` : ''
+                  }`
+                : 'No upcoming change'}
+            </strong>
+          </div>
+          <div class=${`schedule-override ${status.overrideActive ? 'is-active' : ''}`}>
+            <span>Manual override</span>
+            <strong>${status.overrideActive ? 'Taking precedence' : 'Not active'}</strong>
+          </div>
+        </div>
+
+        ${this._scheduleError ? html`<p class="control-error" role="alert">${this._scheduleError}</p>` : ''}
+
+        <div class="schedule-toolbar" aria-label="Schedule actions">
+          <button
+            type="button"
+            class="cta ghost"
+            ?disabled=${disabled}
+            @click=${() => void this._copyWeekdaySchedule(hass, days)}
+          >
+            Copy Monday to weekdays
+          </button>
+          <button
+            type="button"
+            class="cta ghost"
+            ?disabled=${disabled}
+            @click=${() => void this._clearFullSchedule(hass)}
+          >
+            Clear week
+          </button>
+        </div>
+
+        <div class="schedule-grid">
+          ${SCHEDULE_DAYS.map(([day, label]) =>
+            this._scheduleDayCard(hass, day, label, days[day] ?? [], disabled),
+          )}
+        </div>
+      </section>
+    `;
+  }
+
+  private _scheduleDayCard(
+    hass: HomeAssistant,
+    day: string,
+    label: string,
+    periods: SchedulePeriod[],
+    disabled: boolean,
+  ): TemplateResult {
+    return html`
+      <article class="schedule-day-card" aria-label=${`${label} schedule`}>
+        <div class="schedule-day-head">
+          <h4>${label}</h4>
+          <div class="schedule-day-actions">
+            <button
+              type="button"
+              ?disabled=${disabled}
+              @click=${() => void this._copyScheduleDay(hass, day, this._otherScheduleDays(day))}
+              aria-label=${`Copy ${label} to all other days`}
+            >
+              Copy
+            </button>
+            <button
+              type="button"
+              ?disabled=${disabled || periods.length === 0}
+              @click=${() => void this._clearScheduleDay(hass, day)}
+              aria-label=${`Clear ${label}`}
+            >
+              Clear
+            </button>
+          </div>
+        </div>
+        <div class="schedule-periods">
+          ${
+            periods.length
+              ? periods.map((period, index) =>
+                  this._schedulePeriodRow(hass, day, periods, period, index, disabled),
+                )
+              : html`<p class="schedule-empty">No scheduled periods</p>`
+          }
+        </div>
+        <button
+          type="button"
+          class="schedule-add"
+          ?disabled=${disabled}
+          @click=${() => void this._addSchedulePeriod(hass, day, periods)}
+        >
+          Add period
+        </button>
+      </article>
+    `;
+  }
+
+  private _schedulePeriodRow(
+    hass: HomeAssistant,
+    day: string,
+    periods: SchedulePeriod[],
+    period: SchedulePeriod,
+    index: number,
+    disabled: boolean,
+  ): TemplateResult {
+    return html`
+      <div class="schedule-period-row">
+        <input
+          type="time"
+          .value=${period.start}
+          ?disabled=${disabled}
+          aria-label=${`${day} period ${index + 1} start time`}
+          @change=${(event: Event) => {
+            const start = (event.currentTarget as HTMLInputElement).value;
+            void this._updateSchedulePeriod(hass, day, periods, index, { ...period, start });
+          }}
+        />
+        <select
+          .value=${period.mode}
+          ?disabled=${disabled}
+          aria-label=${`${day} period ${index + 1} mode`}
+          @change=${(event: Event) => {
+            const mode = (event.currentTarget as HTMLSelectElement).value;
+            void this._updateSchedulePeriod(hass, day, periods, index, { ...period, mode });
+          }}
+        >
+          ${SCHEDULE_MODE_OPTIONS.map(
+            (mode) => html`
+              <option .value=${mode} ?selected=${period.mode === mode}>
+                ${this._modeLabel(mode)}
+              </option>
+            `,
+          )}
+        </select>
+        <button
+          type="button"
+          class="schedule-delete"
+          ?disabled=${disabled}
+          @click=${() => void this._deleteSchedulePeriod(hass, day, periods, index)}
+          aria-label=${`Delete ${day} period ${index + 1}`}
+        >
+          <ha-icon icon="mdi:trash-can-outline"></ha-icon>
+        </button>
+      </div>
     `;
   }
 
@@ -3208,6 +3433,280 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
     return { tone: 'success', label: 'System OK' };
   }
 
+  private _scheduleDays(
+    snapshot: Partial<Record<EntityRoleId, RoleValue>>,
+  ): Record<string, SchedulePeriod[]> {
+    const attributes = snapshot.weekly_schedule?.status === 'ok' ? snapshot.weekly_schedule.attributes : {};
+    const rawDays = attributes.days;
+    const days: Record<string, SchedulePeriod[]> = {};
+    for (const [day] of SCHEDULE_DAYS) {
+      const raw =
+        rawDays && typeof rawDays === 'object' && !Array.isArray(rawDays)
+          ? (rawDays as Record<string, unknown>)[day]
+          : attributes[day];
+      days[day] = this._coerceSchedulePeriods(raw);
+    }
+    return days;
+  }
+
+  private _scheduleStatus(snapshot: Partial<Record<EntityRoleId, RoleValue>>): {
+    enabled: boolean;
+    currentMode: string | null;
+    nextChange: string | null;
+    nextMode: string | null;
+    overrideActive: boolean;
+  } {
+    const weeklyAttributes =
+      snapshot.weekly_schedule?.status === 'ok' ? snapshot.weekly_schedule.attributes : {};
+    const enabledState =
+      this._state(snapshot.schedule_control) ??
+      this._state(snapshot.schedule_enabled) ??
+      this._state(snapshot.weekly_schedule);
+    const enabled =
+      enabledState !== undefined
+        ? ['on', 'enabled', 'true'].includes(enabledState.toLowerCase())
+        : Boolean(weeklyAttributes.enabled);
+    const currentMode =
+      this._state(snapshot.current_scheduled_mode) ??
+      this._stringAttribute(weeklyAttributes, 'current_mode') ??
+      null;
+    const nextChange =
+      this._state(snapshot.next_scheduled_change) ??
+      this._stringAttribute(weeklyAttributes, 'next_change') ??
+      null;
+    const nextChangeAttributes =
+      snapshot.next_scheduled_change?.status === 'ok'
+        ? snapshot.next_scheduled_change.attributes
+        : {};
+    const nextMode =
+      this._stringAttribute(nextChangeAttributes, 'next_mode') ??
+      this._stringAttribute(weeklyAttributes, 'next_mode') ??
+      null;
+    const overrideState = this._state(snapshot.schedule_override_active);
+    const overrideActive =
+      overrideState !== undefined
+        ? overrideState.toLowerCase() === 'on'
+        : Boolean(weeklyAttributes.manual_override_active) || Boolean(weeklyAttributes.boost_active);
+    return { enabled, currentMode, nextChange, nextMode, overrideActive };
+  }
+
+  private _stringAttribute(attributes: Record<string, unknown>, key: string): string | undefined {
+    const value = attributes[key];
+    return typeof value === 'string' && value.trim() ? value : undefined;
+  }
+
+  private _coerceSchedulePeriods(value: unknown): SchedulePeriod[] {
+    if (!Array.isArray(value)) {
+      return [];
+    }
+    return value
+      .flatMap((entry): SchedulePeriod[] => {
+        if (!entry || typeof entry !== 'object') {
+          return [];
+        }
+        const candidate = entry as Record<string, unknown>;
+        const start = typeof candidate.start === 'string' ? candidate.start : '';
+        const mode = typeof candidate.mode === 'string' ? candidate.mode.toLowerCase() : '';
+        return this._isValidSchedulePeriod({ start, mode }) ? [{ start, mode }] : [];
+      })
+      .sort((left, right) => left.start.localeCompare(right.start));
+  }
+
+  private _isValidSchedulePeriod(period: SchedulePeriod): boolean {
+    return /^([01]\d|2[0-3]):[0-5]\d$/.test(period.start) && this._isValidScheduleMode(period.mode);
+  }
+
+  private _isValidScheduleMode(mode: string): boolean {
+    return (SCHEDULE_MODE_OPTIONS as readonly string[]).includes(mode);
+  }
+
+  private _validateSchedulePeriods(periods: SchedulePeriod[]): string | null {
+    const seen = new Set<string>();
+    for (const period of periods) {
+      if (!this._isValidSchedulePeriod(period)) {
+        return 'Each period needs a valid start time and mode.';
+      }
+      if (seen.has(period.start)) {
+        return 'Schedule periods on the same day cannot use the same start time.';
+      }
+      seen.add(period.start);
+    }
+    return null;
+  }
+
+  private _sortedSchedulePeriods(periods: SchedulePeriod[]): SchedulePeriod[] {
+    return [...periods].sort((left, right) => left.start.localeCompare(right.start));
+  }
+
+  private _otherScheduleDays(day: string): string[] {
+    return SCHEDULE_DAYS.map(([candidate]) => candidate).filter((candidate) => candidate !== day);
+  }
+
+  private _weekdayScheduleDays(): string[] {
+    return SCHEDULE_DAYS.slice(0, 5).map(([day]) => day);
+  }
+
+  private _nextFreeScheduleTime(periods: SchedulePeriod[]): string {
+    const used = new Set(periods.map((period) => period.start));
+    for (const candidate of ['06:00', '08:00', '12:00', '18:00', '22:00', '00:00']) {
+      if (!used.has(candidate)) {
+        return candidate;
+      }
+    }
+    return '00:00';
+  }
+
+  private _formatScheduleDateTime(value: string): string {
+    if (!value || value.toLowerCase() === 'unknown' || value.toLowerCase() === 'unavailable') {
+      return '—';
+    }
+    return formatTimestampMaybe(value);
+  }
+
+  private async _setScheduleEnabled(
+    hass: HomeAssistant,
+    entityId: string | undefined,
+    enabled: boolean,
+  ): Promise<void> {
+    this._scheduleError = undefined;
+    this._schedulePending = true;
+    try {
+      if (entityId) {
+        const domain = this._domain(entityId);
+        if (domain === 'switch' || domain === 'input_boolean') {
+          await this._call(hass, domain, enabled ? 'turn_on' : 'turn_off', { entity_id: entityId });
+          return;
+        }
+      }
+      await this._call(hass, 'altair_mvhr', 'set_weekly_schedule_enabled', { enabled });
+    } catch {
+      this._scheduleError = "Couldn't update weekly schedule";
+    } finally {
+      this._schedulePending = false;
+    }
+  }
+
+  private async _setScheduleDay(
+    hass: HomeAssistant,
+    day: string,
+    periods: SchedulePeriod[],
+  ): Promise<void> {
+    const sorted = this._sortedSchedulePeriods(periods);
+    const validation = this._validateSchedulePeriods(sorted);
+    this._scheduleError = validation ?? undefined;
+    if (validation) {
+      return;
+    }
+    this._schedulePending = true;
+    try {
+      await this._call(hass, 'altair_mvhr', 'set_weekly_schedule_day', {
+        day,
+        periods: sorted,
+      });
+    } catch {
+      this._scheduleError = `Couldn't save ${this._modeLabel(day)} schedule`;
+    } finally {
+      this._schedulePending = false;
+    }
+  }
+
+  private async _updateSchedulePeriod(
+    hass: HomeAssistant,
+    day: string,
+    periods: SchedulePeriod[],
+    index: number,
+    period: SchedulePeriod,
+  ): Promise<void> {
+    const next = periods.map((candidate, candidateIndex) =>
+      candidateIndex === index ? period : candidate,
+    );
+    await this._setScheduleDay(hass, day, next);
+  }
+
+  private async _addSchedulePeriod(
+    hass: HomeAssistant,
+    day: string,
+    periods: SchedulePeriod[],
+  ): Promise<void> {
+    await this._setScheduleDay(hass, day, [
+      ...periods,
+      { start: this._nextFreeScheduleTime(periods), mode: 'medium' },
+    ]);
+  }
+
+  private async _deleteSchedulePeriod(
+    hass: HomeAssistant,
+    day: string,
+    periods: SchedulePeriod[],
+    index: number,
+  ): Promise<void> {
+    await this._setScheduleDay(
+      hass,
+      day,
+      periods.filter((_, candidateIndex) => candidateIndex !== index),
+    );
+  }
+
+  private async _copyScheduleDay(
+    hass: HomeAssistant,
+    sourceDay: string,
+    targetDays: string[],
+  ): Promise<void> {
+    this._scheduleError = undefined;
+    this._schedulePending = true;
+    try {
+      await this._call(hass, 'altair_mvhr', 'copy_weekly_schedule_day', {
+        source_day: sourceDay,
+        target_days: targetDays,
+      });
+    } catch {
+      this._scheduleError = "Couldn't copy schedule";
+    } finally {
+      this._schedulePending = false;
+    }
+  }
+
+  private async _copyWeekdaySchedule(
+    hass: HomeAssistant,
+    days: Record<string, SchedulePeriod[]>,
+  ): Promise<void> {
+    const monday = days.monday ?? [];
+    const validation = this._validateSchedulePeriods(monday);
+    this._scheduleError = validation ?? undefined;
+    if (validation) {
+      return;
+    }
+    await this._copyScheduleDay(
+      hass,
+      'monday',
+      this._weekdayScheduleDays().filter((day) => day !== 'monday'),
+    );
+  }
+
+  private async _clearScheduleDay(hass: HomeAssistant, day: string): Promise<void> {
+    this._scheduleError = undefined;
+    this._schedulePending = true;
+    try {
+      await this._call(hass, 'altair_mvhr', 'clear_weekly_schedule_day', { day });
+    } catch {
+      this._scheduleError = `Couldn't clear ${this._modeLabel(day)} schedule`;
+    } finally {
+      this._schedulePending = false;
+    }
+  }
+
+  private async _clearFullSchedule(hass: HomeAssistant): Promise<void> {
+    this._scheduleError = undefined;
+    this._schedulePending = true;
+    try {
+      await this._call(hass, 'altair_mvhr', 'clear_weekly_schedule', {});
+    } catch {
+      this._scheduleError = "Couldn't clear weekly schedule";
+    } finally {
+      this._schedulePending = false;
+    }
+  }
+
   private _press(hass: HomeAssistant, entityId: string | undefined): void {
     if (!entityId) {
       return;
@@ -4070,6 +4569,17 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       .performance-row {
         grid-template-columns: minmax(0, 1fr);
       }
+      .schedule-summary,
+      .schedule-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      .schedule-heading {
+        flex-direction: column;
+      }
+      .schedule-toggle {
+        width: 100%;
+        justify-content: center;
+      }
       .header-controls {
         width: 100%;
         flex-direction: column;
@@ -4697,6 +5207,181 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       color: var(--primary-text-color);
       text-align: right;
       overflow-wrap: anywhere;
+    }
+
+    /* ---- backend-owned weekly schedule editor ---- */
+    .schedule-panel {
+      border: 1px solid var(--divider-color);
+      border-radius: 16px;
+      padding: 16px;
+      background: var(--ha-card-background, var(--card-background-color));
+      box-sizing: border-box;
+      min-width: 0;
+      display: grid;
+      gap: 14px;
+    }
+    .schedule-heading {
+      align-items: flex-start;
+      gap: 12px;
+    }
+    .schedule-heading h3 {
+      margin: 0;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .schedule-heading p {
+      margin: 4px 0 0;
+      color: var(--secondary-text-color);
+      font-size: 0.86em;
+    }
+    .schedule-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid var(--divider-color);
+      border-radius: 999px;
+      padding: 8px 12px;
+      color: var(--primary-text-color);
+      font-weight: 800;
+      background: color-mix(
+        in srgb,
+        var(--ha-card-background, var(--card-background-color)),
+        var(--primary-color) 4%
+      );
+      white-space: nowrap;
+    }
+    .schedule-toggle input {
+      accent-color: var(--primary-color);
+    }
+    .schedule-summary {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .schedule-summary > div {
+      border: 1px solid color-mix(in srgb, var(--divider-color), transparent 22%);
+      border-radius: 12px;
+      padding: 11px;
+      min-width: 0;
+      background: color-mix(in srgb, var(--divider-color), transparent 92%);
+    }
+    .schedule-summary span {
+      display: block;
+      color: var(--secondary-text-color);
+      font-size: 0.78em;
+      margin-bottom: 3px;
+    }
+    .schedule-summary strong {
+      color: var(--primary-text-color);
+      overflow-wrap: anywhere;
+    }
+    .schedule-override.is-active {
+      border-color: color-mix(in srgb, var(--warning-color), transparent 40%);
+      background: color-mix(in srgb, var(--warning-color), transparent 88%);
+    }
+    .schedule-toolbar,
+    .schedule-day-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .schedule-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .schedule-day-card {
+      border: 1px solid color-mix(in srgb, var(--divider-color), transparent 18%);
+      border-radius: 14px;
+      padding: 12px;
+      min-width: 0;
+      display: grid;
+      gap: 10px;
+      background: color-mix(
+        in srgb,
+        var(--ha-card-background, var(--card-background-color)),
+        var(--primary-text-color) 2%
+      );
+    }
+    .schedule-day-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .schedule-day-head h4 {
+      margin: 0;
+      color: var(--primary-text-color);
+      font-size: 0.9em;
+      font-weight: 800;
+    }
+    .schedule-day-actions button,
+    .schedule-add,
+    .schedule-delete {
+      border: 1px solid var(--divider-color);
+      border-radius: 999px;
+      background: var(--ha-card-background, var(--card-background-color));
+      color: var(--primary-text-color);
+      padding: 7px 10px;
+      min-height: 34px;
+      font: inherit;
+      font-size: 0.82em;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .schedule-periods {
+      display: grid;
+      gap: 8px;
+    }
+    .schedule-period-row {
+      display: grid;
+      grid-template-columns: minmax(92px, 0.8fr) minmax(120px, 1fr) auto;
+      gap: 8px;
+      align-items: center;
+    }
+    .schedule-period-row input,
+    .schedule-period-row select {
+      width: 100%;
+      box-sizing: border-box;
+      border: 1px solid var(--divider-color);
+      border-radius: 10px;
+      background: var(--ha-card-background, var(--card-background-color));
+      color: var(--primary-text-color);
+      padding: 9px;
+      min-height: 40px;
+      font: inherit;
+    }
+    .schedule-delete {
+      border-radius: 10px;
+      padding: 7px;
+      min-width: 40px;
+    }
+    .schedule-delete ha-icon {
+      --mdc-icon-size: 18px;
+    }
+    .schedule-add {
+      justify-self: start;
+    }
+    .schedule-empty {
+      margin: 0;
+      color: var(--secondary-text-color);
+      font-size: 0.86em;
+    }
+    .schedule-period-row input:focus-visible,
+    .schedule-period-row select:focus-visible,
+    .schedule-day-actions button:focus-visible,
+    .schedule-add:focus-visible,
+    .schedule-delete:focus-visible,
+    .schedule-toggle:focus-within {
+      outline: 2px solid var(--primary-color);
+      outline-offset: 2px;
+    }
+    .schedule-panel button:disabled,
+    .schedule-period-row input:disabled,
+    .schedule-period-row select:disabled,
+    .schedule-toggle input:disabled + span {
+      cursor: default;
+      opacity: 0.58;
     }
 
     /* ---- shower-detection banner (full-width, below the lower cards) ---- */
@@ -5353,6 +6038,20 @@ export class HiperMvhrCard extends LitElement implements LovelaceCard {
       }
       .performance-row {
         grid-template-columns: minmax(0, 1fr);
+      }
+      .schedule-summary,
+      .schedule-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      .schedule-heading {
+        flex-direction: column;
+      }
+      .schedule-toggle {
+        width: 100%;
+        justify-content: center;
+      }
+      .schedule-period-row {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
       }
       .header-controls {
         width: 100%;

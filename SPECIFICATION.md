@@ -92,12 +92,18 @@ Roles are grouped by category. `views` lists which audience views show the role 
 | `shower_temperature_rise` | optional | numeric control | H, I | editable shower detector rise threshold |
 | `shower_detection_window` | optional | numeric control | H, I | editable shower detector rolling window |
 | `shower_rearm_temperature_drop` | optional | numeric control | H, I | editable shower detector re-arm drop |
+| `weekly_schedule` | optional | structured/status sensor | I | backend-owned weekly schedule model and status attributes |
+| `schedule_control` | optional | switch/input_boolean | I | enable/disable the backend weekly schedule |
+| `schedule_enabled` | optional | binary | I | backend weekly schedule enabled state |
+| `current_scheduled_mode` | optional | enum/text sensor | I | current mode chosen by the active schedule period |
+| `next_scheduled_change` | optional | timestamp sensor | I | next schedule transition timestamp and target mode |
+| `schedule_override_active` | optional | binary | I | manual override/boost is taking precedence over schedule |
 | `co2_level` | optional | numeric | H, I | not all systems expose this |
 | `commissioning_diagnostics` | commissioning | text/table | C | raw register/entity inspector |
 
 This table is the initial set, not a closed one — new roles are additive (see architecture §4) and don't require a schema version bump for `MvhrSnapshot`/`CapabilityProfile`, only a role-registry entry.
 
-**Implemented so far** (`src/types/entity-roles.ts`): every role in the table above except `mode_control`, `bypass_control`, `filter_alarm`, `fault_code`, `fault_description`, `co2_level`, and `commissioning_diagnostics`. The airflow preset, maximum, and performance analytics roles are generic and only appear when mapped/supported; no manufacturer default assumes a fixed installed capacity or a fixed analytics set. `stop_control` is implemented generically but declared supported for Altair now that the backend exposes the stop coil. `mode_control` and `bypass_control` are Phase 3B/3C respectively (`ROADMAP.md`).
+**Implemented so far** (`src/types/entity-roles.ts`): every role in the table above except `mode_control`, `bypass_control`, `filter_alarm`, `fault_code`, `fault_description`, `co2_level`, and `commissioning_diagnostics`. The airflow preset, maximum, performance analytics, and weekly schedule roles are generic and only appear when mapped/supported; no manufacturer default assumes a fixed installed capacity, fixed analytics set, or a frontend-owned schedule model. `stop_control` is implemented generically but declared supported for Altair now that the backend exposes the stop coil. `mode_control` and `bypass_control` are Phase 3B/3C respectively (`ROADMAP.md`).
 
 ## 3. Capability matrix (launch set)
 
@@ -112,6 +118,7 @@ This table is the initial set, not a closed one — new roles are additive (see 
 | Airflow preset numbers | Role implemented and declared supported (`away_airflow`, `low_airflow`, `home_airflow`, `high_airflow`) | TBD — not declared supported | TBD — not declared supported | Role implemented, feature-flaggable |
 | Airflow calibration controls | Role implemented and declared supported (`calibration_available`, start/cancel/status/progress/result/last) | TBD — not declared supported | TBD — not declared supported | Role implemented, feature-flaggable |
 | Performance analytics | Role implemented and declared supported (`heat_recovery`, cooling/heating energy, savings, emissions) | TBD — not declared supported | TBD — not declared supported | Role implemented, feature-flaggable |
+| Weekly schedule | Role implemented and declared supported (`weekly_schedule`, schedule status/control roles) | TBD — not declared supported | TBD — not declared supported | Role implemented, feature-flaggable |
 | Fault indication | Role implemented, assumed supported | Role implemented, assumed supported | Role implemented, assumed supported | Off by default |
 | Boost timer | Not implemented | Not implemented | Not implemented | Not implemented |
 | Humidity sensor | Not implemented | Not implemented | Not implemented | Not implemented |

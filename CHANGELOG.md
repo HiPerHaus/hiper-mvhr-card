@@ -14,6 +14,12 @@ All notable changes to this project are documented here. Format follows [Keep a 
   of showing placeholders. Live W readings are displayed as kW, savings use
   currency formatting when the entity unit is a currency code, and the
   desktop/mobile layout follows the existing system-card styling.
+- **Weekly Schedule section:** `display_mode: system` now renders an optional
+  backend-owned SCHEDULE editor when schedule roles are mapped. It shows
+  enabled/current/next/override status, edits day-by-day periods for Off,
+  Away, Low, Home and High through `altair_mvhr` services, supports copy and
+  clear actions, validates duplicate start times locally, and hides cleanly
+  when installations do not expose scheduling.
 - **Adjustable shower detection controls:** `display_mode: system` now renders
   editable `shower_temperature_rise` and `shower_detection_window` number
   roles inside the Shower Detection banner, using Home Assistant number
